@@ -62,6 +62,7 @@ var _CustomDropdownmenu = _interopRequireDefault(require("./CustomDropdownmenu")
 var _utils = require("../utils");
 var _History = _interopRequireDefault(require("@mui/icons-material/History"));
 var _FileDownload = _interopRequireDefault(require("@mui/icons-material/FileDownload"));
+var _AliasModal = _interopRequireDefault(require("../Dialog/AliasModal"));
 const _excluded = ["showGrid", "useLinkColumn", "model", "columns", "api", "defaultSort", "setActiveRecord", "parentFilters", "parent", "where", "title", "showModal", "OrderModal", "permissions", "selected", "assigned", "available", "disableCellRedirect", "onAssignChange", "customStyle", "onCellClick", "showRowsSelected", "chartFilters", "clearChartFilter", "showFullScreenLoader", "customFilters", "onRowDoubleClick", "baseFilters", "onRowClick", "gridStyle", "reRenderKey", "additionalFilters", "onCellDoubleClickOverride", "onAddOverride"],
   _excluded2 = ["row", "field", "id"],
   _excluded3 = ["filterField"];
@@ -258,6 +259,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
   const snackbar = (0, _index.useSnackbar)();
   const isClient = model.isClient === true ? 'client' : 'server';
   const [errorMessage, setErrorMessage] = (0, _react.useState)('');
+  const [openAliasModal, setOpenAliasModal] = (0, _react.useState)(false);
+  // const openAliasModal = React.useRef(false);
   const [sortModel, setSortModel] = (0, _react.useState)(convertDefaultSort(defaultSort || (model === null || model === void 0 ? void 0 : model.defaultSort)));
   const initialFilterModel = {
     items: [],
@@ -741,12 +744,19 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
       model: model
     });
   };
+  const toggleAliasModal = () => {
+    setOpenAliasModal(!openAliasModal);
+  };
   const openForm = _ref4 => {
     let {
       id,
       record = {},
       mode
     } = _ref4;
+    if (mode == 'childGrid') {
+      setOpenAliasModal(true);
+      return;
+    }
     if (setActiveRecord) {
       (0, _crudHelper.getRecord)({
         id,
@@ -956,8 +966,13 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     if (typeof onAddOverride === 'function') {
       onAddOverride();
     } else {
+      const {
+        mode
+      } = model;
+      console.log("Mode is ", mode);
       openForm({
-        id: 0
+        id: 0,
+        mode
       });
     }
   };
@@ -1249,6 +1264,15 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
       text: title || model.gridTitle || model.title
     }];
   }
+  const AliasColumn = {
+    field: "ScopeModelAlias",
+    label: "Alias",
+    type: "string",
+    required: false,
+    width: 300,
+    variant: 'standard'
+  };
+  console.log("Data Records ", data);
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_PageTitle.default, {
     showBreadcrumbs: !hideBreadcrumb && !hideBreadcrumbInGrid,
     breadcrumbs: breadCrumbs,
@@ -1352,6 +1376,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     onConfirm: handleDelete,
     onCancel: () => setIsDeleting(false),
     title: "Confirm Delete"
-  }, " ", 'Are you sure you want to delete'.concat(" ", record === null || record === void 0 ? void 0 : record.name, "?")))));
+  }, " ", 'Are you sure you want to delete'.concat(" ", record === null || record === void 0 ? void 0 : record.name, "?")), /*#__PURE__*/_react.default.createElement(_AliasModal.default, {
+    openModal: openAliasModal,
+    toggleAliasModal: toggleAliasModal,
+    column: AliasColumn,
+    api: "".concat(url).concat(model.api),
+    field: 'ScopeModalAlias',
+    model: model,
+    data: data.records
+  }))));
 }, areEqual);
 var _default = exports.default = GridBase;

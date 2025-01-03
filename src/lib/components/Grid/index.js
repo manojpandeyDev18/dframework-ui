@@ -1,5 +1,5 @@
 import Button from '@mui/material/Button';
-import React from 'react';
+import React, { useMemo, useEffect, memo, useRef, useState } from 'react';
 import {
     DataGridPremium,
     GridToolbarContainer,
@@ -19,7 +19,6 @@ import {
     GridActionsCellItem,
     useGridApiRef
 } from '@mui/x-data-grid-premium';
-import { useMemo, useEffect, memo, useRef, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import Typography from '@mui/material/Typography';
@@ -43,6 +42,7 @@ import CustomDropdownmenu from './CustomDropdownmenu';
 import { getPermissions } from '../utils';
 import HistoryIcon from '@mui/icons-material/History';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import AliasModal from '../Dialog/AliasModal';
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -185,6 +185,7 @@ const GridBase = memo(({
     const snackbar = useSnackbar();
     const isClient = model.isClient === true ? 'client' : 'server';
     const [errorMessage, setErrorMessage] = useState('');
+    const [openAliasModal, setOpenAliasModal] = useState(false);
     const [sortModel, setSortModel] = useState(convertDefaultSort(defaultSort || model?.defaultSort));
     const initialFilterModel = { items: [], logicOperator: 'and', quickFilterValues: Array(0), quickFilterLogicOperator: 'and' }
     if (model.defaultFilters) {
@@ -206,7 +207,7 @@ const GridBase = memo(({
     const toLink = model.columns.map(item => item.link);
     const [isGridPreferenceFetched, setIsGridPreferenceFetched] = useState(false);
     const classes = useStyles();
-    const {  stateData, dispatchData, formatDate, removeCurrentPreferenceName, getAllSavedPreferences, applyDefaultPreferenceIfExists } = useStateContext();
+    const { stateData, dispatchData, formatDate, removeCurrentPreferenceName, getAllSavedPreferences, applyDefaultPreferenceIfExists } = useStateContext();
     const { timeZone } = stateData;
     const effectivePermissions = { ...constants.permissions, ...stateData.gridSettings.permissions, ...model.permissions, ...permissions };
     const { Username } = stateData?.getUserData ? stateData.getUserData : {};
@@ -511,7 +512,16 @@ const GridBase = memo(({
             model: model
         });
     };
+
+    const toggleAliasModal = () => {
+        setOpenAliasModal(!openAliasModal);
+    }
+
     const openForm = ({ id, record = {}, mode }) => {
+        if (mode == 'childGrid') {
+            setOpenAliasModal(true);
+            return;
+        }
         if (setActiveRecord) {
             getRecord({ id, api: api || model?.api, setIsLoading, setActiveRecord, modelConfig: model, parentFilters, where, model });
             return;
@@ -685,7 +695,8 @@ const GridBase = memo(({
         if (typeof onAddOverride === 'function') {
             onAddOverride();
         } else {
-            openForm({ id: 0 });
+            const { mode } = model;
+            openForm({ id: 0, mode });
         }
     }
 
@@ -888,6 +899,8 @@ const GridBase = memo(({
         breadCrumbs = [{ text: title || model.gridTitle || model.title }];
     }
 
+    const AliasColumn = { field: "ScopeModelAlias", label: "Alias", type: "string", required: false, width: 300, variant: 'standard' }
+
     return (
         <>
             <PageTitle showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
@@ -981,6 +994,15 @@ const GridBase = memo(({
                     {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
                     }
                     {isDeleting && !errorMessage && (<DialogComponent open={isDeleting} onConfirm={handleDelete} onCancel={() => setIsDeleting(false)} title="Confirm Delete"> {`${'Are you sure you want to delete'} ${record?.name}?`}</DialogComponent>)}
+                    <AliasModal
+                        openModal={openAliasModal}
+                        toggleAliasModal={toggleAliasModal}
+                        column={AliasColumn}
+                        api={`${url}${model.api}`}
+                        field={'ScopeModalAlias'}
+                        model={model}
+                        data={data.records}
+                    />
                 </CardContent>
             </Card >
         </>
