@@ -9,13 +9,15 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Button, TextField } from '@mui/material';
 import { getRecord, saveRecord } from '../Grid/crud-helper';
 import { useSnackbar } from '../SnackBar';
+import Form from '../Form/Form';
 
-const AliasModal = ({ openModal, toggleAliasModal, data, api, model }) => {
+const AliasModal = ({ openModal, toggleAliasModal, data, api, model, id }) => {
 
     const value = useRef('');
 
     const handleClose = ()=> {
         toggleAliasModal();
+        window.location.reload();
     }
     const snackbar = useSnackbar();
     const [loading, setIsLoading] = useState(false);
@@ -39,14 +41,14 @@ const AliasModal = ({ openModal, toggleAliasModal, data, api, model }) => {
       }));
 
     const handleSubmit = () => {
-        console.log("Data is ",data);
         const reqValue = {
             ScopeModelAlias: value.current,
             ScopeModelId: extractedId
         }
         try{
             console.log("API is ",api);
-            saveRecord({ id: "0", api: `${api}`, values: reqValue, setIsLoading, setError: snackbar.showError })
+            saveRecord({ id: id === null ? "0" : id, api: `${api}`, values: reqValue, setIsLoading, setError: snackbar.showError })
+            toggleAliasModal();
         }
         catch(err){
             console.log("Error is ",err);
@@ -62,17 +64,26 @@ const AliasModal = ({ openModal, toggleAliasModal, data, api, model }) => {
             api: api,
             modelConfig: model,
             setError: snackbar.showError,
-            id: extractedId,
+            id: id,
             setIsLoading,
             setActiveRecord
         })
-    },[])
+        value.current = record.ScopeModelAlias
+    },[openModal])
 
     return (
         <BootstrapDialog
             onClose={handleClose}
             aria-labelledby="customized-dialog-title"
             open={openModal}
+            sx={{
+                '& .MuiDialog-paper': {
+                    width: '50vw', // 50% of the viewport width
+                    height: '40vh', // 40% of the viewport height
+                    maxWidth: '600px', // Optional: Maximum width for larger screens
+                    maxHeight: '500px', // Optional: Maximum height for larger screens
+                },
+            }}
         >
             <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
                 Alias
@@ -90,13 +101,15 @@ const AliasModal = ({ openModal, toggleAliasModal, data, api, model }) => {
                 <CloseIcon />
             </IconButton>
             <DialogContent dividers>
-                <TextField
+                {/* <TextField
                     type="text"
                     variant="standard"
                     label="Alias"
                     fullWidth
+                    value={record.ScopeModelAlias}
                     onChange={handleChange}
-                />
+                /> */}
+                <Form model={model} />
             </DialogContent>
             <DialogActions>
                 <Button autoFocus onClick={handleSubmit}>

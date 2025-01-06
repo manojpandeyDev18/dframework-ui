@@ -17,6 +17,7 @@ var _Close = _interopRequireDefault(require("@mui/icons-material/Close"));
 var _material = require("@mui/material");
 var _crudHelper = require("../Grid/crud-helper");
 var _SnackBar = require("../SnackBar");
+var _Form = _interopRequireDefault(require("../Form/Form"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
 function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
@@ -26,11 +27,13 @@ const AliasModal = _ref => {
     toggleAliasModal,
     data,
     api,
-    model
+    model,
+    id
   } = _ref;
   const value = (0, _react.useRef)('');
   const handleClose = () => {
     toggleAliasModal();
+    window.location.reload();
   };
   const snackbar = (0, _SnackBar.useSnackbar)();
   const [loading, setIsLoading] = (0, _react.useState)(false);
@@ -61,7 +64,6 @@ const AliasModal = _ref => {
     };
   });
   const handleSubmit = () => {
-    console.log("Data is ", data);
     const reqValue = {
       ScopeModelAlias: value.current,
       ScopeModelId: extractedId
@@ -69,12 +71,13 @@ const AliasModal = _ref => {
     try {
       console.log("API is ", api);
       (0, _crudHelper.saveRecord)({
-        id: "0",
+        id: id === null ? "0" : id,
         api: "".concat(api),
         values: reqValue,
         setIsLoading,
         setError: snackbar.showError
       });
+      toggleAliasModal();
     } catch (err) {
       console.log("Error is ", err);
     }
@@ -87,15 +90,27 @@ const AliasModal = _ref => {
       api: api,
       modelConfig: model,
       setError: snackbar.showError,
-      id: extractedId,
+      id: id,
       setIsLoading,
       setActiveRecord
     });
-  }, []);
+    value.current = record.ScopeModelAlias;
+  }, [openModal]);
   return /*#__PURE__*/_react.default.createElement(BootstrapDialog, {
     onClose: handleClose,
     "aria-labelledby": "customized-dialog-title",
-    open: openModal
+    open: openModal,
+    sx: {
+      '& .MuiDialog-paper': {
+        width: '50vw',
+        // 50% of the viewport width
+        height: '40vh',
+        // 40% of the viewport height
+        maxWidth: '600px',
+        // Optional: Maximum width for larger screens
+        maxHeight: '500px' // Optional: Maximum height for larger screens
+      }
+    }
   }, /*#__PURE__*/_react.default.createElement(_DialogTitle.default, {
     sx: {
       m: 0,
@@ -113,12 +128,8 @@ const AliasModal = _ref => {
     })
   }, /*#__PURE__*/_react.default.createElement(_Close.default, null)), /*#__PURE__*/_react.default.createElement(_DialogContent.default, {
     dividers: true
-  }, /*#__PURE__*/_react.default.createElement(_material.TextField, {
-    type: "text",
-    variant: "standard",
-    label: "Alias",
-    fullWidth: true,
-    onChange: handleChange
+  }, /*#__PURE__*/_react.default.createElement(_Form.default, {
+    model: model
   })), /*#__PURE__*/_react.default.createElement(_DialogActions.default, null, /*#__PURE__*/_react.default.createElement(_material.Button, {
     autoFocus: true,
     onClick: handleSubmit
