@@ -1005,6 +1005,7 @@ const GridBase = memo(({
                         model={model}
                         id={openAliasModal.id}
                         data={data.records}
+                        { ...props }
                     />}
                 </CardContent>
             </Card >

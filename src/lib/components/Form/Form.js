@@ -29,12 +29,14 @@ const Form = ({
   models,
   relationFilters = {},
   permissions = {
-    edit: model.permissions.edit,
-    export: model.permissions.export,
-    delete: model.permissions.allowFormDelete || false
+    edit: model.permissions?.edit || false,
+    export: model.permissions?.export || false,
+    delete: model.permissions?.allowFormDelete || false
   },
   Layout = FormLayout,
-  baseSaveData = {}
+  baseSaveData = {},
+  isForm,
+  idofModal,
 }) => {
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
@@ -101,7 +103,8 @@ const Form = ({
       } else {
         getRecord({
           ...params,
-          id: options.length > 1 ? options[1] : options[0],
+          // id: options.length > 1 ? options[1] : options[0],
+          id: isForm? idofModal : id,
           setIsLoading,
           setActiveRecord
         });
@@ -117,9 +120,13 @@ const Form = ({
   useEffect(() => {
     if (url) {
       setValidationSchema(model.getValidationSchema({ id, snackbar }));
+      console.log('model.mode',model.mode)
+      if(model.mode!=='childGrid' || isForm )
+      {
       getRecordAndLookups({});
+      }
     }
-  }, [id, idWithOptions, model, url]);
+  }, [id, idWithOptions, url]);
 
   const formik = useFormik({
     enableReinitialize: true,
