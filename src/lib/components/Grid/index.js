@@ -185,7 +185,10 @@ const GridBase = memo(({
     const snackbar = useSnackbar();
     const isClient = model.isClient === true ? 'client' : 'server';
     const [errorMessage, setErrorMessage] = useState('');
-    const [openAliasModal, setOpenAliasModal] = useState(false);
+    const [openAliasModal, setOpenAliasModal] = useState({
+        openModal: false,
+        id: null
+    });
     const [sortModel, setSortModel] = useState(convertDefaultSort(defaultSort || model?.defaultSort));
     const initialFilterModel = { items: [], logicOperator: 'and', quickFilterValues: Array(0), quickFilterLogicOperator: 'and' }
     if (model.defaultFilters) {
@@ -227,7 +230,7 @@ const GridBase = memo(({
         Boolean: 'boolean'
     };
 
-    const { addUrlParamKey, searchParamKey, hideBreadcrumb = false, tableName, showHistory = true, hideBreadcrumbInGrid = false, navigateToRelation = [] } = model;
+    const { addUrlParamKey, searchParamKey, hideBreadcrumb = false, tableName, showHistory = true, hideBreadcrumbInGrid = false, navigateToRelation = [], mode } = model;
     const gridTitle = model.gridTitle || model.title;
     const OrderSuggestionHistoryFields = {
         OrderStatus: 'OrderStatusId'
@@ -514,12 +517,12 @@ const GridBase = memo(({
     };
 
     const toggleAliasModal = () => {
-        setOpenAliasModal(!openAliasModal);
+        setOpenAliasModal({ ...openAliasModal, openModal: !openAliasModal.openModal });
     }
 
     const openForm = ({ id, record = {}, mode }) => {
         if (mode == 'childGrid') {
-            setOpenAliasModal(true);
+            setOpenAliasModal({ ...openAliasModal, openModal: true, id: record[idProperty] });
             return;
         }
         if (setActiveRecord) {
@@ -594,7 +597,7 @@ const GridBase = memo(({
                 }
             }
             if (action === actionTypes.Edit) {
-                return openForm({ id: record[idProperty], record });
+                return openForm({ id: record[idProperty], record, mode });
             }
             if (action === actionTypes.Copy) {
                 return openForm({ id: record[idProperty], mode: 'copy' });
@@ -695,7 +698,6 @@ const GridBase = memo(({
         if (typeof onAddOverride === 'function') {
             onAddOverride();
         } else {
-            const { mode } = model;
             openForm({ id: 0, mode });
         }
     }
@@ -796,7 +798,7 @@ const GridBase = memo(({
         if (url) {
             fetchData();
         }
-    }, [paginationModel, sortModel, filterModel, api, gridColumns, model, parentFilters, assigned, selected, available, chartFilters, isGridPreferenceFetched, reRenderKey, url])
+    }, [paginationModel, sortModel, filterModel, api, gridColumns, model, parentFilters, assigned, selected, available, chartFilters, isGridPreferenceFetched, reRenderKey, url, openAliasModal])
 
     useEffect(() => {
         if (props.isChildGrid) {
@@ -994,15 +996,16 @@ const GridBase = memo(({
                     {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
                     }
                     {isDeleting && !errorMessage && (<DialogComponent open={isDeleting} onConfirm={handleDelete} onCancel={() => setIsDeleting(false)} title="Confirm Delete"> {`${'Are you sure you want to delete'} ${record?.name}?`}</DialogComponent>)}
-                    <AliasModal
-                        openModal={openAliasModal}
+                    {openAliasModal.openModal && <AliasModal
+                        openModal={openAliasModal.openModal}
                         toggleAliasModal={toggleAliasModal}
                         column={AliasColumn}
                         api={`${url}${model.api}`}
                         field={'ScopeModalAlias'}
                         model={model}
+                        id={openAliasModal.id}
                         data={data.records}
-                    />
+                    />}
                 </CardContent>
             </Card >
         </>

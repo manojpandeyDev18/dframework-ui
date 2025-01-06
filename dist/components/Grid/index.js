@@ -259,8 +259,10 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
   const snackbar = (0, _index.useSnackbar)();
   const isClient = model.isClient === true ? 'client' : 'server';
   const [errorMessage, setErrorMessage] = (0, _react.useState)('');
-  const [openAliasModal, setOpenAliasModal] = (0, _react.useState)(false);
-  // const openAliasModal = React.useRef(false);
+  const [openAliasModal, setOpenAliasModal] = (0, _react.useState)({
+    openModal: false,
+    id: null
+  });
   const [sortModel, setSortModel] = (0, _react.useState)(convertDefaultSort(defaultSort || (model === null || model === void 0 ? void 0 : model.defaultSort)));
   const initialFilterModel = {
     items: [],
@@ -353,7 +355,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     tableName,
     showHistory = true,
     hideBreadcrumbInGrid = false,
-    navigateToRelation = []
+    navigateToRelation = [],
+    mode
   } = model;
   const gridTitle = model.gridTitle || model.title;
   const OrderSuggestionHistoryFields = {
@@ -745,7 +748,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     });
   };
   const toggleAliasModal = () => {
-    setOpenAliasModal(!openAliasModal);
+    setOpenAliasModal(_objectSpread(_objectSpread({}, openAliasModal), {}, {
+      openModal: !openAliasModal.openModal
+    }));
   };
   const openForm = _ref4 => {
     let {
@@ -754,7 +759,10 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
       mode
     } = _ref4;
     if (mode == 'childGrid') {
-      setOpenAliasModal(true);
+      setOpenAliasModal(_objectSpread(_objectSpread({}, openAliasModal), {}, {
+        openModal: true,
+        id: record[idProperty]
+      }));
       return;
     }
     if (setActiveRecord) {
@@ -852,9 +860,12 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
         }
       }
       if (action === actionTypes.Edit) {
+        console.log("Record is ", record);
+        console.log("ID Property ", idProperty);
         return openForm({
           id: record[idProperty],
-          record
+          record,
+          mode
         });
       }
       if (action === actionTypes.Copy) {
@@ -966,10 +977,6 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     if (typeof onAddOverride === 'function') {
       onAddOverride();
     } else {
-      const {
-        mode
-      } = model;
-      console.log("Mode is ", mode);
       openForm({
         id: 0,
         mode
@@ -1130,7 +1137,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     if (url) {
       fetchData();
     }
-  }, [paginationModel, sortModel, filterModel, api, gridColumns, model, parentFilters, assigned, selected, available, chartFilters, isGridPreferenceFetched, reRenderKey, url]);
+  }, [paginationModel, sortModel, filterModel, api, gridColumns, model, parentFilters, assigned, selected, available, chartFilters, isGridPreferenceFetched, reRenderKey, url, openAliasModal]);
   (0, _react.useEffect)(() => {
     if (props.isChildGrid) {
       return;
@@ -1272,7 +1279,6 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     width: 300,
     variant: 'standard'
   };
-  console.log("Data Records ", data);
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_PageTitle.default, {
     showBreadcrumbs: !hideBreadcrumb && !hideBreadcrumbInGrid,
     breadcrumbs: breadCrumbs,
@@ -1376,13 +1382,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     onConfirm: handleDelete,
     onCancel: () => setIsDeleting(false),
     title: "Confirm Delete"
-  }, " ", 'Are you sure you want to delete'.concat(" ", record === null || record === void 0 ? void 0 : record.name, "?")), /*#__PURE__*/_react.default.createElement(_AliasModal.default, {
-    openModal: openAliasModal,
+  }, " ", 'Are you sure you want to delete'.concat(" ", record === null || record === void 0 ? void 0 : record.name, "?")), openAliasModal.openModal && /*#__PURE__*/_react.default.createElement(_AliasModal.default, {
+    openModal: openAliasModal.openModal,
     toggleAliasModal: toggleAliasModal,
     column: AliasColumn,
     api: "".concat(url).concat(model.api),
     field: 'ScopeModalAlias',
     model: model,
+    id: openAliasModal.id,
     data: data.records
   }))));
 }, areEqual);
