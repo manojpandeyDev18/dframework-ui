@@ -120,11 +120,7 @@ const Form = ({
   useEffect(() => {
     if (url) {
       setValidationSchema(model.getValidationSchema({ id, snackbar }));
-      console.log('model.mode',model.mode)
-      if(model.mode!=='childGrid' || isForm )
-      {
       getRecordAndLookups({});
-      }
     }
   }, [id, idWithOptions, url]);
 
@@ -139,9 +135,10 @@ const Form = ({
           values[key] = values[key].trim();
         }
       }
-      setIsLoading(true);
+      values.scopeModelId = 48;
+      setIsLoading(false);
       saveRecord({
-        id,
+        id: isForm ? idofModal : id,
         api: gridApi,
         values,
         setIsLoading,
@@ -195,8 +192,11 @@ const Form = ({
     if (isCopy) {
       record[model.linkColumn] = "";
     }
-    setData(record);
-    setLookups(lookups);
+    
+      setData(record);
+      setLookups(lookups);
+
+    return ;
 
     if (localValue !== "") {
       breadcrumbs.push({ text: localValue });
