@@ -5,9 +5,15 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import { makeStyles } from "@material-ui/core";
 
+const useStyles = makeStyles({
+    errorText: {
+        color: 'red', // Specify the red color for errors
+    },
+});
 const SelectField = ({ column, field, fieldLabel, formik, activeRecord, lookups, otherProps, classes, onChange, getRecordAndLookups }) => {
-    const [userSelected, setUserSelected] = React.useState(false); 
+    const [userSelected, setUserSelected] = React.useState(false);
     const { filter } = column;
 
     const initialOptions = useMemo(() => {
@@ -41,7 +47,7 @@ const SelectField = ({ column, field, fieldLabel, formik, activeRecord, lookups,
         getRecordAndLookups({
             scopeId: formik.values[valueField],
             lookups: column.lookup,
-            customSetIsLoading: () => {},
+            customSetIsLoading: () => { },
             customSetActiveRecord: setActiveRecord
         });
     };
@@ -74,6 +80,8 @@ const SelectField = ({ column, field, fieldLabel, formik, activeRecord, lookups,
         setUserSelected(true); // Set the flag to true when the user makes a selection
     };
 
+
+
     return (
         <FormControl
             fullWidth
@@ -102,7 +110,9 @@ const SelectField = ({ column, field, fieldLabel, formik, activeRecord, lookups,
                     </MenuItem>
                 ))}
             </Select>
-            <FormHelperText>{formik.touched[field] && formik.errors[field]}</FormHelperText>
+             <FormHelperText sx={{ color: 'red' }}>
+                {formik.touched[field] && formik.errors[field]}
+            </FormHelperText> 
         </FormControl>
     );
 };

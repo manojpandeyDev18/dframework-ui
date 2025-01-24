@@ -682,7 +682,7 @@ const GridBase = memo(({
                 return navigate(`/masterScope/${record[idProperty]}?showRelation=${navigateToRelation}`);
             }
         }
-        if (isReadOnly && toLink) {
+        if (isReadOnly && toLink.find(item => item !== undefined)) {
             if (model?.isAcostaController && onCellClick && cellParams.colDef.customCellClick === true) {
                 onCellClick(cellParams.row);
                 return;

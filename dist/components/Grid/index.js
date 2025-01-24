@@ -948,7 +948,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
         return navigate("/masterScope/".concat(record[idProperty], "?showRelation=").concat(navigateToRelation));
       }
     }
-    if (isReadOnly && toLink) {
+    if (isReadOnly && toLink.find(item => item !== undefined)) {
       if (model !== null && model !== void 0 && model.isAcostaController && onCellClick && cellParams.colDef.customCellClick === true) {
         onCellClick(cellParams.row);
         return;
