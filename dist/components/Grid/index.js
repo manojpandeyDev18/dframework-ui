@@ -1474,6 +1474,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
       pinnedColumns: pinnedColumns
     },
     localeText: {
+      filterValueTrue: 'Yes',
+      filterValueFalse: 'No',
       toolbarColumns: model.tTranslate('Columns', tOpts),
       toolbarFilters: model.tTranslate('Filters', tOpts),
       toolbarExport: model.tTranslate('Export', tOpts)
