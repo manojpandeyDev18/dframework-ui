@@ -856,10 +856,10 @@ const GridBase = memo(({
 
                 <GridToolbarContainer {...props}>
                     {effectivePermissions.showColumnsOrder && (
-                        <GridToolbarColumnsButton tTranslate={model.tTranslate} tOpts={tOpts} />
+                        <GridToolbarColumnsButton />
                     )}
                     {effectivePermissions.filter && (<>
-                        <GridToolbarFilterButton tTranslate={model.tTranslate} tOpts={tOpts} />
+                        <GridToolbarFilterButton />
                         <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{model.tTranslate("CLEAR FILTER", tOpts)}</Button>
                     </>)}
 
