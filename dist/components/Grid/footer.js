@@ -11,6 +11,7 @@ require("core-js/modules/es.regexp.test.js");
 require("core-js/modules/web.dom-collections.iterator.js");
 var _xDataGridPremium = require("@mui/x-data-grid-premium");
 var _Box = _interopRequireDefault(require("@mui/material/Box"));
+var _reactI18next = require("react-i18next");
 var _Typography = _interopRequireDefault(require("@mui/material/Typography"));
 var _TextField = _interopRequireDefault(require("@mui/material/TextField"));
 var _Button = _interopRequireDefault(require("@mui/material/Button"));
@@ -22,13 +23,22 @@ function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e
 const Footer = _ref => {
   let {
     pagination,
-    apiRef
+    apiRef,
+    tTranslate
   } = _ref;
   const page = apiRef.current.state.pagination.paginationModel.page;
   const rowsPerPage = apiRef.current.state.pagination.paginationModel.pageSize;
   const totalRows = apiRef.current.state.rows.totalRowCount;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
   const [pageNumber, setPageNumber] = (0, _react.useState)(page + 1);
+  const {
+    t: translate,
+    i18n
+  } = (0, _reactI18next.useTranslation)();
+  const tOpts = {
+    t: translate,
+    i18n
+  };
   const {
     useLocalization
   } = (0, _StateProvider.useStateContext)();
@@ -70,7 +80,7 @@ const Footer = _ref => {
     }
   }, pagination && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_Typography.default, {
     variant: "p"
-  }, getLocalizedString('Jumptopage'), ":"), /*#__PURE__*/_react.default.createElement(_TextField.default, {
+  }, tTranslate('Jump to page', tOpts), ":"), /*#__PURE__*/_react.default.createElement(_TextField.default, {
     sx: {
       width: 70,
       pl: 1
@@ -86,6 +96,6 @@ const Footer = _ref => {
     disabled: !totalRows,
     size: "small",
     onClick: onPageChange
-  }, getLocalizedString('Go')))), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridFooter, null));
+  }, tTranslate('Go', tOpts)))), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridFooter, null));
 };
 exports.Footer = Footer;

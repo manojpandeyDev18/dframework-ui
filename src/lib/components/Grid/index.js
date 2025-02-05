@@ -15,6 +15,7 @@ import CopyIcon from '@mui/icons-material/FileCopy';
 import ArticleIcon from '@mui/icons-material/Article';
 import EditIcon from '@mui/icons-material/Edit';
 import FilterListOffIcon from '@mui/icons-material/FilterListOff';
+import { useTranslation } from 'react-i18next';
 import {
     GridActionsCellItem,
     useGridApiRef
@@ -96,7 +97,7 @@ const convertDefaultSort = (defaultSort) => {
     }
     return orderBy;
 };
-const ExportMenuItem = ({ handleExport, contentType, type, isPivotExport = false }) => {
+const ExportMenuItem = ({ tTranslate, tOpts, handleExport, contentType, type, isPivotExport = false }) => {
     return (
         <MenuItem
             onClick={handleExport}
@@ -104,7 +105,7 @@ const ExportMenuItem = ({ handleExport, contentType, type, isPivotExport = false
             data-content-type={contentType}
             data-is-pivot-export={isPivotExport}
         >
-            {"Export"} {type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()}
+            {tTranslate("Export", tOpts)} {type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()}
         </MenuItem>
     );
 };
@@ -192,6 +193,8 @@ const GridBase = memo(({
     const [isDeleting, setIsDeleting] = useState(false);
     const [record, setRecord] = useState(null);
     const snackbar = useSnackbar();
+    const { t: translate, i18n } = useTranslation()
+    const tOpts = { t: translate, i18n };
     const isClient = model.isClient === true ? 'client' : 'server';
     const [errorMessage, setErrorMessage] = useState('');
     const [sortModel, setSortModel] = useState(convertDefaultSort(defaultSort || model?.defaultSort));
@@ -435,7 +438,7 @@ const GridBase = memo(({
             if (column.link) {
                 overrides.cellClassName = "mui-grid-linkColumn";
             }
-            finalColumns.push({ headerName: column.headerName || column.label, ...column, ...overrides });
+            finalColumns.push({ headerName: model.tTranslate(column.headerName || column.label, tOpts), ...column, ...overrides });
             if (column.pinned) {
                 pinnedColumns[column.pinned === 'right' ? 'right' : 'left'].push(column.field);
             }
@@ -853,18 +856,18 @@ const GridBase = memo(({
 
                 <GridToolbarContainer {...props}>
                     {effectivePermissions.showColumnsOrder && (
-                        <GridToolbarColumnsButton />
+                        <GridToolbarColumnsButton tTranslate={model.tTranslate} tOpts={tOpts} />
                     )}
                     {effectivePermissions.filter && (<>
-                        <GridToolbarFilterButton />
-                        <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
+                        <GridToolbarFilterButton tTranslate={model.tTranslate} tOpts={tOpts} />
+                        <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{model.tTranslate("CLEAR FILTER", tOpts)}</Button>
                     </>)}
 
                     {effectivePermissions.export && (
-                        <CustomExportButton handleExport={handleExport} showPivotExportBtn={model?.showPivotExportBtn} showOnlyExcelExport={model.showOnlyExcelExport} />
+                        <CustomExportButton tTranslate={model.tTranslate} tOpts={tOpts} handleExport={handleExport} showPivotExportBtn={model?.showPivotExportBtn} showOnlyExcelExport={model.showOnlyExcelExport} />
                     )}
                     {model.preferenceId &&
-                        <GridPreferences preferenceName={model.preferenceId} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                        <GridPreferences tTranslate={model.tTranslate} preferenceName={model.preferenceId} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                     }
                 </GridToolbarContainer>
             </div >
@@ -1062,7 +1065,8 @@ const GridBase = memo(({
                         slotProps={{
                             footer: {
                                 pagination: true,
-                                apiRef
+                                apiRef,
+                                tTranslate: model.tTranslate
                             },
                             panel: {
                                 placement: "bottom-end"
@@ -1083,8 +1087,9 @@ const GridBase = memo(({
                             pinnedColumns: pinnedColumns
                         }}
                         localeText={{
-                            filterValueTrue: 'Yes',
-                            filterValueFalse: 'No'
+                            toolbarColumns: model.tTranslate('Columns', tOpts),
+                            toolbarFilters: model.tTranslate('Filters', tOpts),
+                            toolbarExport: model.tTranslate('Export', tOpts),
                         }}
 
                     />
