@@ -605,7 +605,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
         overrides.cellClassName = "mui-grid-linkColumn";
       }
       finalColumns.push(_objectSpread(_objectSpread({
-        headerName: model.tTranslate(column.headerName || column.label, tOpts)
+        headerName: model === null || model === void 0 ? void 0 : model.tTranslate(column.headerName || column.label, tOpts)
       }, column), overrides));
       if (column.pinned) {
         pinnedColumns[column.pinned === 'right' ? 'right' : 'left'].push(column.field);
@@ -1194,14 +1194,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
       startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
       onClick: clearFilters,
       size: "small"
-    }, model.tTranslate("CLEAR FILTER", tOpts))), effectivePermissions.export && /*#__PURE__*/_react.default.createElement(CustomExportButton, {
-      tTranslate: model.tTranslate,
+    }, model === null || model === void 0 ? void 0 : model.tTranslate("CLEAR FILTER", tOpts))), effectivePermissions.export && /*#__PURE__*/_react.default.createElement(CustomExportButton, {
+      tTranslate: model === null || model === void 0 ? void 0 : model.tTranslate,
       tOpts: tOpts,
       handleExport: handleExport,
       showPivotExportBtn: model === null || model === void 0 ? void 0 : model.showPivotExportBtn,
       showOnlyExcelExport: model.showOnlyExcelExport
     }), model.preferenceId && /*#__PURE__*/_react.default.createElement(_GridPreference.default, {
-      tTranslate: model.tTranslate,
+      tTranslate: model === null || model === void 0 ? void 0 : model.tTranslate,
       preferenceName: model.preferenceId,
       gridRef: apiRef,
       columns: gridColumns,
@@ -1453,7 +1453,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
       footer: {
         pagination: true,
         apiRef,
-        tTranslate: model.tTranslate
+        tTranslate: model === null || model === void 0 ? void 0 : model.tTranslate
       },
       panel: {
         placement: "bottom-end"
@@ -1476,9 +1476,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     localeText: {
       filterValueTrue: 'Yes',
       filterValueFalse: 'No',
-      toolbarColumns: model.tTranslate('Columns', tOpts),
-      toolbarFilters: model.tTranslate('Filters', tOpts),
-      toolbarExport: model.tTranslate('Export', tOpts)
+      toolbarColumns: model === null || model === void 0 ? void 0 : model.tTranslate('Columns', tOpts),
+      toolbarFilters: model === null || model === void 0 ? void 0 : model.tTranslate('Filters', tOpts),
+      toolbarExport: model === null || model === void 0 ? void 0 : model.tTranslate('Export', tOpts)
     }
   }), isOrderDetailModalOpen && selectedOrder && model.OrderModal && /*#__PURE__*/_react.default.createElement(model.OrderModal, {
     orderId: selectedOrder.OrderId,

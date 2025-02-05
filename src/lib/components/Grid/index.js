@@ -438,7 +438,7 @@ const GridBase = memo(({
             if (column.link) {
                 overrides.cellClassName = "mui-grid-linkColumn";
             }
-            finalColumns.push({ headerName: model.tTranslate(column.headerName || column.label, tOpts), ...column, ...overrides });
+            finalColumns.push({ headerName: model?.tTranslate(column.headerName || column.label, tOpts), ...column, ...overrides });
             if (column.pinned) {
                 pinnedColumns[column.pinned === 'right' ? 'right' : 'left'].push(column.field);
             }
@@ -860,14 +860,14 @@ const GridBase = memo(({
                     )}
                     {effectivePermissions.filter && (<>
                         <GridToolbarFilterButton />
-                        <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{model.tTranslate("CLEAR FILTER", tOpts)}</Button>
+                        <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{model?.tTranslate("CLEAR FILTER", tOpts)}</Button>
                     </>)}
 
                     {effectivePermissions.export && (
-                        <CustomExportButton tTranslate={model.tTranslate} tOpts={tOpts} handleExport={handleExport} showPivotExportBtn={model?.showPivotExportBtn} showOnlyExcelExport={model.showOnlyExcelExport} />
+                        <CustomExportButton tTranslate={model?.tTranslate} tOpts={tOpts} handleExport={handleExport} showPivotExportBtn={model?.showPivotExportBtn} showOnlyExcelExport={model.showOnlyExcelExport} />
                     )}
                     {model.preferenceId &&
-                        <GridPreferences tTranslate={model.tTranslate} preferenceName={model.preferenceId} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                        <GridPreferences tTranslate={model?.tTranslate} preferenceName={model.preferenceId} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                     }
                 </GridToolbarContainer>
             </div >
@@ -1066,7 +1066,7 @@ const GridBase = memo(({
                             footer: {
                                 pagination: true,
                                 apiRef,
-                                tTranslate: model.tTranslate
+                                tTranslate: model?.tTranslate
                             },
                             panel: {
                                 placement: "bottom-end"
@@ -1089,9 +1089,9 @@ const GridBase = memo(({
                         localeText={{
                             filterValueTrue: 'Yes',
                             filterValueFalse: 'No',
-                            toolbarColumns: model.tTranslate('Columns', tOpts),
-                            toolbarFilters: model.tTranslate('Filters', tOpts),
-                            toolbarExport: model.tTranslate('Export', tOpts),
+                            toolbarColumns: model?.tTranslate('Columns', tOpts),
+                            toolbarFilters: model?.tTranslate('Filters', tOpts),
+                            toolbarExport: model?.tTranslate('Export', tOpts),
                         }}
 
                     />
