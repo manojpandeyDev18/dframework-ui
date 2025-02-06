@@ -28,6 +28,7 @@ var _formik = require("formik");
 var yup = _interopRequireWildcard(require("yup"));
 var _SnackBar = require("../SnackBar");
 var _httpRequest = _interopRequireDefault(require("./httpRequest"));
+var _reactI18next = require("react-i18next");
 var _StateProvider = require("../useRouter/StateProvider");
 var _actions = _interopRequireDefault(require("../useRouter/actions"));
 var _Add = _interopRequireDefault(require("@mui/icons-material/Add"));
@@ -110,6 +111,7 @@ const defaultPrefName = "default";
 const GridPreferences = _ref => {
   var _stateData$gridSettin, _stateData$gridSettin2;
   let {
+    tTranslate,
     preferenceName,
     gridRef,
     columns = [],
@@ -126,6 +128,14 @@ const GridPreferences = _ref => {
   } = (0, _StateProvider.useRouter)();
   const apiRef = (0, _xDataGridPremium.useGridApiRef)();
   const snackbar = (0, _SnackBar.useSnackbar)();
+  const {
+    t: translate,
+    i18n
+  } = (0, _reactI18next.useTranslation)();
+  const tOpts = {
+    t: translate,
+    i18n
+  };
   const [openDialog, setOpenDialog] = (0, _react.useState)(false);
   const [openForm, setOpenForm] = (0, _react.useState)(false);
   const [filteredPrefs, setFilteredPrefs] = (0, _react.useState)([]);
@@ -413,9 +423,9 @@ const GridPreferences = _ref => {
     "aria-haspopup": "true",
     "aria-expanded": menuAnchorEl ? 'true' : undefined,
     onClick: handleOpen,
-    title: "Preferences",
+    title: tTranslate('Preferences', tOpts),
     startIcon: /*#__PURE__*/_react.default.createElement(_Settings.default, null)
-  }, "Preferences ", currentPreference && "(".concat(currentPreference, ")")), /*#__PURE__*/_react.default.createElement(_material.Menu, {
+  }, tTranslate('Preferences', tOpts), " ", currentPreference && "(".concat(currentPreference, ")")), /*#__PURE__*/_react.default.createElement(_material.Menu, {
     id: "grid-preference-menu",
     anchorEl: menuAnchorEl,
     open: !!menuAnchorEl,
@@ -444,12 +454,12 @@ const GridPreferences = _ref => {
     component: _material.ListItemButton,
     dense: true,
     onClick: () => openModal(formTypes.Add)
-  }, /*#__PURE__*/_react.default.createElement(_material.ListItemIcon, null, /*#__PURE__*/_react.default.createElement(_Add.default, null)), "Add Preference"), /*#__PURE__*/_react.default.createElement(_material.MenuItem, {
+  }, /*#__PURE__*/_react.default.createElement(_material.ListItemIcon, null, /*#__PURE__*/_react.default.createElement(_Add.default, null)), tTranslate('Add Preference', tOpts)), /*#__PURE__*/_react.default.createElement(_material.MenuItem, {
     component: _material.ListItemButton,
     dense: true,
     divider: (preferences === null || preferences === void 0 ? void 0 : preferences.length) > 0,
     onClick: () => openModal(formTypes.Manage, false)
-  }, /*#__PURE__*/_react.default.createElement(_material.ListItemIcon, null, /*#__PURE__*/_react.default.createElement(_Settings.default, null)), "Manage Preferences"), preferences === null || preferences === void 0 ? void 0 : preferences.map((ele, key) => {
+  }, /*#__PURE__*/_react.default.createElement(_material.ListItemIcon, null, /*#__PURE__*/_react.default.createElement(_Settings.default, null)), tTranslate('Manage Preferences', tOpts)), preferences === null || preferences === void 0 ? void 0 : preferences.map((ele, key) => {
     const {
       prefName,
       prefDesc,
@@ -479,7 +489,7 @@ const GridPreferences = _ref => {
     columnGap: 2
   }, /*#__PURE__*/_react.default.createElement(_material.Typography, {
     variant: "h5"
-  }, formType, " Preference", formType === formTypes.Manage ? 's' : ''))), /*#__PURE__*/_react.default.createElement(_material.DialogContent, null, openForm && /*#__PURE__*/_react.default.createElement(_material.Grid, {
+  }, formType, " ", tTranslate('Preference', tOpts), formType === formTypes.Manage ? 's' : ''))), /*#__PURE__*/_react.default.createElement(_material.DialogContent, null, openForm && /*#__PURE__*/_react.default.createElement(_material.Grid, {
     component: 'form',
     onSubmit: formik.handleSubmit,
     rowGap: 2,
@@ -500,7 +510,7 @@ const GridPreferences = _ref => {
     variant: "outlined",
     size: "small",
     margin: "dense",
-    label: "Preference Name",
+    label: tTranslate('Preference Name', tOpts),
     name: 'prefName',
     onChange: formik.handleChange,
     error: !!formik.errors.prefName,
@@ -518,7 +528,7 @@ const GridPreferences = _ref => {
     rows: 2,
     size: "small",
     margin: "dense",
-    label: "Preference Description",
+    label: tTranslate('Preference Description', tOpts),
     name: 'prefDesc',
     onChange: formik.handleChange,
     error: !!formik.errors.prefDesc,
@@ -533,7 +543,7 @@ const GridPreferences = _ref => {
       name: 'isDefault',
       onChange: formik.handleChange
     }),
-    label: "Default"
+    label: tTranslate('Default', tOpts)
   })), /*#__PURE__*/_react.default.createElement(_material.Grid, {
     item: true,
     xs: 12
@@ -550,7 +560,7 @@ const GridPreferences = _ref => {
     color: "primary",
     variant: "contained",
     disableElevation: true
-  }, "Save"), /*#__PURE__*/_react.default.createElement(_material.Button, {
+  }, tTranslate('Save', tOpts)), /*#__PURE__*/_react.default.createElement(_material.Button, {
     type: "button",
     startIcon: /*#__PURE__*/_react.default.createElement(_Close.default, null),
     color: "error",
@@ -558,7 +568,7 @@ const GridPreferences = _ref => {
     size: "small",
     onClick: handleDialogClose,
     disableElevation: true
-  }, "Close")))), openDialog && formType === formTypes.Manage && /*#__PURE__*/_react.default.createElement(_material.Grid, {
+  }, tTranslate('Close', tOpts))))), openDialog && formType === formTypes.Manage && /*#__PURE__*/_react.default.createElement(_material.Grid, {
     container: true
   }, /*#__PURE__*/_react.default.createElement(_material.Grid, {
     item: true,
@@ -599,7 +609,7 @@ const GridPreferences = _ref => {
     size: "small",
     onClick: () => closeModal(),
     disableElevation: true
-  }, "Close"))), /*#__PURE__*/_react.default.createElement(_material.Dialog, {
+  }, tTranslate('Close', tOpts)))), /*#__PURE__*/_react.default.createElement(_material.Dialog, {
     open: openPreferenceExistsModal,
     maxWidth: "xs",
     fullWidth: true
@@ -607,7 +617,7 @@ const GridPreferences = _ref => {
     sx: {
       fontSize: '16px'
     }
-  }, "\"", prefName, "\" name already in use, please use another name."), /*#__PURE__*/_react.default.createElement(_material.DialogActions, {
+  }, "\"", prefName, "\" ", tTranslate('name already in use, please use another name.', tOpts)), /*#__PURE__*/_react.default.createElement(_material.DialogActions, {
     sx: {
       justifyContent: 'center',
       marginTop: '4%'
@@ -618,17 +628,17 @@ const GridPreferences = _ref => {
     size: "small",
     onClick: () => setOpenPreferenceExistsModal(false),
     disableElevation: true
-  }, "Ok"))), /*#__PURE__*/_react.default.createElement(_material.Dialog, {
+  }, tTranslate('Ok', tOpts)))), /*#__PURE__*/_react.default.createElement(_material.Dialog, {
     open: openConfirmDeleteDialog.preferenceName,
     maxWidth: "sm",
     fullWidth: true
-  }, /*#__PURE__*/_react.default.createElement(_material.DialogTitle, null, "Confirm delete"), /*#__PURE__*/_react.default.createElement(_material.DialogContent, null, /*#__PURE__*/_react.default.createElement(_material.DialogContentText, {
+  }, /*#__PURE__*/_react.default.createElement(_material.DialogTitle, null, tTranslate('Confirm delete', tOpts)), /*#__PURE__*/_react.default.createElement(_material.DialogContent, null, /*#__PURE__*/_react.default.createElement(_material.DialogContentText, {
     id: "alert-dialog-description"
-  }, "Are you sure you wish to delete \"", openConfirmDeleteDialog.preferenceName, "\"")), /*#__PURE__*/_react.default.createElement(_material.DialogActions, null, /*#__PURE__*/_react.default.createElement(_material.Button, {
+  }, tTranslate('Are you sure you wish to delete', tOpts), " \"", openConfirmDeleteDialog.preferenceName, "\"")), /*#__PURE__*/_react.default.createElement(_material.DialogActions, null, /*#__PURE__*/_react.default.createElement(_material.Button, {
     onClick: () => setOpenConfirmDeleteDialog({})
-  }, "Cancel"), /*#__PURE__*/_react.default.createElement(_material.Button, {
+  }, tTranslate('Cancel', tOpts)), /*#__PURE__*/_react.default.createElement(_material.Button, {
     onClick: confirmDeletePreference,
     autoFocus: true
-  }, "Ok"))));
+  }, tTranslate('Ok', tOpts)))));
 };
 var _default = exports.default = GridPreferences;
