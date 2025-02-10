@@ -35,12 +35,6 @@ Object.defineProperty(exports, "MuiTypography", {
     return _Typography.default;
   }
 });
-Object.defineProperty(exports, "PageTitle", {
-  enumerable: true,
-  get: function get() {
-    return _PageTitle.default;
-  }
-});
 Object.defineProperty(exports, "ReadonlyPanel", {
   enumerable: true,
   get: function get() {
@@ -172,7 +166,6 @@ var _Dialog = require("./components/Dialog");
 var _index = _interopRequireDefault(require("./components/Grid/index"));
 var _uiModels = require("./components/Grid/ui-models");
 var _HelpModal = _interopRequireDefault(require("./components/HelpModal"));
-var _PageTitle = _interopRequireDefault(require("./components/PageTitle"));
 var _Typography = _interopRequireDefault(require("./components/Typography"));
 var _localization = _interopRequireWildcard(require("./components/mui/locale/localization"));
 var _daDK = require("./components/mui/locale/data-grid/daDK");

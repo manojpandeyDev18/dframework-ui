@@ -342,8 +342,7 @@ const Form = _ref => {
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_PageTitle.default, {
     title: formTitle,
     showBreadcrumbs: !hideBreadcrumb,
-    breadcrumbs: breadcrumbs,
-    model: model
+    breadcrumbs: breadcrumbs
   }), /*#__PURE__*/_react.default.createElement(ActiveStepContext.Provider, {
     value: {
       activeStep,

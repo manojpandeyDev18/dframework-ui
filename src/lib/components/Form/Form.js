@@ -294,7 +294,6 @@ const Form = ({
         title={formTitle}
         showBreadcrumbs={!hideBreadcrumb}
         breadcrumbs={breadcrumbs}
-        model={model}
       />
       <ActiveStepContext.Provider value={{ activeStep, setActiveStep }}>
         <Paper sx={{ padding: 2, ...sx }}>
