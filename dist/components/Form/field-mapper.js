@@ -121,7 +121,6 @@ const fieldMappers = exports.fieldMappers = {
   "date": _date.default,
   "dateTime": _dateTime.default,
   "time": _time.default,
-  "grid-transfer": _gridTransfer.default,
   "oneToMany": _gridTransfer.default,
   "radio": _radio.default,
   "autocomplete": _autocomplete.default,
@@ -283,7 +282,7 @@ const RenderColumns = _ref3 => {
       Component,
       column,
       field,
-      fieldLabel,
+      label,
       otherProps
     } = _ref4;
     let isGridComponent = typeof column.relation === 'function';
@@ -313,7 +312,7 @@ const RenderColumns = _ref3 => {
       mode: mode,
       column: column,
       field: field,
-      fieldLabel: fieldLabel,
+      label: label,
       formik: formik,
       data: data,
       onChange: onChange,
@@ -338,13 +337,13 @@ const getFormConfig = function getFormConfig(_ref5) {
   }
   for (const column of columns) {
     let fieldType = column.type;
-    if (column.fieldLabel === null) {
-      /* If the field should not be shown in form mode, specify fieldLabel as null */
+    if (column.label === null) {
+      /* If the field should not be shown in form mode, specify label as null */
       continue;
     }
     const {
       field,
-      fieldLabel = column.header,
+      label,
       tab
     } = column;
     const otherProps = {};
@@ -359,7 +358,7 @@ const getFormConfig = function getFormConfig(_ref5) {
     target.push({
       Component,
       field,
-      fieldLabel,
+      label,
       column: _objectSpread(_objectSpread({}, column), {}, {
         readOnly: searchParams.has('showRelation') || column.readOnly
       }),

@@ -36,9 +36,9 @@ const Form = ({
 }) => {
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
-  const { relations = [], hideRelationsInAdd = false } = model;
-  const navigateBack =
-    model.navigateBack || pathname.substring(0, pathname.lastIndexOf("/")); // removes the last segment
+  const { relations = [] } = model;
+  const navigateBack = (window.history && window.history?.length > 1) ? () => window.history.back()
+    : () => pathname.substring(0, pathname.lastIndexOf("/"));  // removes the last segment
   const { dispatchData, stateData } = useStateContext();
   const { id: idWithOptions } = useParams() || getParams;
   const id = idWithOptions?.split("-")[0];
@@ -117,7 +117,7 @@ const Form = ({
         "An error occured, please try after some time.",
         error
       );
-      navigate(navigateBack.includes("window.history") ? window.history.back() : navigateBack);
+      navigate(navigateBack());
     }
   };
   useEffect(() => {
@@ -152,7 +152,7 @@ const Form = ({
               return window.location.reload();
             }
             snackbar.showMessage("Record Updated Successfully.");
-            navigate(navigateBack.includes("window.history") ? window.history.back() : navigateBack);
+            navigate(navigateBack());
           }
         })
         .catch((err) => {
@@ -170,7 +170,7 @@ const Form = ({
   const handleDiscardChanges = () => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
-    navigate(navigateBack.includes("window.history") ? window.history.back() : navigateBack);
+    navigate(navigateBack());
   };
 
   const warnUnsavedChanges = () => {
@@ -181,7 +181,7 @@ const Form = ({
 
   const errorOnLoad = function (title, error) {
     snackbar.showError(title, error);
-    navigate(navigateBack.includes("window.history") ? window.history.back() : navigateBack);
+    navigate(navigateBack());
   };
 
   const setActiveRecord = function ({ id, title, record, lookups }) {
@@ -220,7 +220,7 @@ const Form = ({
       warnUnsavedChanges();
       event.preventDefault();
     } else {
-      navigate(navigateBack.includes("window.history") ? window.history.back() : navigateBack);
+      navigate(navigateBack());
       event.preventDefault();
     }
   };
@@ -236,7 +236,7 @@ const Form = ({
       });
       if (response === true) {
         snackbar.showMessage("Record Deleted Successfully.");
-        navigate(navigateBack.includes("window.history") ? window.history.back() : navigateBack);
+        navigate(navigateBack());
       }
     } catch (error) {
       snackbar?.showError("An error occured, please try after some time.");
@@ -284,7 +284,7 @@ const Form = ({
     { text: formTitle },
     { text: id === "0" ? "New" : "Update" }
   ];
-  const showRelations = !(hideRelationsInAdd && id == 0) && Boolean(relations.length);
+  const showRelations = (id > 0) && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
   const recordEditable = !("canEdit" in data) || data.canEdit;
   const readOnlyRelations = !recordEditable || data.readOnlyRelations;
