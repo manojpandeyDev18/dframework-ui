@@ -24,12 +24,11 @@ function PageTitle(props) {
     RightComponent = null,
     mobileRightComponent,
     title = "",
-    titleDescription = "",
     titleClass = "text-theme-blue text-max-width",
     showTitleInfo,
     showBreadcrumbs,
     breadcrumbs = [],
-    nestedGrid = false,
+    enableGoBack = false,
     breadcrumbColor,
   } = props;
   const [showTooltip, setShowTooltip] = useState(false);
@@ -81,7 +80,7 @@ function PageTitle(props) {
                 </Typography>)}
               </Breadcrumbs>
             </Grid>
-            {(breadcrumbs.length > 1 || nestedGrid) && <Grid item sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
+            {(breadcrumbs.length > 1 || enableGoBack) && <Grid item sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
               <Button variant="contained" onClick={handleBack}>Back</Button>
             </Grid>}
             <Grid item sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -113,7 +112,7 @@ function PageTitle(props) {
                 </h1>
               </div>
             ) : (
-              <div className={`${titleDescription ? "mt-2" : ""}`}>
+              <div>
                 <div style={{ display: isMobile ? 'block' : "flex", alignItems: "center" }}>
                   <div style={{ flex: "1 0 auto" }}>
                     {showTitleInfo ? (
@@ -124,14 +123,6 @@ function PageTitle(props) {
                         variant="p"
                         text={titleHeading}
                         name={name}
-                      />
-                    )}
-                    {titleDescription && (
-                      <MuiTypography
-                        className={`${titleClass} page-text-description`}
-                        variant="p"
-                        component="p"
-                        text={titleDescription}
                       />
                     )}
                   </div>
