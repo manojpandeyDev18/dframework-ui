@@ -401,6 +401,11 @@ const GridBase = memo(({
             if (parent && column.lookup === parent) {
                 continue;
             }
+
+            if (column.excludeOnGrid) {
+                continue;
+            }
+
             if (column.type === 'oneToMany') {
                 if (column.countInList === false) {
                     continue;
@@ -904,7 +909,7 @@ const GridBase = memo(({
         fetchData(isPivotExport ? 'export' : undefined, undefined, e.target.dataset.contentType, columns, isPivotExport, isElasticScreen);
     };
     useEffect(() => {
-        if (url) {
+        if (url && isGridPreferenceFetched) {
             fetchData();
         }
     }, [paginationModel, sortModel, filterModel, api, gridColumns, model, parentFilters, assigned, selected, available, chartFilters, isGridPreferenceFetched, reRenderKey, url])

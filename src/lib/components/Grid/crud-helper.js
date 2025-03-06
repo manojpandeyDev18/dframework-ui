@@ -119,6 +119,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         return;
     }
     try {
+        setIsLoading(true);
         let params = {
             url,
             method: 'POST',
