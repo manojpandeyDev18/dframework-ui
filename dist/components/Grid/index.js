@@ -21,6 +21,7 @@ require("core-js/modules/es.string.replace.js");
 require("core-js/modules/es.string.search.js");
 require("core-js/modules/es.string.trim.js");
 require("core-js/modules/esnext.iterator.constructor.js");
+require("core-js/modules/esnext.iterator.every.js");
 require("core-js/modules/esnext.iterator.filter.js");
 require("core-js/modules/esnext.iterator.find.js");
 require("core-js/modules/esnext.iterator.for-each.js");
@@ -83,8 +84,8 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var s = Object.getOwnPropertySymbols(e); for (r = 0; r < s.length; r++) o = s[r], t.includes(o) || {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
-function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (e.includes(n)) continue; t[n] = r[n]; } return t; }
+function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
+function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -587,6 +588,25 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
           })) : undefined
         }));
       }
+      if (column.type === 'boolean') {
+        const booleanOperators = (0, _xDataGridPremium.getGridBooleanOperators)();
+        overrides.filterOperators = booleanOperators.map(operator => _objectSpread(_objectSpread({}, operator), {}, {
+          InputComponent: operator.InputComponent ? params => /*#__PURE__*/_react.default.createElement(_CustomDropdownmenu.default, _extends({
+            column: _objectSpread(_objectSpread({}, column), {}, {
+              customLookup: [{
+                value: true,
+                label: 'Yes'
+              }, {
+                value: false,
+                label: 'No'
+              }],
+              dataRef: dataRef
+            })
+          }, params, {
+            autoHighlight: true
+          })) : undefined
+        }));
+      }
       if (column.linkTo) {
         overrides.cellClassName = "mui-grid-linkColumn";
       }
@@ -795,6 +815,10 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     }
     if (additionalFilters) {
       finalFilters.items = [...finalFilters.items, ...additionalFilters];
+    }
+    const isValidFilters = !finalFilters.items.length || finalFilters.items.every(item => item.hasOwnProperty('value') && item.value !== undefined);
+    if (!isValidFilters) {
+      return;
     }
     (0, _crudHelper.getList)({
       action,
@@ -1068,7 +1092,10 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
         }
       }).catch(err => {
         snackbar.showError("An error occured, please try after some time.second", err);
-      }).finally(() => setIsLoading(false));
+      }).finally(() => {
+        selectedSet.current.clear();
+        setIsLoading(false);
+      });
       return;
     }
     if (typeof onAddOverride === 'function') {
@@ -1240,7 +1267,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
     fetchData(isPivotExport ? 'export' : undefined, undefined, e.target.dataset.contentType, columns, isPivotExport, isElasticScreen);
   };
   (0, _react.useEffect)(() => {
-    if (url) {
+    if (url && isGridPreferenceFetched) {
       fetchData();
     }
   }, [paginationModel, sortModel, filterModel, api, gridColumns, model, parentFilters, assigned, selected, available, chartFilters, isGridPreferenceFetched, reRenderKey, url]);
@@ -1327,6 +1354,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref2 => {
         if (isKeywordField) {
           item.filterField = "".concat(item.field, ".keyword");
         }
+        item.value = ['isEmpty', 'isNotEmpty'].includes(operator) ? null : value;
         return _objectSpread(_objectSpread({}, item), {}, {
           type: column.type
         });
