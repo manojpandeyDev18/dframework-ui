@@ -402,11 +402,6 @@ const GridBase = memo(({
             if (parent && column.lookup === parent) {
                 continue;
             }
-
-            if (column.excludeOnGrid) {
-                continue;
-            }
-
             if (column.type === 'oneToMany') {
                 if (column.countInList === false) {
                     continue;
