@@ -9,6 +9,7 @@ import {
     getGridDateOperators,
     GRID_CHECKBOX_SELECTION_COL_DEF,
     getGridStringOperators,
+    getGridBooleanOperators
 } from '@mui/x-data-grid-premium';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CopyIcon from '@mui/icons-material/FileCopy';
@@ -430,6 +431,26 @@ const GridBase = memo(({
                             }}
                             {...params}
                             autoHighlight
+                        />
+                    ) : undefined
+                }));
+            }
+            if(column.type === 'boolean') {
+                const booleanOperators = getGridBooleanOperators();
+                overrides.filterOperators = booleanOperators.map((operator) => ({
+                    ...operator,
+                    InputComponent: operator.InputComponent ? (params) => (
+                        <CustomDropdownmenu 
+                        column={{
+                            ...column,
+                            customLookup: [
+                                { value: true, label: 'Yes' },
+                                { value: false, label: 'No' },
+                            ],
+                            dataRef: dataRef
+                        }}
+                        {...params}
+                        autoHighlight
                         />
                     ) : undefined
                 }));
@@ -977,6 +998,7 @@ const GridBase = memo(({
                 if (isKeywordField) {
                     item.filterField = `${item.field}.keyword`;
                 }
+                item.value = ['isEmpty', 'isNotEmpty'].includes(operator) ? null : value;
                 return { ...item, type: column.type };
             }
             const updatedValue = isNumber ? null : value;
