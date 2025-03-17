@@ -23,7 +23,6 @@ function PageTitle(props) {
     RightComponent = null,
     mobileRightComponent,
     title = "",
-    titleDescription = "",
     titleClass = "text-theme-blue text-max-width",
     showBreadcrumbs,
     breadcrumbs = [],
@@ -99,9 +98,7 @@ function PageTitle(props) {
     fontSize: "inherit"
   })))), /*#__PURE__*/_react.default.createElement(_core.Box, {
     className: "app-page-title--first"
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    className: "".concat(titleDescription ? "mt-2" : "")
-  }, /*#__PURE__*/_react.default.createElement("div", {
+  }, /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement("div", {
     style: {
       display: isMobile ? 'block' : "flex",
       alignItems: "center"
@@ -115,11 +112,6 @@ function PageTitle(props) {
     variant: "p",
     text: titleHeading,
     name: name
-  }), titleDescription && /*#__PURE__*/_react.default.createElement(_Typography.default, {
-    className: "".concat(titleClass, " page-text-description"),
-    variant: "p",
-    component: "p",
-    text: titleDescription
   }))))), !isMobile && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_core.Box, null, " ", RightComponent && /*#__PURE__*/_react.default.createElement(RightComponent, null), " "), /*#__PURE__*/_react.default.createElement(_core.Box, null, " ", mobileRightComponent, " ")))), /*#__PURE__*/_react.default.createElement(_HelpModal.default, null), " "));
 }
 var _default = exports.default = (0, _reactI18next.withTranslation)()(PageTitle);

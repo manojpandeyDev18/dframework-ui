@@ -2,7 +2,7 @@ import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { useStateContext } from '../../useRouter/StateProvider';
-const field = ({ column, field, fieldLabel, formik, otherProps, classes, fieldConfigs, model, mode }) => {
+const field = ({ column, field, formik, otherProps, classes, fieldConfigs, model, mode }) => {
     let isDisabled;
     const { systemDateTimeFormat, stateData } = useStateContext(); //provider
     if (mode !== 'copy') {
@@ -33,8 +33,8 @@ const field = ({ column, field, fieldLabel, formik, otherProps, classes, fieldCo
         }}
         onBlur={formik.handleBlur}
         helperText={formik.touched[field] && formik.errors[field]}
-        disablePast={column?.disablePast}
-        disableFuture={column?.disableFuture}
+        minDate={column.min}
+        maxDate={column.max}
         disabled={isDisabled}
         shouldDisableDate={date => shouldDisableDate ? shouldDisableDate(date, formik) : false}
         slotProps={{ textField: { fullWidth: true, helperText, ...props } }}
