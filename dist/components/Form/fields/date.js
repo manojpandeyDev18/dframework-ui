@@ -26,7 +26,6 @@ const field = _ref => {
   let {
     column,
     field,
-    fieldLabel,
     formik,
     otherProps,
     classes,
@@ -69,8 +68,8 @@ const field = _ref => {
     },
     onBlur: formik.handleBlur,
     helperText: formik.touched[field] && formik.errors[field],
-    disablePast: column === null || column === void 0 ? void 0 : column.disablePast,
-    disableFuture: column === null || column === void 0 ? void 0 : column.disableFuture,
+    minDate: column.min,
+    maxDate: column.max,
     disabled: isDisabled,
     shouldDisableDate: date => _shouldDisableDate ? _shouldDisableDate(date, formik) : false,
     slotProps: {

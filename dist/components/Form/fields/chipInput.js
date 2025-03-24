@@ -32,7 +32,6 @@ const Field = _ref => {
     isAdd,
     column,
     field,
-    fieldLabel,
     formik,
     lookups,
     data,
