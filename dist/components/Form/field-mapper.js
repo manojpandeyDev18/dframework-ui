@@ -26,6 +26,7 @@ Object.defineProperty(exports, "GridTransfer", {
     return _gridTransfer.default;
   }
 });
+exports.ImportantSpan = void 0;
 Object.defineProperty(exports, "NumberField", {
   enumerable: true,
   get: function get() {
@@ -150,6 +151,8 @@ const useStyles = (0, _core.makeStyles)({
     marginTop: "20px"
   }
 });
+const ImportantSpan = exports.ImportantSpan = _styled.default.span(_templateObject || (_templateObject = _taggedTemplateLiteral([" color: red !important; "]))); // * Style Css
+
 const RenderSteps = _ref => {
   let {
     tabColumns,
@@ -275,8 +278,6 @@ const RenderColumns = _ref3 => {
   if (!(formElements !== null && formElements !== void 0 && formElements.length)) {
     return null;
   }
-  const ImportantSpan = _styled.default.span(_templateObject || (_templateObject = _taggedTemplateLiteral([" color: red !important; "]))); // * Style Css
-
   return /*#__PURE__*/React.createElement(React.Fragment, null, formElements.map((_ref4, key) => {
     let {
       Component,

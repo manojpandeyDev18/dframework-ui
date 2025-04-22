@@ -55,7 +55,6 @@ const Form = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const snackbar = useSnackbar();
   const combos = {};
-  const [validationSchema, setValidationSchema] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -136,7 +135,6 @@ const Form = ({
   };
   useEffect(() => {
     if (url) {
-      setValidationSchema(model.getValidationSchema({ id, snackbar }));
       getRecordAndLookups({});
     }
   }, [id, idWithOptions, model, url]);
@@ -145,22 +143,28 @@ const Form = ({
   { ...model.initialValues, ...data,...baseSaveData } 
   : { ...baseSaveData, ...model.initialValues, ...data };
 
+  const validationSchema = useMemo(() => model.getValidationSchema({ id, snackbar, data: initialValues }), [id, initialValues]);
   const formik = useFormik({
     enableReinitialize: true,
     initialValues,
     validationSchema: validationSchema,
     validateOnBlur: false,
     onSubmit: async (values, { resetForm }) => {
+      const formValues = {};
       for (const key in values) {
+        formValues[key] = values[key]
         if (typeof values[key] === "string") {
-          values[key] = values[key].trim();
+          formValues[key] = values[key].trim();
+        }
+        if(values[key] && typeof values[key] === "object") {
+          formValues[key] = JSON.stringify(values[key]);
         }
       }
       setIsLoading(true);
       saveRecord({
         id,
         api: gridApi,
-        values,
+        values: formValues,
         setIsLoading,
         setError: snackbar.showError,
       })
@@ -289,8 +293,11 @@ const Form = ({
     const { errors } = formik;
     formik.handleSubmit();
     const fieldName = Object.keys(errors)[0];
-    const errorMessage = errors[fieldName];
+    let errorMessage = errors[fieldName];
     if (errorMessage) {
+      if(typeof errorMessage === 'object') {
+        errorMessage = Object.values(errorMessage).join(' , ');
+      }
       snackbar.showError(errorMessage, null, "error");
     }
     const fieldConfig = model.columns.find(

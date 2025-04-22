@@ -2,27 +2,46 @@ import * as React from 'react';
 import FormControl from '@mui/material/FormControl';
 import Input from '@mui/material/Input';
 import Typography from '@mui/material/Typography';
+import { FormHelperText } from '@mui/material';
+import Checkbox from '@mui/material/Checkbox';
 import debounce from 'lodash/debounce';
+import { ImportantSpan } from '../field-mapper';
 
 const Field = ({ field, formik }) => {
-    const [state, setState] = React.useState({});
+    const [jsonData, setJsonData] = React.useState({});
+    const validations = React.useMemo(() => {
+        const value = formik.values[`${field}Validations`];
+        return typeof value === 'string' ? JSON.parse(value || '[]') : value
+    }, [formik.values[field]]);
+
+    const json = React.useMemo(() => {
+        const value = formik.values[field];
+        return typeof value === 'string' ? JSON.parse(value): value
+    }, [formik.values[field]]);
+
     React.useEffect(() => {
-        if (!formik.values[field]) return;
-        const inputJSON = JSON.parse(formik.values[field]);
-        setState(inputJSON);
+        let inputJSON = {};
+        if (!json && !validations) return;
+        else if(validations && !json) {
+            Object.keys(validations).forEach(key => inputJSON[key] = validations[key].defaultValue || '');
+        } else {
+            inputJSON = json;
+        }
+        setJsonData(inputJSON);
+        handleDebouncedChange(inputJSON);
     }, [formik.values[field]]);
 
     const handleDebouncedChange = React.useMemo(
         () =>
-            debounce((newState) => {
-                formik.setFieldValue(field, JSON.stringify(newState));
+            debounce((jsonData) => {
+                formik.setFieldValue(field, jsonData);
             }, 300),
-        [formik, field]
+        [field]
     );
 
     const handleChange = (key, value) => {
-        const updatedState = { ...state, [key]: value };
-        setState(updatedState);
+        const updatedState = { ...jsonData, [key]: value };
+        setJsonData(updatedState);
         handleDebouncedChange(updatedState);
     };
 
@@ -40,29 +59,47 @@ const Field = ({ field, formik }) => {
             error={formik.touched[field] && Boolean(formik.errors[field])}
             style={{ marginBottom: '1rem' }}
         >
-            {Object.keys(state).map((key) => (
-                <div
-                    key={key}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: '0.5rem',
-                    }}
-                >
-                    <Typography variant="body1" sx={{ width: "180px", marginRight: 2 }}>
-                        {key} :
-                    </Typography>
-                    <Input
-                        id={key}
-                        name={key}
-                        value={state[key]}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                        fullWidth
-                        style={{ flex: 2 }}
-                    />
-                </div>
-            ))}
+            {Object.keys(jsonData).map((key) => {
+                const validationObj = validations.find((obj) => obj.field === key) || {};
+                const { required, min, max } = validationObj;
+                let { type } = validationObj;
+                return (
+                    <div
+                        key={key}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-start',
+                            marginBottom: '0.5rem',
+                        }}
+                    >
+                        <Typography variant="body1" sx={{ width: "180px", marginRight: 2 }}>
+                            {key} {required ?  <ImportantSpan>*</ImportantSpan>: <></>}:
+                        </Typography>
+                        {type === 'boolean' ?
+                            <Checkbox
+                                checked={jsonData[key]}
+                                onChange={(e) => handleChange(key, e.target.checked)}
+                                style={{ paddingLeft: 0 }}
+                            /> :
+                            <Input
+                                id={key}
+                                name={key}
+                                value={jsonData[key]}
+                                onChange={(e) => handleChange(key, e.target.value)}
+                                fullWidth
+                                style={{ flex: 2 }}
+                                required={!!required}
+                                type={type || 'text'}
+                                inputProps={{
+                                    ...(min !== undefined && { min }),
+                                    ...(max !== undefined && { max }),
+                                }}
+                            />}
+                    </div>
+                )
+            })}
+            {formik.touched[field] && formik.errors[field] && <FormHelperText>{typeof formik.errors[field] === 'object' ? Object.values(formik.errors[field]).join(' , ') : formik.errors[field]}</FormHelperText>}
         </FormControl>
     );
 };

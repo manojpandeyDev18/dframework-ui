@@ -3,7 +3,6 @@
 require("core-js/modules/es.array.push.js");
 require("core-js/modules/es.weak-map.js");
 require("core-js/modules/esnext.iterator.filter.js");
-require("core-js/modules/esnext.iterator.for-each.js");
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -18,6 +17,7 @@ require("core-js/modules/es.string.replace-all.js");
 require("core-js/modules/es.string.trim.js");
 require("core-js/modules/esnext.iterator.constructor.js");
 require("core-js/modules/esnext.iterator.find.js");
+require("core-js/modules/esnext.iterator.for-each.js");
 require("core-js/modules/web.dom-collections.iterator.js");
 var _index = _interopRequireDefault(require("./index"));
 var _react = _interopRequireDefault(require("react"));
@@ -136,111 +136,144 @@ class UiModel {
     this.columnVisibilityModel = columnVisibilityModel;
     this.defaultValues = defaultValues;
   }
-  getValidationSchema(_ref4) {
+  getFieldValidation(_ref4) {
     let {
-      id
+      id,
+      column,
+      data = {}
     } = _ref4;
+    const {
+      formLabel,
+      field,
+      type = 'string',
+      requiredIfNew = false,
+      required = false,
+      min = '',
+      max = ''
+    } = column;
+    let config;
+    const jsonValidationField = data && data["".concat(field, "Validations")];
+    const jsonColumns = JSON.parse(jsonValidationField || '[]');
+    const jsonConfig = {};
+    switch (type) {
+      case 'string':
+        config = yup.string().nullable().trim().label(formLabel);
+        if (min) {
+          config = config.min(Number(min), "".concat(formLabel, " must be at least ").concat(min, " characters long"));
+        }
+        if (max) {
+          config = config.max(Number(max), "".concat(formLabel, " must be at most ").concat(max, " characters long"));
+        }
+        break;
+      case 'boolean':
+        config = yup.bool().nullable().transform((value, originalValue) => {
+          if (originalValue === '') return null;
+          return value;
+        }).label(formLabel);
+        break;
+      case 'radio':
+      case 'dayRadio':
+        config = yup.mixed().label(formLabel).required("Select at least one option for ".concat(formLabel));
+        break;
+      case 'date':
+        config = yup.date().nullable().transform((value, originalValue) => {
+          if (originalValue === '' || originalValue === null) return null;
+          return value;
+        }).label(formLabel).required("".concat(formLabel, " is required"));
+        break;
+      case 'dateTime':
+        config = yup.date().nullable() // Allow null values
+        .transform((value, originalValue) => {
+          // Transform empty strings or null values into null
+          if (originalValue === '' || originalValue === null) return null;
+          return value;
+        }).label(formLabel); // Set a label for better error messages
+        break;
+      case 'select':
+      case 'autocomplete':
+        if (required) {
+          config = yup.string().trim().label(formLabel).required("Select at least one ".concat(formLabel));
+        } else {
+          config = yup.string().nullable();
+        }
+        break;
+      case 'password':
+        config = yup.string().label(formLabel).test("ignore-asterisks", "".concat(formLabel, " must be at least 8 characters and must contain at least one lowercase letter, one uppercase letter, one digit, and one special character"), value => {
+          // Skip further validations if value is exactly "******"
+          if (value === "******") return true;
+          // Check minimum length, maximum length, and pattern if not "******"
+          return yup.string().min(8, "".concat(formLabel, " must be at least 8 characters")).max(50, "".concat(formLabel, " must be at most 50 characters")).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,50}$/, "".concat(formLabel, " must contain at least one lowercase letter, one uppercase letter, one digit, and one special character")).isValidSync(value);
+        });
+        break;
+      case 'email':
+        config = yup.string().trim().matches(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/, 'Email must be a valid email');
+        break;
+      case 'number':
+        if (required) {
+          config = yup.number().label(formLabel).required("".concat(formLabel, " is required."));
+        } else {
+          config = yup.number().nullable();
+        }
+        if (min !== undefined && min !== '') {
+          config = config.min(Number(min), "".concat(formLabel, " must be greater than or equal to ").concat(min));
+        }
+        if (max !== undefined && max !== '') {
+          config = config.max(Number(max), "".concat(formLabel, " must be less than or equal to ").concat(max));
+        }
+        break;
+      case 'fileUpload':
+        config = yup.string().trim().label(formLabel);
+        break;
+      case 'json':
+        // jsonColumn will be an array of json fields i.e [{ "field": "HoldPressure", "type": "number", "min": 0, "max": 500, "required": true }]
+        jsonColumns.forEach(column => {
+          column.formLabel = column.field;
+          jsonConfig[column.field] = this.getFieldValidation({
+            id,
+            column,
+            data
+          });
+        });
+        config = yup.object().shape(jsonConfig);
+        break;
+      default:
+        config = yup.mixed().nullable().label(formLabel);
+        break;
+    }
+    if (required && type !== "number") {
+      config = config.trim().required("".concat(formLabel, " is required"));
+    }
+    if (requiredIfNew && (!id || id === '')) {
+      config = config.trim().required("".concat(formLabel, " is required"));
+    }
+    return config;
+  }
+  getValidationSchema(_ref5) {
+    let {
+      id,
+      data
+    } = _ref5;
     const {
       columns
     } = this;
     let validationConfig = {};
     for (const column of columns) {
       const {
-        field,
+        validate,
         label,
         header,
-        type = 'string',
-        requiredIfNew = false,
-        required = false,
-        min = '',
-        max = '',
-        validationLength = 0,
-        validate
+        field
       } = column;
       const formLabel = label || header || field;
       if (!formLabel) {
         continue;
       }
-      let config;
-      switch (type) {
-        case 'string':
-          config = yup.string().nullable().trim().label(formLabel);
-          if (min) {
-            config = config.min(Number(min), "".concat(formLabel, " must be at least ").concat(min, " characters long"));
-          }
-          if (max) {
-            config = config.max(Number(max), "".concat(formLabel, " must be at most ").concat(max, " characters long"));
-          }
-          break;
-        case 'boolean':
-          config = yup.bool().nullable().transform((value, originalValue) => {
-            if (originalValue === '') return null;
-            return value;
-          }).label(formLabel);
-          break;
-        case 'radio':
-        case 'dayRadio':
-          config = yup.mixed().label(formLabel).required("Select at least one option for ".concat(formLabel));
-          break;
-        case 'date':
-          config = yup.date().nullable().transform((value, originalValue) => {
-            if (originalValue === '' || originalValue === null) return null;
-            return value;
-          }).label(formLabel).required("".concat(formLabel, " is required"));
-          break;
-        case 'dateTime':
-          config = yup.date().nullable() // Allow null values
-          .transform((value, originalValue) => {
-            // Transform empty strings or null values into null
-            if (originalValue === '' || originalValue === null) return null;
-            return value;
-          }).label(formLabel); // Set a label for better error messages
-          break;
-        case 'select':
-        case 'autocomplete':
-          if (required) {
-            config = yup.string().trim().label(formLabel).required("Select at least one ".concat(formLabel));
-          } else {
-            config = yup.string().nullable();
-          }
-          break;
-        case 'password':
-          config = yup.string().label(formLabel).test("ignore-asterisks", "".concat(formLabel, " must be at least 8 characters and must contain at least one lowercase letter, one uppercase letter, one digit, and one special character"), value => {
-            // Skip further validations if value is exactly "******"
-            if (value === "******") return true;
-            // Check minimum length, maximum length, and pattern if not "******"
-            return yup.string().min(8, "".concat(formLabel, " must be at least 8 characters")).max(50, "".concat(formLabel, " must be at most 50 characters")).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,50}$/, "".concat(formLabel, " must contain at least one lowercase letter, one uppercase letter, one digit, and one special character")).isValidSync(value);
-          });
-          break;
-        case 'email':
-          config = yup.string().trim().matches(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/, 'Email must be a valid email');
-          break;
-        case 'number':
-          if (required) {
-            config = yup.number().label(formLabel).required("".concat(formLabel, " is required."));
-          } else {
-            config = yup.number().nullable();
-          }
-          if (min !== undefined && min !== '') {
-            config = config.min(Number(min), "".concat(formLabel, " must be greater than or equal to ").concat(min));
-          }
-          if (max !== undefined && max !== '') {
-            config = config.max(Number(max), "".concat(formLabel, " must be less than or equal to ").concat(max));
-          }
-          break;
-        case 'fileUpload':
-          config = yup.string().trim().label(formLabel);
-          break;
-        default:
-          config = yup.mixed().nullable().label(formLabel);
-          break;
-      }
-      if (required && type !== "number") {
-        config = config.trim().required("".concat(formLabel, " is required"));
-      }
-      if (requiredIfNew && (!id || id === '')) {
-        config = config.trim().required("".concat(formLabel, " is required"));
-      }
+      column.formLabel = formLabel;
+      const config = this.getFieldValidation({
+        id,
+        column,
+        data
+      });
       if (validate) {
         const compareValidator = compareValidatorRegex.exec(validate);
         if (compareValidator) {

@@ -10,6 +10,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = exports.ActiveStepContext = void 0;
 require("core-js/modules/es.array.includes.js");
 require("core-js/modules/es.array.push.js");
+require("core-js/modules/es.json.stringify.js");
 require("core-js/modules/es.promise.js");
 require("core-js/modules/es.promise.finally.js");
 require("core-js/modules/es.regexp.exec.js");
@@ -96,7 +97,6 @@ const Form = _ref => {
   const [isDeleting, setIsDeleting] = (0, _react.useState)(false);
   const snackbar = (0, _SnackBar.useSnackbar)();
   const combos = {};
-  const [validationSchema, setValidationSchema] = (0, _react.useState)(null);
   const [activeStep, setActiveStep] = (0, _react.useState)(0);
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = (0, _react.useState)(false);
   const [deleteError, setDeleteError] = (0, _react.useState)(null);
@@ -179,15 +179,16 @@ const Form = _ref => {
   };
   (0, _react.useEffect)(() => {
     if (url) {
-      setValidationSchema(model.getValidationSchema({
-        id,
-        snackbar
-      }));
       getRecordAndLookups({});
     }
   }, [id, idWithOptions, model, url]);
   const initialValues = id === "0" ? // for new records need to override baseSaveData with Data
   _objectSpread(_objectSpread(_objectSpread({}, model.initialValues), data), baseSaveData) : _objectSpread(_objectSpread(_objectSpread({}, baseSaveData), model.initialValues), data);
+  const validationSchema = (0, _react.useMemo)(() => model.getValidationSchema({
+    id,
+    snackbar,
+    data: initialValues
+  }), [id, initialValues]);
   const formik = (0, _formik.useFormik)({
     enableReinitialize: true,
     initialValues,
@@ -197,16 +198,21 @@ const Form = _ref => {
       let {
         resetForm
       } = _ref3;
+      const formValues = {};
       for (const key in values) {
+        formValues[key] = values[key];
         if (typeof values[key] === "string") {
-          values[key] = values[key].trim();
+          formValues[key] = values[key].trim();
+        }
+        if (values[key] && typeof values[key] === "object") {
+          formValues[key] = JSON.stringify(values[key]);
         }
       }
       setIsLoading(true);
       (0, _crudHelper.saveRecord)({
         id,
         api: gridApi,
-        values,
+        values: formValues,
         setIsLoading,
         setError: snackbar.showError
       }).then(success => {
@@ -340,8 +346,11 @@ const Form = _ref => {
     } = formik;
     formik.handleSubmit();
     const fieldName = Object.keys(errors)[0];
-    const errorMessage = errors[fieldName];
+    let errorMessage = errors[fieldName];
     if (errorMessage) {
+      if (typeof errorMessage === 'object') {
+        errorMessage = Object.values(errorMessage).join(' , ');
+      }
       snackbar.showError(errorMessage, null, "error");
     }
     const fieldConfig = model.columns.find(column => column.field === fieldName);

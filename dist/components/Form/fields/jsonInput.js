@@ -4,20 +4,23 @@ require("core-js/modules/es.error.cause.js");
 require("core-js/modules/es.array.push.js");
 require("core-js/modules/es.weak-map.js");
 require("core-js/modules/esnext.iterator.filter.js");
-require("core-js/modules/esnext.iterator.for-each.js");
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-require("core-js/modules/es.json.stringify.js");
 require("core-js/modules/esnext.iterator.constructor.js");
+require("core-js/modules/esnext.iterator.find.js");
+require("core-js/modules/esnext.iterator.for-each.js");
 require("core-js/modules/esnext.iterator.map.js");
 require("core-js/modules/web.dom-collections.iterator.js");
 var React = _interopRequireWildcard(require("react"));
 var _FormControl = _interopRequireDefault(require("@mui/material/FormControl"));
 var _Input = _interopRequireDefault(require("@mui/material/Input"));
 var _Typography = _interopRequireDefault(require("@mui/material/Typography"));
+var _material = require("@mui/material");
+var _Checkbox = _interopRequireDefault(require("@mui/material/Checkbox"));
 var _debounce = _interopRequireDefault(require("lodash/debounce"));
+var _fieldMapper = require("../field-mapper");
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
 function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
@@ -31,20 +34,33 @@ const Field = _ref => {
     field,
     formik
   } = _ref;
-  const [state, setState] = React.useState({});
-  React.useEffect(() => {
-    if (!formik.values[field]) return;
-    const inputJSON = JSON.parse(formik.values[field]);
-    setState(inputJSON);
+  const [jsonData, setJsonData] = React.useState({});
+  const validations = React.useMemo(() => {
+    const value = formik.values["".concat(field, "Validations")];
+    return typeof value === 'string' ? JSON.parse(value || '[]') : value;
   }, [formik.values[field]]);
-  const handleDebouncedChange = React.useMemo(() => (0, _debounce.default)(newState => {
-    formik.setFieldValue(field, JSON.stringify(newState));
-  }, 300), [formik, field]);
+  const json = React.useMemo(() => {
+    const value = formik.values[field];
+    return typeof value === 'string' ? JSON.parse(value) : value;
+  }, [formik.values[field]]);
+  React.useEffect(() => {
+    let inputJSON = {};
+    if (!json && !validations) return;else if (validations && !json) {
+      Object.keys(validations).forEach(key => inputJSON[key] = validations[key].defaultValue || '');
+    } else {
+      inputJSON = json;
+    }
+    setJsonData(inputJSON);
+    handleDebouncedChange(inputJSON);
+  }, [formik.values[field]]);
+  const handleDebouncedChange = React.useMemo(() => (0, _debounce.default)(jsonData => {
+    formik.setFieldValue(field, jsonData);
+  }, 300), [field]);
   const handleChange = (key, value) => {
-    const updatedState = _objectSpread(_objectSpread({}, state), {}, {
+    const updatedState = _objectSpread(_objectSpread({}, jsonData), {}, {
       [key]: value
     });
-    setState(updatedState);
+    setJsonData(updatedState);
     handleDebouncedChange(updatedState);
   };
   React.useEffect(() => {
@@ -60,29 +76,53 @@ const Field = _ref => {
     style: {
       marginBottom: '1rem'
     }
-  }, Object.keys(state).map(key => /*#__PURE__*/React.createElement("div", {
-    key: key,
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: '0.5rem'
-    }
-  }, /*#__PURE__*/React.createElement(_Typography.default, {
-    variant: "body1",
-    sx: {
-      width: "180px",
-      marginRight: 2
-    }
-  }, key, " :"), /*#__PURE__*/React.createElement(_Input.default, {
-    id: key,
-    name: key,
-    value: state[key],
-    onChange: e => handleChange(key, e.target.value),
-    fullWidth: true,
-    style: {
-      flex: 2
-    }
-  }))));
+  }, Object.keys(jsonData).map(key => {
+    const validationObj = validations.find(obj => obj.field === key) || {};
+    const {
+      required,
+      min,
+      max
+    } = validationObj;
+    let {
+      type
+    } = validationObj;
+    return /*#__PURE__*/React.createElement("div", {
+      key: key,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        marginBottom: '0.5rem'
+      }
+    }, /*#__PURE__*/React.createElement(_Typography.default, {
+      variant: "body1",
+      sx: {
+        width: "180px",
+        marginRight: 2
+      }
+    }, key, " ", required ? /*#__PURE__*/React.createElement(_fieldMapper.ImportantSpan, null, "*") : /*#__PURE__*/React.createElement(React.Fragment, null), ":"), type === 'boolean' ? /*#__PURE__*/React.createElement(_Checkbox.default, {
+      checked: jsonData[key],
+      onChange: e => handleChange(key, e.target.checked),
+      style: {
+        paddingLeft: 0
+      }
+    }) : /*#__PURE__*/React.createElement(_Input.default, {
+      id: key,
+      name: key,
+      value: jsonData[key],
+      onChange: e => handleChange(key, e.target.value),
+      fullWidth: true,
+      style: {
+        flex: 2
+      },
+      required: !!required,
+      type: type || 'text',
+      inputProps: _objectSpread(_objectSpread({}, min !== undefined && {
+        min
+      }), max !== undefined && {
+        max
+      })
+    }));
+  }), formik.touched[field] && formik.errors[field] && /*#__PURE__*/React.createElement(_material.FormHelperText, null, typeof formik.errors[field] === 'object' ? Object.values(formik.errors[field]).join(' , ') : formik.errors[field]));
 };
 var _default = exports.default = Field;
