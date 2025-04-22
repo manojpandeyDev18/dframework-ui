@@ -10,13 +10,17 @@ import { ImportantSpan } from '../field-mapper';
 const Field = ({ field, formik }) => {
     const [jsonData, setJsonData] = React.useState({});
     const validations = React.useMemo(() => {
-        const value = formik.values[`${field}Validations`];
-        return typeof value === 'string' ? JSON.parse(value || '[]') : value
+        let value = formik.values[`${field}Validations`];
+        if (typeof value === 'string') {
+            value = JSON.parse(value);
+        }
+        return value || [];
     }, [formik.values[field]]);
 
     const json = React.useMemo(() => {
         const value = formik.values[field];
-        return typeof value === 'string' ? JSON.parse(value): value
+        // Need to have json as object to apply the Yup Validation.
+        return typeof value === 'string' ? JSON.parse(value): value;
     }, [formik.values[field]]);
 
     React.useEffect(() => {
@@ -61,8 +65,7 @@ const Field = ({ field, formik }) => {
         >
             {Object.keys(jsonData).map((key) => {
                 const validationObj = validations.find((obj) => obj.field === key) || {};
-                const { required, min, max } = validationObj;
-                let { type } = validationObj;
+                const { required, min, max, type } = validationObj;
                 return (
                     <div
                         key={key}

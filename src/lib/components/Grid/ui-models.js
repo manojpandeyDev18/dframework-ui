@@ -160,7 +160,7 @@ class UiModel {
 				// jsonColumn will be an array of json fields i.e [{ "field": "HoldPressure", "type": "number", "min": 0, "max": 500, "required": true }]
 				jsonColumns.forEach(column => {
 					column.formLabel = column.field;
-					jsonConfig[column.field] = this.getFieldValidation({ id, column, data })
+					jsonConfig[column.field] = this.getFieldValidation({ id, column, data });
 				});
 				config = yup.object().shape(jsonConfig);
 				break;

@@ -36,11 +36,15 @@ const Field = _ref => {
   } = _ref;
   const [jsonData, setJsonData] = React.useState({});
   const validations = React.useMemo(() => {
-    const value = formik.values["".concat(field, "Validations")];
-    return typeof value === 'string' ? JSON.parse(value || '[]') : value;
+    let value = formik.values["".concat(field, "Validations")];
+    if (typeof value === 'string') {
+      value = JSON.parse(value);
+    }
+    return value || [];
   }, [formik.values[field]]);
   const json = React.useMemo(() => {
     const value = formik.values[field];
+    // Need to have json as object to apply the Yup Validation.
     return typeof value === 'string' ? JSON.parse(value) : value;
   }, [formik.values[field]]);
   React.useEffect(() => {
@@ -81,9 +85,7 @@ const Field = _ref => {
     const {
       required,
       min,
-      max
-    } = validationObj;
-    let {
+      max,
       type
     } = validationObj;
     return /*#__PURE__*/React.createElement("div", {

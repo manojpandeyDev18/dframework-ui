@@ -152,12 +152,13 @@ const Form = ({
     onSubmit: async (values, { resetForm }) => {
       const formValues = {};
       for (const key in values) {
-        formValues[key] = values[key]
-        if (typeof values[key] === "string") {
+        const type = typeof values[key];
+        if (type === "string") {
           formValues[key] = values[key].trim();
-        }
-        if(values[key] && typeof values[key] === "object") {
+        } else if(values[key] && type === "object") {
           formValues[key] = JSON.stringify(values[key]);
+        } else {
+          formValues[key] = values[key];
         }
       }
       setIsLoading(true);
@@ -293,10 +294,11 @@ const Form = ({
     const { errors } = formik;
     formik.handleSubmit();
     const fieldName = Object.keys(errors)[0];
-    let errorMessage = errors[fieldName];
+    const errorMessage = errors[fieldName];
     if (errorMessage) {
       if(typeof errorMessage === 'object') {
-        errorMessage = Object.values(errorMessage).join(' , ');
+        snackbar.showError(Object.values(errorMessage).join(' , '), null, "error");
+        return;
       }
       snackbar.showError(errorMessage, null, "error");
     }
