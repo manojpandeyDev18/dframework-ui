@@ -66,6 +66,8 @@ const useStyles = makeStyles({
     }
 })
 
+export const ImportantSpan = styled.span` color: red !important; `; // * Style Css
+
 const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, handleSubmit }) => {
     const [skipped, setSkipped] = React.useState(new Set());
 
@@ -150,7 +152,6 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
     if (!formElements?.length) {
         return null;
     }
-    const ImportantSpan = styled.span` color: red !important; `; // * Style Css
 
     return (
         <>
