@@ -5,15 +5,14 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
 
-const Field = ({ isAdd, column, field, formik, lookups, data, otherProps, model, fieldConfigs, mode }) => {
-    let inputValue = formik.values[field]?.length ? formik.values[field].split(", ") : [];
+const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs, mode }) => {
+    const inputValue = formik.values[field]?.length ? formik.values[field].split(", ") : [];
     let isDisabled;
     if (mode !== 'copy') {
         isDisabled = fieldConfigs?.disabled;
     }
     const handleAutoCompleteChange = (e, newValue, action, item = {}) => {
-        let lastElement = newValue.pop();
-        lastElement = lastElement?.trim();
+        const lastElement = newValue.pop()?.trim();
         if (!newValue.includes(lastElement)) {
             newValue.push(lastElement);
         }
@@ -22,7 +21,7 @@ const Field = ({ isAdd, column, field, formik, lookups, data, otherProps, model,
         }
         formik.setFieldValue(field, newValue?.join(', ') || '');
     }
-    const fixedOptions = column.hasDefault && !isAdd ? inputValue[0] : '';
+    const fixedOptions = column.hasDefault && !isAdd ? inputValue[0] : [];
 
     return (
         <FormControl

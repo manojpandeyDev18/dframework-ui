@@ -31,23 +31,19 @@ const Field = _ref => {
     column,
     field,
     formik,
-    lookups,
-    data,
     otherProps,
-    model,
     fieldConfigs,
     mode
   } = _ref;
-  let inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(", ") : [];
+  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(", ") : [];
   let isDisabled;
   if (mode !== 'copy') {
     isDisabled = fieldConfigs === null || fieldConfigs === void 0 ? void 0 : fieldConfigs.disabled;
   }
   const handleAutoCompleteChange = function handleAutoCompleteChange(e, newValue, action) {
-    var _lastElement, _newValue;
+    var _newValue$pop, _newValue;
     let item = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-    let lastElement = newValue.pop();
-    lastElement = (_lastElement = lastElement) === null || _lastElement === void 0 ? void 0 : _lastElement.trim();
+    const lastElement = (_newValue$pop = newValue.pop()) === null || _newValue$pop === void 0 ? void 0 : _newValue$pop.trim();
     if (!newValue.includes(lastElement)) {
       newValue.push(lastElement);
     }
@@ -56,7 +52,7 @@ const Field = _ref => {
     }
     formik.setFieldValue(field, ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(', ')) || '');
   };
-  const fixedOptions = column.hasDefault && !isAdd ? inputValue[0] : '';
+  const fixedOptions = column.hasDefault && !isAdd ? inputValue[0] : [];
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
     key: field,
