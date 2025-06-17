@@ -11,13 +11,13 @@ const Field = ({ isAdd, column, field, formik, lookups, data, otherProps, model,
     if (mode !== 'copy') {
         isDisabled = fieldConfigs?.disabled;
     }
-    const handleAutoCompleteChange = (e, newValue, action, item) => {
+    const handleAutoCompleteChange = (e, newValue, action, item = {}) => {
         let lastElement = newValue.pop();
         lastElement = lastElement?.trim();
         if (!newValue.includes(lastElement)) {
             newValue.push(lastElement);
         }
-        if(fixedOptions.includes(item.option) && action === "removeOption"){
+        if(fixedOptions && fixedOptions.includes(item.option) && action === "removeOption"){
             newValue = [item.option];
         }
         formik.setFieldValue(field, newValue?.join(', ') || '');
