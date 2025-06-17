@@ -12,7 +12,8 @@ require("core-js/modules/es.string.includes.js");
 require("core-js/modules/es.string.trim.js");
 require("core-js/modules/esnext.iterator.map.js");
 require("core-js/modules/web.dom-collections.iterator.js");
-var React = _interopRequireWildcard(require("react"));
+var _react = _interopRequireWildcard(require("react"));
+var React = _react;
 var _material = require("@mui/material");
 var _FormControl = _interopRequireDefault(require("@mui/material/FormControl"));
 var _Autocomplete = _interopRequireDefault(require("@mui/material/Autocomplete"));
@@ -32,15 +33,13 @@ const Field = _ref => {
     field,
     formik,
     otherProps,
-    fieldConfigs,
+    fieldConfigs = {},
     mode
   } = _ref;
-  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(", ") : [];
-  let isDisabled;
-  if (mode !== 'copy') {
-    isDisabled = fieldConfigs === null || fieldConfigs === void 0 ? void 0 : fieldConfigs.disabled;
-  }
-  const handleAutoCompleteChange = function handleAutoCompleteChange(e, newValue, action) {
+  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(",") : [];
+  const isDisabled = mode !== 'copy' ? fieldConfigs.disabled : false;
+  const fixedOptions = column.hasDefault && !isAdd ? inputValue[0] : [];
+  const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
     var _newValue$pop, _newValue;
     let item = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
     const lastElement = (_newValue$pop = newValue.pop()) === null || _newValue$pop === void 0 ? void 0 : _newValue$pop.trim();
@@ -51,8 +50,7 @@ const Field = _ref => {
       newValue = [item.option];
     }
     formik.setFieldValue(field, ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(', ')) || '');
-  };
-  const fixedOptions = column.hasDefault && !isAdd ? inputValue[0] : [];
+  }, [formik, field]);
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
     key: field,
