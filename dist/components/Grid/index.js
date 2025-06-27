@@ -861,6 +861,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref3 => {
     if (!isValidFilters) {
       return;
     }
+    if (contentType) {
+      const {
+        permissions: {
+          exportAction
+        } = {}
+      } = stateData.gridSettings;
+      action = exportAction || 'list';
+    }
     (0, _crudHelper.getList)({
       action,
       page: !contentType ? page : 0,

@@ -601,6 +601,10 @@ const GridBase = memo(({
         if (!isValidFilters) {
             return;
         }
+        if(contentType) {
+            const { permissions: { exportAction } = {} } = stateData.gridSettings;
+            action = exportAction || 'list';
+        }
         getList({
             action,
             page: !contentType ? page : 0,
