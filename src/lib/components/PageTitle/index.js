@@ -22,7 +22,6 @@ function PageTitle({
   enableBackButton = false,
   breadcrumbColor,
 }) {
-  console.log(navigate);
   const isMobile = useMobile(true);
   const breadcrumbsLasIndex = breadcrumbs.length - 1
   const needToShowBreadcrumbs = showBreadcrumbs && breadcrumbs.length;

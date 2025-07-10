@@ -205,7 +205,7 @@ class UiModel {
             const maxlength = Number(max) || 50;
             const regex = column.regex || regexConfig.password;
             // Check minimum length, maximum length, and pattern if not "******"
-            return yup.string().min(minlength, "".concat(formLabel, " must be at least ").concat(minlength, " characters")).max(maxlength, "".concat(formLabel, " must be at most ").concat(maxlength, " characters")).x(regex, "".concat(formLabel, " must contain at least one lowercase letter, one uppercase letter, one digit, and one special character")).isValidSync(value);
+            return yup.string().min(minlength, "".concat(formLabel, " must be at least ").concat(minlength, " characters")).max(maxlength, "".concat(formLabel, " must be at most ").concat(maxlength, " characters")).matches(regex, "".concat(formLabel, " must contain at least one lowercase letter, one uppercase letter, one digit, and one special character")).isValidSync(value);
           });
           break;
         case 'email':

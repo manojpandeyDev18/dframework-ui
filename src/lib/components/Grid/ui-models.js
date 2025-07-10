@@ -136,7 +136,7 @@ class UiModel {
 							return yup.string()
 								.min(minlength, `${formLabel} must be at least ${minlength} characters`)
 								.max(maxlength, `${formLabel} must be at most ${maxlength} characters`)
-								.x(
+								.matches(
 									regex,
 									`${formLabel} must contain at least one lowercase letter, one uppercase letter, one digit, and one special character`
 								)
