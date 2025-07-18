@@ -294,15 +294,6 @@ const Form = _ref => {
     setErrorMessage(null);
     setIsDeleting(false);
   };
-  if (isLoading) {
-    return /*#__PURE__*/_react.default.createElement(_Box.default, {
-      sx: {
-        display: "flex",
-        pt: "20%",
-        justifyContent: "center"
-      }
-    }, /*#__PURE__*/_react.default.createElement(_CircularProgress.default, null));
-  }
   const handleChange = function handleChange(e) {
     const {
       name,
@@ -340,9 +331,38 @@ const Form = _ref => {
   }];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  const recordEditable = !("canEdit" in data) || data.canEdit;
-  const readOnlyRelations = !recordEditable || data.readOnlyRelations;
+  const recordEditable = (0, _react.useMemo)(() => {
+    if (!data) return false;
+    // If canEdit property doesn't exist, default to true
+    // Otherwise, use the canEdit value from data
+    return !("canEdit" in data) || data.canEdit;
+  }, [data]);
+  const readOnlyRelations = (0, _react.useMemo)(() => {
+    if (!data) return false;
+    // Relations are read-only if:
+    // 1. The record itself is not editable, OR
+    // 2. The data explicitly sets readOnlyRelations to true
+    return !recordEditable || data.readOnlyRelations;
+  }, [recordEditable, data]);
+  const relationProps = (0, _react.useMemo)(() => ({
+    readOnly: readOnlyRelations,
+    models,
+    relationFilters,
+    relations,
+    parentFilters: [],
+    parent: model.name || model.title || "",
+    where: []
+  }), [readOnlyRelations, models, relationFilters, relations, model.name, model.title]);
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
+  if (isLoading) {
+    return /*#__PURE__*/_react.default.createElement(_Box.default, {
+      sx: {
+        display: "flex",
+        pt: "20%",
+        justifyContent: "center"
+      }
+    }, /*#__PURE__*/_react.default.createElement(_CircularProgress.default, null));
+  }
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_PageTitle.default, {
     navigate: navigate,
     title: formTitle,
@@ -408,14 +428,6 @@ const Form = _ref => {
       setDeleteError(null);
     },
     title: deleteError ? "Error Deleting Record" : "Confirm Delete"
-  }, deletePromptText), showRelations ? /*#__PURE__*/_react.default.createElement(_relations.default, {
-    readOnly: readOnlyRelations,
-    models: models,
-    relationFilters: relationFilters,
-    relations: relations,
-    parentFilters: [],
-    parent: model.name || model.title || "",
-    where: []
-  }) : null)));
+  }, deletePromptText), showRelations ? /*#__PURE__*/_react.default.createElement(_relations.default, relationProps) : null)));
 };
 var _default = exports.default = Form;
