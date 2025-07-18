@@ -55,8 +55,7 @@ const consts = {
   create: "Create",
   copy: "Copy",
   edit: "Edit",
-  number: "number",
-  boolean: "boolean"
+  number: "number"
 };
 const Form = _ref => {
   var _stateData$gridSettin;
