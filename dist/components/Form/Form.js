@@ -137,6 +137,10 @@ const Form = _ref => {
   } = model;
   const handleNavigation = () => {
     let navigatePath;
+    // Disabling navigation if navigateBack is false
+    if ([false, "false"].includes(navigateBack)) {
+      return;
+    }
     switch (typeof navigateBack) {
       case consts.function:
         navigatePath = navigateBack({
