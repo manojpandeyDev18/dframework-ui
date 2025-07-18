@@ -244,13 +244,6 @@ const Form = ({
     setErrorMessage(null)
     setIsDeleting(false);
   };
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", pt: "20%", justifyContent: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
   const handleChange = function (e) {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
@@ -282,9 +275,39 @@ const Form = ({
   ];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  const recordEditable = !("canEdit" in data) || data.canEdit;
-  const readOnlyRelations = !recordEditable || data.readOnlyRelations;
+  
+  const recordEditable = useMemo(() => {
+    if (!data) return false;
+    // If canEdit property doesn't exist, default to true
+    // Otherwise, use the canEdit value from data
+    return !("canEdit" in data) || data.canEdit;
+  }, [data]);
+  
+  const readOnlyRelations = useMemo(() => {
+    if (!data) return false;
+    // Relations are read-only if:
+    // 1. The record itself is not editable, OR
+    // 2. The data explicitly sets readOnlyRelations to true
+    return !recordEditable || data.readOnlyRelations;
+  }, [recordEditable, data]);
+  
+  const relationProps = useMemo(() => ({
+    readOnly: readOnlyRelations,
+    models,
+    relationFilters,
+    relations,
+    parentFilters: [],
+    parent: model.name || model.title || "",
+    where: []
+  }), [readOnlyRelations, models, relationFilters, relations, model.name, model.title]);
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", pt: "20%", justifyContent: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   return (
     <>
       <PageTitle
@@ -370,13 +393,7 @@ const Form = ({
           >{deletePromptText}</DialogComponent>
           {showRelations ? (
             <Relations
-              readOnly={readOnlyRelations}
-              models={models}
-              relationFilters={relationFilters}
-              relations={relations}
-              parentFilters={[]}
-              parent={model.name || model.title || ""}
-              where={[]}
+              {...relationProps}
             />
           ) : null}
         </Paper>
