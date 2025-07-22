@@ -28,7 +28,7 @@ function PageTitle(_ref) {
     breadcrumbs = [],
     enableBackButton = false,
     breadcrumbColor,
-    showHelpButton = true
+    showHelpButton = false
   } = _ref;
   const isMobile = (0, _useMobile.default)(true);
   const breadcrumbsLasIndex = breadcrumbs.length - 1;

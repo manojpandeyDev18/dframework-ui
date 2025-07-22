@@ -89,7 +89,7 @@ const Form = ({
     model,
     userDefinedPermissions
   });
-  const { hideBreadcrumb = false, navigateBack, showHelpButton = true } = model;
+  const { hideBreadcrumb = false, navigateBack } = model;
 
   const handleNavigation = () => {
     let navigatePath;
@@ -320,7 +320,6 @@ const Form = ({
         showBreadcrumbs={!hideBreadcrumb}
         breadcrumbs={breadcrumbs}
         model={model}
-        showHelpButton={showHelpButton}
       />
       <ActiveStepContext.Provider value={{ activeStep, setActiveStep }}>
         <Paper sx={{ padding: 2, ...sx }}>

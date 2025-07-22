@@ -133,8 +133,7 @@ const Form = _ref => {
   });
   const {
     hideBreadcrumb = false,
-    navigateBack,
-    showHelpButton = true
+    navigateBack
   } = model;
   const handleNavigation = () => {
     let navigatePath;
@@ -373,8 +372,7 @@ const Form = _ref => {
     title: formTitle,
     showBreadcrumbs: !hideBreadcrumb,
     breadcrumbs: breadcrumbs,
-    model: model,
-    showHelpButton: showHelpButton
+    model: model
   }), /*#__PURE__*/_react.default.createElement(ActiveStepContext.Provider, {
     value: {
       activeStep,
