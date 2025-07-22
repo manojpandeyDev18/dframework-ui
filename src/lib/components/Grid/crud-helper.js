@@ -130,6 +130,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         const form = document.createElement("form");
         requestData.responseType = contentType;
         requestData.columns = columns;
+        requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
         form.setAttribute("target", "_blank");
