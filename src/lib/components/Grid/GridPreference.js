@@ -166,7 +166,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
 
     const applyPreference = async (prefId) => {
         let userPreferenceCharts;
-        let defaultPreference = 'Default';
+        let perferenceName = 'Default';
         // Check if prefId is 0, if so, use defaultPreferenceEnums, otherwise fetch from API
         if (prefId === 0) {
             userPreferenceCharts = defaultPreferenceEnums[preferenceName] || null;
@@ -179,7 +179,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
             };
             const response = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
             userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-            defaultPreference = response.prefValue || '';
+            perferenceName = response.prefName || 'Default';
         }
 
         // If userPreferenceCharts is available, apply preferences to the grid
@@ -196,7 +196,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
         gridRef.current.setSortModel(sortModel || []);
         gridRef.current.setFilterModel(filterModel);
 
-        dispatchData({ type: actionsStateProvider.SET_CURRENT_PREFERENCE_NAME, payload: defaultPreference });
+        dispatchData({ type: actionsStateProvider.SET_CURRENT_PREFERENCE_NAME, payload: perferenceName });
         setIsGridPreferenceFetched(true);
     };
 
