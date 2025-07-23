@@ -27,7 +27,8 @@ function PageTitle(_ref) {
     showBreadcrumbs,
     breadcrumbs = [],
     enableBackButton = false,
-    breadcrumbColor
+    breadcrumbColor,
+    showHelpButton = false
   } = _ref;
   const isMobile = (0, _useMobile.default)(true);
   const breadcrumbsLasIndex = breadcrumbs.length - 1;
@@ -81,7 +82,7 @@ function PageTitle(_ref) {
   }, /*#__PURE__*/_react.default.createElement(_material.Button, {
     variant: "contained",
     onClick: handleBack
-  }, "Back")), /*#__PURE__*/_react.default.createElement(_material.Grid, {
+  }, "Back")), showHelpButton && /*#__PURE__*/_react.default.createElement(_material.Grid, {
     sx: {
       display: 'flex',
       alignItems: 'center',

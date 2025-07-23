@@ -20,7 +20,8 @@ function PageTitle({
   showBreadcrumbs,
   breadcrumbs = [],
   enableBackButton = false,
-  breadcrumbColor
+  breadcrumbColor,
+  showHelpButton = false
 }) {
   const isMobile = useMobile(true);
   const breadcrumbsLasIndex = breadcrumbs.length - 1;
@@ -54,11 +55,11 @@ function PageTitle({
               {(breadcrumbs.length > 1 || enableBackButton) && <Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                 <Button variant="contained" onClick={handleBack}>Back</Button>
               </Grid>}
-              <Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+              {showHelpButton && <Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                 <IconButton color="primary" title='Help' size="large">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
-              </Grid>
+              </Grid>}
             </Grid>
             {/* Title render */}
             <Box className="app-page-title--first">
