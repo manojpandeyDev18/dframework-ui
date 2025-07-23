@@ -296,7 +296,9 @@ const GridPreferences = _ref => {
         dispatchData
       })) || {};
       userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-      perferenceName = response.prefName || 'Default';
+      if (response.prefName) {
+        perferenceName = response.prefName;
+      }
     }
 
     // If userPreferenceCharts is available, apply preferences to the grid

@@ -179,7 +179,9 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
             };
             const response = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
             userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-            perferenceName = response.prefName || 'Default';
+            if (response.prefName) {
+                perferenceName = response.prefName;
+            }
         }
 
         // If userPreferenceCharts is available, apply preferences to the grid
