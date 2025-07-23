@@ -55,7 +55,7 @@ function PageTitle({
               {(breadcrumbs.length > 1 || enableBackButton) && <Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                 <Button variant="contained" onClick={handleBack}>Back</Button>
               </Grid>}
-              {showHelpButton &&<Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+              {showHelpButton && <Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                 <IconButton color="primary" title='Help' size="large">
                   <HelpIcon fontSize="inherit" />
                 </IconButton>
