@@ -278,7 +278,7 @@ const GridPreferences = _ref => {
   };
   const applyPreference = async prefId => {
     let userPreferenceCharts;
-    let defaultPreference = 'Default';
+    let perferenceName = 'Default';
     // Check if prefId is 0, if so, use defaultPreferenceEnums, otherwise fetch from API
     if (prefId === 0) {
       userPreferenceCharts = defaultPreferenceEnums[preferenceName] || null;
@@ -296,7 +296,9 @@ const GridPreferences = _ref => {
         dispatchData
       })) || {};
       userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-      defaultPreference = response.prefValue || '';
+      if (response.prefName) {
+        perferenceName = response.prefName;
+      }
     }
 
     // If userPreferenceCharts is available, apply preferences to the grid
@@ -329,7 +331,7 @@ const GridPreferences = _ref => {
     gridRef.current.setFilterModel(filterModel);
     dispatchData({
       type: _actions.default.SET_CURRENT_PREFERENCE_NAME,
-      payload: defaultPreference
+      payload: perferenceName
     });
     setIsGridPreferenceFetched(true);
   };
