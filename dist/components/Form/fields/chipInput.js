@@ -8,6 +8,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 require("core-js/modules/es.array.includes.js");
 require("core-js/modules/es.array.push.js");
+require("core-js/modules/es.string.ends-with.js");
 require("core-js/modules/es.string.includes.js");
 require("core-js/modules/es.string.trim.js");
 require("core-js/modules/esnext.iterator.constructor.js");
@@ -38,7 +39,7 @@ const Field = _ref => {
     mode
   } = _ref;
   const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(",") : [];
-  const isDisabled = mode !== 'copy' ? fieldConfigs.disabled : false;
+  const isDisabled = mode !== 'copy' ? fieldConfigs.disabled || window.location.pathname.endsWith('/0') && column.label === "Alias" : false;
   const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
     var _newValue$pop, _newValue;
@@ -64,7 +65,12 @@ const Field = _ref => {
     value: inputValue,
     options: [],
     renderInput: params => /*#__PURE__*/React.createElement(_TextField.default, _extends({}, params, {
-      variant: "standard"
+      variant: "standard",
+      InputProps: {
+        sx: {
+          backgroundColor: isDisabled ? '#dfdede' : 'transparent'
+        }
+      }
     })),
     onChange: handleAutoCompleteChange,
     size: "small",
