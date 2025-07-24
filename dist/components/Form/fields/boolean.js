@@ -28,12 +28,13 @@ const Field = _ref => {
     var _formik$values$field;
     return (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 ? _formik$values$field : !!column.defaultValue;
   }, [formik, column]);
+  const isDisabled = typeof column.readOnly === 'function' ? column.readOnly(formik) : column.readOnly;
   return /*#__PURE__*/_react.default.createElement("div", {
     key: field
   }, /*#__PURE__*/_react.default.createElement(_FormControlLabel.default, {
     control: /*#__PURE__*/_react.default.createElement(_Checkbox.default, _extends({}, otherProps, {
       name: field,
-      disabled: column.readOnly === true || column.disabled === true,
+      disabled: isDisabled || column.disabled === true,
       checked: checked,
       onChange: handleChange,
       onBlur: formik.handleBlur,
