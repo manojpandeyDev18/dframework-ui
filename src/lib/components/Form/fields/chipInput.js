@@ -41,8 +41,10 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
                         {...params} 
                         variant="standard"
                         InputProps={{
+                            ...params.InputProps,
                             sx: {
-                                backgroundColor: isDisabled ? '#dfdede' : 'transparent'
+                                ...params.InputProps?.sx,
+                                ...(isDisabled && { backgroundColor: '#dfdede' })
                             }
                         }}
                     />
