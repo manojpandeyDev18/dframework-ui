@@ -11,7 +11,6 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 require("core-js/modules/es.array.includes.js");
 require("core-js/modules/es.array.push.js");
-require("core-js/modules/es.string.ends-with.js");
 require("core-js/modules/es.string.includes.js");
 require("core-js/modules/es.string.trim.js");
 require("core-js/modules/esnext.iterator.constructor.js");
@@ -46,11 +45,10 @@ const Field = _ref => {
     fieldConfigs = {},
     mode
   } = _ref;
+  console.log("pathname ", window.location.pathname);
   const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(",") : [];
-  const isDisabled = mode !== 'copy' ? fieldConfigs.disabled || window.location.pathname.endsWith('/0') && column.label === "Alias" : false;
+  const isDisabled = mode !== 'copy' || typeof column.disabled === "function" ? fieldConfigs.disabled || column.disabled(window.location.pathname) : false;
   const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
-  console.log("Fixed options are ", fixedOptions);
-  console.log("Input value is ", inputValue);
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
     var _newValue$pop, _newValue;
     let item = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
@@ -74,8 +72,6 @@ const Field = _ref => {
     freeSolo: true,
     value: inputValue,
     options: [],
-    onChange: handleAutoCompleteChange,
-    size: "small",
     renderInput: params => {
       var _params$InputProps;
       return /*#__PURE__*/React.createElement(_TextField.default, _extends({}, params, {
@@ -87,6 +83,8 @@ const Field = _ref => {
         })
       }));
     },
+    onChange: handleAutoCompleteChange,
+    size: "small",
     renderTags: (tagValue, getTagProps) => tagValue.map((option, index) => {
       const _getTagProps = getTagProps({
           index

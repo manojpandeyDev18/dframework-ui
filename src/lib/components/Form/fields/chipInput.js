@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 
 const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mode }) => {
     const inputValue = formik.values[field]?.length ? formik.values[field].split(",") : [];
-    const isDisabled = mode !== 'copy' ? fieldConfigs.disabled || (window.location.pathname.endsWith('/0') && column.label === "Alias") : false;
+    const isDisabled = mode !== 'copy' || typeof column.disabled === "function" ? (fieldConfigs.disabled || column.disabled(window.location.pathname)) : false;
     const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
 
     const handleAutoCompleteChange = useCallback((e, newValue, action, item = {}) => {
