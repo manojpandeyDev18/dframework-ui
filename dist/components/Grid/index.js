@@ -763,6 +763,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     if (additionalFilters) {
       filters.items = [...(filters.items || []), ...additionalFilters];
     }
+    extraParams = _objectSpread(_objectSpread({}, extraParams), props.extraParams);
     const isValidFilters = !filters.items.length || filters.items.every(item => "value" in item && item.value !== undefined);
     if (!isValidFilters) return;
     (0, _crudHelper.getList)({
@@ -1032,6 +1033,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       if (result) {
         fetchData();
         snackbar.showMessage("Record Added Successfully.");
+        if (result.info) {
+          snackbar.showMessage(result.info);
+        }
       }
     } catch (err) {
       snackbar.showError(err.message || "An error occurred, please try again later.");
