@@ -161,6 +161,9 @@ const Form = ({
             return window.location.reload();
           }
           snackbar.showMessage(`Record ${id === 0 ? "Added" : "Updated"} Successfully.`);
+          if (success.info) {
+            snackbar.showMessage(success.info);
+          }
           handleNavigation();
         })
         .catch((err) => {

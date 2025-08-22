@@ -206,6 +206,9 @@ const Form = _ref => {
           return window.location.reload();
         }
         snackbar.showMessage("Record ".concat(id === 0 ? "Added" : "Updated", " Successfully."));
+        if (success.info) {
+          snackbar.showMessage(success.info);
+        }
         handleNavigation();
       }).catch(err => {
         snackbar.showError("An error occured.", err);
