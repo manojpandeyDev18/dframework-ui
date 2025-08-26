@@ -160,7 +160,8 @@ const Form = ({
           if (model.reloadOnSave) {
             return window.location.reload();
           }
-          snackbar.showMessage(`Record ${id === 0 ? "Added" : "Updated"} Successfully.`);
+          const message = success.info ? success.info : `Record ${id === 0 ? "Added" : "Updated"} Successfully.`;
+          snackbar.showMessage(message);
           handleNavigation();
         })
         .catch((err) => {
