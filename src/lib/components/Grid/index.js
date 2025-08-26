@@ -724,10 +724,8 @@ const GridBase = memo(({
 
             if (result) {
                 fetchData();
-                snackbar.showMessage("Record Added Successfully.");
-                if (result.info) {
-                    snackbar.showMessage(result.info);
-                }
+                const message = result.info ? result.info : "Record Added Successfully.";
+                snackbar.showMessage(message);
             }
         } catch (err) {
             snackbar.showError(err.message || "An error occurred, please try again later.");
