@@ -499,7 +499,7 @@ const GridBase = memo(({
         if (additionalFilters) {
             filters.items = [...(filters.items || []), ...additionalFilters];
         }
-        extraParams = { ...extraParams, ...props.extraParams };
+        extraParams = { ...extraParams, ...props.extraParams }; // Merge any custom params passed via component props into extraParams
         const isValidFilters = !filters.items.length || filters.items.every(item => "value" in item && item.value !== undefined);
         if (!isValidFilters) return;
 
