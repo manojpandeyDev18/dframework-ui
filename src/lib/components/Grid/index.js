@@ -195,7 +195,7 @@ const GridBase = memo(({
     const userDefinedPermissions = { add: effectivePermissions.add, edit: effectivePermissions.edit, delete: effectivePermissions.delete };
     const { canAdd, canEdit, canDelete } = getPermissions({ userData, model, userDefinedPermissions });
     const tTranslate = model.tTranslate ?? ((key) => key);
-    const { addUrlParamKey, searchParamKey, hideBreadcrumb = false, tableName, showHistory = true, hideBreadcrumbInGrid = false, breadcrumbColor } = model;
+    const { addUrlParamKey, searchParamKey, hideBreadcrumb = false, tableName, showHistory = true, hideBreadcrumbInGrid = false, breadcrumbColor, deleteId } = model;
     const gridTitle = model.gridTitle || model.title;
     const preferenceName = model.preferenceId || model.module?.preferenceId;
     const searchParams = new URLSearchParams(window.location.search);
@@ -616,7 +616,7 @@ const GridBase = memo(({
                     return openForm({ id: record[idProperty], mode: 'copy' });
                 case actionTypes.Delete:
                     setIsDeleting(true);
-                    setRecord({ name: record[model.linkColumn], id: record[idProperty] });
+                    setRecord({ name: record[model.linkColumn], id: record[deleteId] || record[idProperty] });
                     break;
                 case actionTypes.History:
                     // navigates to history screen, specifying the tablename, id of record and breadcrumb to render title on history screen.

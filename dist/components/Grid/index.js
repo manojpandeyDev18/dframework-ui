@@ -345,7 +345,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     tableName,
     showHistory = true,
     hideBreadcrumbInGrid = false,
-    breadcrumbColor
+    breadcrumbColor,
+    deleteId
   } = model;
   const gridTitle = model.gridTitle || model.title;
   const preferenceName = model.preferenceId || ((_model$module = model.module) === null || _model$module === void 0 ? void 0 : _model$module.preferenceId);
@@ -911,7 +912,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
           setIsDeleting(true);
           setRecord({
             name: record[model.linkColumn],
-            id: record[idProperty]
+            id: record[deleteId] || record[idProperty]
           });
           break;
         case actionTypes.History:
