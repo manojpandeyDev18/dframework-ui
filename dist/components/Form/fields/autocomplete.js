@@ -32,12 +32,13 @@ const consts = {
   limitTags: 5
 };
 const Field = /*#__PURE__*/React.memo(_ref => {
+  var _formik$values$field;
   let {
       column,
       field,
       formik,
       lookups,
-      dependsOn,
+      dependsOn = [],
       fieldConfigs = {},
       mode,
       api
@@ -47,18 +48,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     stateData
   } = (0, _StateProvider.useStateContext)();
   const [options, setOptions] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-
-  // Memoize current field value to avoid dependency on entire formik.values
-  const currentFieldValue = React.useMemo(() => formik.values[field], [formik.values, field]);
-
-  // Memoize input value processing to avoid recalculation on each render
-  const inputValue = React.useMemo(() => {
-    var _currentFieldValue$sp;
-    return (currentFieldValue === null || currentFieldValue === void 0 || (_currentFieldValue$sp = currentFieldValue.split(", ")) === null || _currentFieldValue$sp === void 0 ? void 0 : _currentFieldValue$sp.map(Number)) || [];
-  }, [currentFieldValue]);
-
-  // Memoize dependency values to prevent unnecessary re-renders
+  const inputValue = ((_formik$values$field = formik.values[field]) === null || _formik$values$field === void 0 || (_formik$values$field = _formik$values$field.split(", ")) === null || _formik$values$field === void 0 ? void 0 : _formik$values$field.map(Number)) || [];
   const dependencyValues = React.useMemo(() => {
     const toReturn = {};
     if (!dependsOn || !Array.isArray(dependsOn)) return toReturn;
@@ -66,24 +56,20 @@ const Field = /*#__PURE__*/React.memo(_ref => {
       toReturn[dependency] = formik.values[dependency];
     }
     return toReturn;
-  }, [dependsOn, ...(dependsOn || []).map(field => formik.values[field])]);
-
-  // Check if this field has dependencies
-  const hasDependencies = React.useMemo(() => dependsOn && Array.isArray(dependsOn) && dependsOn.length, [dependsOn]);
+  }, [dependsOn, ...dependsOn.map(field => formik.values[field])]);
   const initialOptions = React.useMemo(() => {
-    if (hasDependencies) {
+    if (dependsOn.length) {
       return []; // Start empty for cascading combos
     }
     return lookups ? lookups[column.lookup] : [];
-  }, [lookups, column.lookup, hasDependencies]);
+  }, [lookups, column.lookup, dependsOn]);
 
   // Fetch cascading combo options
-  const fetchCascadingOptions = React.useCallback(async () => {
-    if (!hasDependencies || !column.lookup) return;
-    setLoading(true);
+  const fetchCascadingOptions = async () => {
+    if (!dependsOn.length || !column.lookup) return;
     try {
       // Only fetch if all dependencies have values
-      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => value !== null && value !== undefined && value !== '');
+      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => ![null, undefined, ''].includes(value));
       if (!allDependenciesHaveValues) {
         setOptions([]);
         return;
@@ -108,21 +94,18 @@ const Field = /*#__PURE__*/React.memo(_ref => {
         }
       }
     } catch (error) {
-      console.error('Error fetching cascading options:', error);
       setOptions([]);
-    } finally {
-      setLoading(false);
     }
-  }, [hasDependencies, column.lookup, dependencyValues, field, api, inputValue, formik.setFieldValue]);
+  };
 
   // Initialize options
   React.useEffect(() => {
-    if (hasDependencies) {
+    if (dependsOn.length) {
       fetchCascadingOptions();
     } else {
       setOptions(initialOptions);
     }
-  }, [hasDependencies, fetchCascadingOptions, initialOptions]);
+  }, [dependencyValues, initialOptions]);
 
   // Memoize filtered options to avoid recalculation on each render
   const filteredOptions = React.useMemo(() => {
@@ -167,8 +150,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     onChange: handleAutoCompleteChange,
     value: filteredCombos,
     size: "small",
-    disabled: isDisabled || loading,
-    loading: loading
+    disabled: isDisabled
   })), formik.touched[field] && formik.errors[field] && /*#__PURE__*/React.createElement(_material.FormHelperText, null, formik.errors[field]));
 });
 var _default = exports.default = Field;

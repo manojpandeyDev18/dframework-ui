@@ -180,7 +180,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
     );
 };
 
-const getFormConfig = function ({ columns, tabs = {}, id, searchParams, formik }) {
+const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
     const formElements = [], tabColumns = {};
     for (const tab in tabs) {
         tabColumns[tab] = [];
@@ -219,7 +219,7 @@ const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displa
     const { formElements, tabColumns } = React.useMemo(() => {
         const showTabs = model.formConfig?.showTabbed;
         const searchParams = new URLSearchParams(window.location.search);
-        const { formElements, tabColumns } = getFormConfig({ columns: model.columns, tabs: showTabs ? model.tabs : {}, id: displayId, searchParams, formik });
+        const { formElements, tabColumns } = getFormConfig({ columns: model.columns, tabs: showTabs ? model.tabs : {}, id: displayId, searchParams });
         return { formElements, tabColumns, showTabs: showTabs && tabColumns.length > 0 };
     }, [model]);
     return (

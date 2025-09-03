@@ -330,8 +330,7 @@ const getFormConfig = function getFormConfig(_ref5) {
     columns,
     tabs = {},
     id,
-    searchParams,
-    formik
+    searchParams
   } = _ref5;
   const formElements = [],
     tabColumns = {};
@@ -414,8 +413,7 @@ const FormLayout = _ref6 => {
       columns: model.columns,
       tabs: showTabs ? model.tabs : {},
       id: displayId,
-      searchParams,
-      formik
+      searchParams
     });
     return {
       formElements,

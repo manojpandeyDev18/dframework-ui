@@ -7,53 +7,37 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { transport } from "../../Grid/httpRequest";
 
-const SelectField = React.memo(({ column, field, formik, lookups, dependsOn, api, ...otherProps }) => {
+const emptyValues = [null, undefined, ''];
+
+const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = [], api, ...otherProps }) => {
     const userSelected = React.useRef(false);
-    const { filter, placeHolder } = column;
-    
+    const { placeHolder } = column;
     const [options, setOptions] = React.useState([]);
-    const [loading, setLoading] = React.useState(false);
     
     // Memoize dependency values to prevent unnecessary re-renders
     const dependencyValues = useMemo(() => {
         const toReturn = {};
-        if (!dependsOn || !Array.isArray(dependsOn)) return toReturn;
+        if (!dependsOn.length) return toReturn;
         for(const dependency of dependsOn) {
             toReturn[dependency] = formik.values[dependency];
         }
         return toReturn;
-    }, [dependsOn, ...((dependsOn || []).map(field => formik.values[field]))]);
-    
-    // Check if this field has dependencies
-    const hasDependencies = useMemo(() => 
-        dependsOn && Array.isArray(dependsOn) && dependsOn.length
-    , [dependsOn]);
-
-    // Memoize current field value to avoid dependency on entire formik.values
-    const currentFieldValue = useMemo(() => formik.values[field], [formik.values, field]);
+    }, [dependsOn, ...((dependsOn).map(dependency => formik.values[dependency]))]);
     
     const initialOptions = useMemo(() => {
-        if (hasDependencies) {
+        if (dependsOn.length) {
             return []; // Start empty for cascading combos
         }
         const options = typeof column.lookup === 'string' ? lookups[column.lookup] : column.lookup;
-        if (filter) {
-            return filter({ options, currentValue: currentFieldValue, state: formik.values });
-        }
         return options;
-    }, [column.lookup, filter, lookups, currentFieldValue, formik.values, hasDependencies]);
+    }, [column.lookup, lookups, dependsOn]);
 
     // Fetch cascading combo options
-    const fetchCascadingOptions = useCallback(async () => {
-        if (!hasDependencies || !column.lookup) return;
-        
-        setLoading(true);
+    const fetchCascadingOptions = async () => {
+        if (!dependsOn.length || !column.lookup) return;
         try {
             // Only fetch if all dependencies have values
-            const allDependenciesHaveValues = Object.values(dependencyValues).every(value => 
-                value !== null && value !== undefined && value !== ''
-            );
-            
+            const allDependenciesHaveValues = Object.values(dependencyValues).every(value => !emptyValues.includes(value));
             if (!allDependenciesHaveValues) {
                 setOptions([]);
                 return;
@@ -63,7 +47,6 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn, api
                 lookup: column.lookup,
                 where: dependencyValues
             }];
-
             const response = await transport({ url: `${api}/combo`, data: requestBody, method: 'POST' });
             
             if (response.data && response.data.success && response.data.lookups) {
@@ -71,29 +54,27 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn, api
                 setOptions(fetchedOptions);
                 
                 // Clear current value if it's not in the new options
-                if (currentFieldValue && !fetchedOptions.find(opt => opt.value === currentFieldValue)) {
+                if (formik.values[field] && !fetchedOptions.find(opt => opt.value === formik.values[field])) {
                     formik.setFieldValue(field, '');
                 }
             }
         } catch (error) {
             setOptions([]);
-        } finally {
-            setLoading(false);
         }
-    }, [hasDependencies, column.lookup, dependencyValues, field, api, currentFieldValue, formik.setFieldValue]);
+    }
 
     // Single effect to manage options - reduces redundant effects
     useEffect(() => {
-        if (hasDependencies) {
+        if (dependsOn.length) {
             fetchCascadingOptions();
         } else if(!userSelected.current) {
             setOptions(initialOptions);
         }
-    }, [hasDependencies, fetchCascadingOptions, initialOptions]);
+    }, [dependencyValues, initialOptions]);
 
     // Memoize input value processing to avoid recalculation on each render
     const inputValue = useMemo(() => {
-        let value = currentFieldValue;
+        let value = formik.values[field];
         
         // Handle default value selection
         if (options?.length && !value && !column.multiSelect && "IsDefault" in options[0]) {
@@ -114,7 +95,7 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn, api
         }
         
         return value;
-    }, [currentFieldValue, options, column.multiSelect, field, formik.setFieldValue]);
+    }, [formik.values[field], options, column.multiSelect, field, formik.setFieldValue]);
 
     // Memoize event handlers to prevent unnecessary re-renders of child components
     const handleChange = useCallback((event) => {
@@ -142,7 +123,6 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn, api
                 value={`${inputValue}`}
                 onChange={handleChange}
                 onBlur={formik.handleBlur}
-                disabled={loading}
                 sx={selectStyles}
             >
                 {Array.isArray(options) && options.map(option => (

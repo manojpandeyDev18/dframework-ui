@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+require("core-js/modules/es.array.includes.js");
 require("core-js/modules/es.parse-int.js");
 require("core-js/modules/es.promise.js");
 require("core-js/modules/esnext.iterator.constructor.js");
 require("core-js/modules/esnext.iterator.every.js");
-require("core-js/modules/esnext.iterator.filter.js");
 require("core-js/modules/esnext.iterator.find.js");
 require("core-js/modules/esnext.iterator.map.js");
 require("core-js/modules/web.dom-collections.iterator.js");
@@ -34,55 +34,39 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
       field,
       formik,
       lookups,
-      dependsOn,
+      dependsOn = [],
       api
     } = _ref,
     otherProps = _objectWithoutProperties(_ref, _excluded);
   const userSelected = _react.default.useRef(false);
   const {
-    filter,
     placeHolder
   } = column;
   const [options, setOptions] = _react.default.useState([]);
-  const [loading, setLoading] = _react.default.useState(false);
 
   // Memoize dependency values to prevent unnecessary re-renders
   const dependencyValues = (0, _react.useMemo)(() => {
     const toReturn = {};
-    if (!dependsOn || !Array.isArray(dependsOn)) return toReturn;
+    if (!dependsOn.length) return toReturn;
     for (const dependency of dependsOn) {
       toReturn[dependency] = formik.values[dependency];
     }
     return toReturn;
-  }, [dependsOn, ...(dependsOn || []).map(field => formik.values[field])]);
-
-  // Check if this field has dependencies
-  const hasDependencies = (0, _react.useMemo)(() => dependsOn && Array.isArray(dependsOn) && dependsOn.length, [dependsOn]);
-
-  // Memoize current field value to avoid dependency on entire formik.values
-  const currentFieldValue = (0, _react.useMemo)(() => formik.values[field], [formik.values, field]);
+  }, [dependsOn, ...dependsOn.map(dependency => formik.values[dependency])]);
   const initialOptions = (0, _react.useMemo)(() => {
-    if (hasDependencies) {
+    if (dependsOn.length) {
       return []; // Start empty for cascading combos
     }
     const options = typeof column.lookup === 'string' ? lookups[column.lookup] : column.lookup;
-    if (filter) {
-      return filter({
-        options,
-        currentValue: currentFieldValue,
-        state: formik.values
-      });
-    }
     return options;
-  }, [column.lookup, filter, lookups, currentFieldValue, formik.values, hasDependencies]);
+  }, [column.lookup, lookups, dependsOn]);
 
   // Fetch cascading combo options
-  const fetchCascadingOptions = (0, _react.useCallback)(async () => {
-    if (!hasDependencies || !column.lookup) return;
-    setLoading(true);
+  const fetchCascadingOptions = async () => {
+    if (!dependsOn.length || !column.lookup) return;
     try {
       // Only fetch if all dependencies have values
-      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => value !== null && value !== undefined && value !== '');
+      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => ![null, undefined, ''].includes(value));
       if (!allDependenciesHaveValues) {
         setOptions([]);
         return;
@@ -101,29 +85,27 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
         setOptions(fetchedOptions);
 
         // Clear current value if it's not in the new options
-        if (currentFieldValue && !fetchedOptions.find(opt => opt.value === currentFieldValue)) {
+        if (formik.values[field] && !fetchedOptions.find(opt => opt.value === formik.values[field])) {
           formik.setFieldValue(field, '');
         }
       }
     } catch (error) {
       setOptions([]);
-    } finally {
-      setLoading(false);
     }
-  }, [hasDependencies, column.lookup, dependencyValues, field, api, currentFieldValue, formik.setFieldValue]);
+  };
 
   // Single effect to manage options - reduces redundant effects
   (0, _react.useEffect)(() => {
-    if (hasDependencies) {
+    if (dependsOn.length) {
       fetchCascadingOptions();
     } else if (!userSelected.current) {
       setOptions(initialOptions);
     }
-  }, [hasDependencies, fetchCascadingOptions, initialOptions]);
+  }, [dependencyValues, initialOptions]);
 
   // Memoize input value processing to avoid recalculation on each render
   const inputValue = (0, _react.useMemo)(() => {
-    let value = currentFieldValue;
+    let value = formik.values[field];
 
     // Handle default value selection
     if (options !== null && options !== void 0 && options.length && !value && !column.multiSelect && "IsDefault" in options[0]) {
@@ -143,7 +125,7 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
       }
     }
     return value;
-  }, [currentFieldValue, options, column.multiSelect, field, formik.setFieldValue]);
+  }, [formik.values[field], options, column.multiSelect, field, formik.setFieldValue]);
 
   // Memoize event handlers to prevent unnecessary re-renders of child components
   const handleChange = (0, _react.useCallback)(event => {
@@ -169,7 +151,6 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
     value: "".concat(inputValue),
     onChange: handleChange,
     onBlur: formik.handleBlur,
-    disabled: loading,
     sx: selectStyles
   }), Array.isArray(options) && options.map(option => /*#__PURE__*/_react.default.createElement(_MenuItem.default, {
     key: option.value,
