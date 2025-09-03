@@ -149,7 +149,7 @@ const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookup
     );
 };
 
-const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, isAdd }) => {
+const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, isAdd, api }) => {
     const classes = useStyles();
     if (!formElements?.length) {
         return null;
@@ -170,7 +170,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
                                 : null
                             }
                             <Grid size={{ xs: isGridComponent ? 12 : 9 }} className={classes.childStyles}>
-                                <Component isAdd={isAdd} model={model} fieldConfigs={fieldConfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} {...otherProps} />
+                                <Component isAdd={isAdd} model={model} fieldConfigs={fieldConfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} api={api} {...otherProps} />
                             </Grid>
                         </Grid >
                     );
@@ -180,7 +180,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
     );
 };
 
-const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
+const getFormConfig = function ({ columns, tabs = {}, id, searchParams, formik }) {
     const formElements = [], tabColumns = {};
     for (const tab in tabs) {
         tabColumns[tab] = [];
@@ -194,6 +194,9 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
         const otherProps = {};
         if (column.options) {
             otherProps.options = column.options;
+        }
+        if(column.dependsOn) {
+            otherProps.dependsOn = column.dependsOn
         }
         const Component = fieldMappers[fieldType];
         if (!Component || (column.hideInAddGrid && id === '0')) {
@@ -210,18 +213,18 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
     return { formElements, tabColumns: tabsData };
 };
 
-const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldConfigs, mode, handleSubmit }) => {
+const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldConfigs, mode, handleSubmit, api }) => {
     const classes = useStyles();
     const isAdd = [0, undefined, null, ''].includes(displayId);
     const { formElements, tabColumns } = React.useMemo(() => {
         const showTabs = model.formConfig?.showTabbed;
         const searchParams = new URLSearchParams(window.location.search);
-        const { formElements, tabColumns } = getFormConfig({ columns: model.columns, tabs: showTabs ? model.tabs : {}, id: displayId, searchParams });
+        const { formElements, tabColumns } = getFormConfig({ columns: model.columns, tabs: showTabs ? model.tabs : {}, id: displayId, searchParams, formik });
         return { formElements, tabColumns, showTabs: showTabs && tabColumns.length > 0 };
     }, [model]);
     return (
         <div>
-            <RenderColumns isAdd={isAdd} formElements={formElements} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} />
+            <RenderColumns isAdd={isAdd} formElements={formElements} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} api={api} />
             <div className={classes.renderSteps}>
                 <RenderSteps tabColumns={tabColumns} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} handleSubmit={handleSubmit} />
             </div>

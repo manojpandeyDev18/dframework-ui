@@ -55,7 +55,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
 
     const lookups = [];
     const dateColumns = [];
-    gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true }) => {
+    gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true, dependsOn }) => {
         if (dateDataTypes.includes(type)) {
             dateColumns.push({ field, keepLocal, keepLocalDate });
         }
@@ -63,7 +63,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
             return;
         }
         if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
-            lookups.push(lookup);
+            lookups.push({ lookup, dependsOn });
         }
     });
 
@@ -110,7 +110,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
     };
 
     if (lookups) {
-        requestData.lookups = lookups.join(',');
+        requestData.lookups = JSON.stringify(lookups);
     }
 
     if (model?.limitToSurveyed) {
@@ -222,11 +222,11 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     const lookupsToFetch = [];
     const fields = model.formDef || model.columns;
     fields?.forEach(field => {
-        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !([null, 0].includes(id) && field.parentComboField)) {
-            lookupsToFetch.push(field.lookup);
+        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !([null, 0].includes(id)) && !field.dependsOn) {
+            lookupsToFetch.push({ lookup: field.lookup });
         }
     });
-    searchParams.set("lookups", lookupsToFetch);
+    searchParams.set("lookups", JSON.stringify(lookupsToFetch));
     if (where && Object.keys(where)?.length) {
         searchParams.set("where", JSON.stringify(where));
     }

@@ -363,6 +363,7 @@ const Form = ({
               id={id}
               handleSubmit={handleSubmit}
               mode={mode}
+              api={api || gridApi}
             />
           </form>
           {errorMessage && (

@@ -411,7 +411,8 @@ const Form = _ref => {
     lookups: lookups,
     id: id,
     handleSubmit: handleSubmit,
-    mode: mode
+    mode: mode,
+    api: api || gridApi
   })), errorMessage && /*#__PURE__*/_react.default.createElement(_Dialog.DialogComponent, {
     open: !!errorMessage,
     onConfirm: clearError,

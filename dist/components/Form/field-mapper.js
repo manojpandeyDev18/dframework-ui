@@ -272,7 +272,8 @@ const RenderColumns = _ref3 => {
     lookups,
     fieldConfigs,
     mode,
-    isAdd
+    isAdd,
+    api
   } = _ref3;
   const classes = useStyles();
   if (!(formElements !== null && formElements !== void 0 && formElements.length)) {
@@ -319,7 +320,8 @@ const RenderColumns = _ref3 => {
       data: data,
       onChange: onChange,
       combos: combos,
-      lookups: lookups
+      lookups: lookups,
+      api: api
     }, otherProps))));
   }));
 };
@@ -328,7 +330,8 @@ const getFormConfig = function getFormConfig(_ref5) {
     columns,
     tabs = {},
     id,
-    searchParams
+    searchParams,
+    formik
   } = _ref5;
   const formElements = [],
     tabColumns = {};
@@ -349,6 +352,9 @@ const getFormConfig = function getFormConfig(_ref5) {
     const otherProps = {};
     if (column.options) {
       otherProps.options = column.options;
+    }
+    if (column.dependsOn) {
+      otherProps.dependsOn = column.dependsOn;
     }
     const Component = fieldMappers[fieldType];
     if (!Component || column.hideInAddGrid && id === '0') {
@@ -389,7 +395,8 @@ const FormLayout = _ref6 => {
     id: displayId,
     fieldConfigs,
     mode,
-    handleSubmit
+    handleSubmit,
+    api
   } = _ref6;
   const classes = useStyles();
   const isAdd = [0, undefined, null, ''].includes(displayId);
@@ -407,7 +414,8 @@ const FormLayout = _ref6 => {
       columns: model.columns,
       tabs: showTabs ? model.tabs : {},
       id: displayId,
-      searchParams
+      searchParams,
+      formik
     });
     return {
       formElements,
@@ -425,7 +433,8 @@ const FormLayout = _ref6 => {
     combos: combos,
     lookups: lookups,
     fieldConfigs: fieldConfigs,
-    mode: mode
+    mode: mode,
+    api: api
   }), /*#__PURE__*/React.createElement("div", {
     className: classes.renderSteps
   }, /*#__PURE__*/React.createElement(RenderSteps, {

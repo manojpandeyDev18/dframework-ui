@@ -114,7 +114,8 @@ const getList = async _ref => {
       field,
       keepLocal = false,
       keepLocalDate,
-      filterable = true
+      filterable = true,
+      dependsOn
     } = _ref2;
     if (dateDataTypes.includes(type)) {
       dateColumns.push({
@@ -127,7 +128,10 @@ const getList = async _ref => {
       return;
     }
     if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
-      lookups.push(lookup);
+      lookups.push({
+        lookup,
+        dependsOn
+      });
     }
   });
   const where = [];
@@ -178,7 +182,7 @@ const getList = async _ref => {
     fileName: model.overrideFileName
   });
   if (lookups) {
-    requestData.lookups = lookups.join(',');
+    requestData.lookups = JSON.stringify(lookups);
   }
   if (model !== null && model !== void 0 && model.limitToSurveyed) {
     requestData.limitToSurveyed = model === null || model === void 0 ? void 0 : model.limitToSurveyed;
@@ -309,11 +313,13 @@ const getRecord = async _ref4 => {
   const lookupsToFetch = [];
   const fields = model.formDef || model.columns;
   fields === null || fields === void 0 || fields.forEach(field => {
-    if (field.lookup && !lookupsToFetch.includes(field.lookup) && !([null, 0].includes(id) && field.parentComboField)) {
-      lookupsToFetch.push(field.lookup);
+    if (field.lookup && !lookupsToFetch.includes(field.lookup) && ![null, 0].includes(id) && !field.dependsOn) {
+      lookupsToFetch.push({
+        lookup: field.lookup
+      });
     }
   });
-  searchParams.set("lookups", lookupsToFetch);
+  searchParams.set("lookups", JSON.stringify(lookupsToFetch));
   if (where && (_Object$keys = Object.keys(where)) !== null && _Object$keys !== void 0 && _Object$keys.length) {
     searchParams.set("where", JSON.stringify(where));
   }
