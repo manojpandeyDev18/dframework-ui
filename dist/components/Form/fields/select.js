@@ -28,6 +28,7 @@ function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
+const emptyValues = [null, undefined, ''];
 const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
   let {
       column,
@@ -66,15 +67,17 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
     if (!dependsOn.length || !column.lookup) return;
     try {
       // Only fetch if all dependencies have values
-      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => ![null, undefined, ''].includes(value));
+      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => !emptyValues.includes(value));
       if (!allDependenciesHaveValues) {
         setOptions([]);
         return;
       }
-      const requestBody = [{
-        lookup: column.lookup,
-        where: dependencyValues
-      }];
+      const requestBody = {
+        lookups: [{
+          lookup: column.lookup,
+          where: dependencyValues
+        }]
+      };
       const response = await (0, _httpRequest.transport)({
         url: "".concat(api, "/combo"),
         data: requestBody,

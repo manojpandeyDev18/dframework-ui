@@ -31,6 +31,7 @@ function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t =
 const consts = {
   limitTags: 5
 };
+const emptyValues = [null, undefined, ''];
 const Field = /*#__PURE__*/React.memo(_ref => {
   var _formik$values$field;
   let {
@@ -69,15 +70,17 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     if (!dependsOn.length || !column.lookup) return;
     try {
       // Only fetch if all dependencies have values
-      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => ![null, undefined, ''].includes(value));
+      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => !emptyValues.includes(value));
       if (!allDependenciesHaveValues) {
         setOptions([]);
         return;
       }
-      const requestBody = [{
-        lookup: column.lookup,
-        where: dependencyValues
-      }];
+      const requestBody = {
+        lookups: [{
+          lookup: column.lookup,
+          where: dependencyValues
+        }]
+      };
       const response = await (0, _httpRequest.transport)({
         url: "".concat(api, "/combo"),
         data: requestBody,

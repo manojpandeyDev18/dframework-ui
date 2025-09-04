@@ -43,10 +43,9 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
                 return;
             }
 
-            const requestBody = [{
-                lookup: column.lookup,
-                where: dependencyValues
-            }];
+            const requestBody = {
+                lookups: [{ lookup: column.lookup, where: dependencyValues }]
+            };
             const response = await transport({ url: `${api}/combo`, data: requestBody, method: 'POST' });
             
             if (response.data && response.data.success && response.data.lookups) {
