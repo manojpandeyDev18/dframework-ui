@@ -25,7 +25,7 @@ const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fiel
     }, [options, column.filter, stateData]);
 
     const filteredCombos = filteredOptions.filter(option => inputValue.includes(option.value)) || [];
-    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;    // Memoize event handler to prevent unnecessary re-renders
+    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
     const handleAutoCompleteChange = (_, newValue) => {
         formik?.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
     };
