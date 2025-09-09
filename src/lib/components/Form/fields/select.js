@@ -10,7 +10,7 @@ import useCascadingLookup from '../../../hooks/useCascadingLookup';
 const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = [], api, ...otherProps }) => {
     const userSelected = React.useRef(false);
     const { placeHolder } = column;
-    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api });
+    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, userSelected });
     
     // Memoize input value processing to avoid recalculation on each render
     const inputValue = useMemo(() => {
@@ -38,11 +38,11 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
     }, [formik.values[field], options, column.multiSelect, field, formik.setFieldValue]);
 
     // Memoize event handlers to prevent unnecessary re-renders of child components
-    const handleChange = useCallback((event) => {
+    const handleChange = (event) => {
         formik.handleChange(event);
         userSelected.current = true;
-    }, [formik.handleChange]);
-    
+    };
+
     return (
         <FormControl
             fullWidth

@@ -44,7 +44,8 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
     formik,
     lookups,
     dependsOn,
-    api
+    api,
+    userSelected
   });
 
   // Memoize input value processing to avoid recalculation on each render
@@ -72,10 +73,10 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
   }, [formik.values[field], options, column.multiSelect, field, formik.setFieldValue]);
 
   // Memoize event handlers to prevent unnecessary re-renders of child components
-  const handleChange = (0, _react.useCallback)(event => {
+  const handleChange = event => {
     formik.handleChange(event);
     userSelected.current = true;
-  }, [formik.handleChange]);
+  };
   return /*#__PURE__*/_react.default.createElement(_FormControl.default, {
     fullWidth: true,
     key: field,

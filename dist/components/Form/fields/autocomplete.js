@@ -49,7 +49,8 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     formik,
     lookups,
     dependsOn,
-    api
+    api,
+    isAutoComplete: true
   });
   const inputValue = ((_formik$values$field = formik.values[field]) === null || _formik$values$field === void 0 || (_formik$values$field = _formik$values$field.split(", ")) === null || _formik$values$field === void 0 ? void 0 : _formik$values$field.map(Number)) || [];
   const filteredOptions = React.useMemo(() => {
@@ -66,7 +67,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     return processedOptions;
   }, [options, column.filter, stateData]);
   const filteredCombos = filteredOptions.filter(option => inputValue.includes(option.value)) || [];
-  const isDisabled = mode !== 'copy' && fieldConfigs.disabled; // Memoize event handler to prevent unnecessary re-renders
+  const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
   const handleAutoCompleteChange = (_, newValue) => {
     formik === null || formik === void 0 || formik.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
   };

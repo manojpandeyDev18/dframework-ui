@@ -3,7 +3,7 @@ import request from "../components/Grid/httpRequest";
 
 const emptyValues = [null, undefined, ''];
 
-export default function useCascadingLookup({ column, formik, lookups, dependsOn = [], api }) {
+export default function useCascadingLookup({ column, formik, lookups, dependsOn = [], api, isAutoComplete = false, userSelected }) {
     const [options, setOptions] = useState([]);
 
     // Memoize dependency values
@@ -22,9 +22,7 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
         return typeof column.lookup === 'string' ? lookups[column.lookup] : column.lookup;
     }, [column.lookup, lookups, dependsOn]);
 
-    // Fetch cascading options
-    useEffect(() => {
-        const fetchOptions = async () => {
+            const fetchOptions = async () => {
             if (!dependsOn.length || !column.lookup) return;
             // Only fetch if all dependencies have values
             const allDependenciesHaveValues = Object.values(dependencyValues).every(
@@ -52,9 +50,12 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
                 setOptions(newOptions);
             }
         };
+
+    // Fetch cascading options
+    useEffect(() => {
         if (dependsOn.length) {
             fetchOptions();
-        } else {
+        } else if (isAutoComplete || !userSelected.current) {
             setOptions(initialOptions);
         }
     }, [dependencyValues, initialOptions, api, column.lookup]);

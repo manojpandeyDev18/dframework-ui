@@ -12,7 +12,7 @@ const consts = {
 
 const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldConfigs = {}, mode, api, ...otherProps }) => {
     const { stateData } = useStateContext();
-    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api });
+    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, isAutoComplete: true });
     const inputValue = formik.values[field]?.split(", ")?.map(Number) || [];
 
     const filteredOptions = React.useMemo(() => {
