@@ -7,12 +7,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 require("core-js/modules/es.array.includes.js");
-require("core-js/modules/es.promise.js");
 require("core-js/modules/es.string.includes.js");
 require("core-js/modules/esnext.iterator.constructor.js");
-require("core-js/modules/esnext.iterator.every.js");
 require("core-js/modules/esnext.iterator.filter.js");
-require("core-js/modules/esnext.iterator.find.js");
 require("core-js/modules/esnext.iterator.map.js");
 require("core-js/modules/web.dom-collections.iterator.js");
 var React = _interopRequireWildcard(require("react"));
@@ -21,7 +18,7 @@ var _FormControl = _interopRequireDefault(require("@mui/material/FormControl"));
 var _Autocomplete = _interopRequireDefault(require("@mui/material/Autocomplete"));
 var _TextField = _interopRequireDefault(require("@mui/material/TextField"));
 var _StateProvider = require("../../useRouter/StateProvider");
-var _httpRequest = require("../../Grid/httpRequest");
+var _useCascadingLookup = _interopRequireDefault(require("../../../hooks/useCascadingLookup"));
 const _excluded = ["column", "field", "formik", "lookups", "dependsOn", "fieldConfigs", "mode", "api"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
@@ -31,7 +28,6 @@ function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t =
 const consts = {
   limitTags: 5
 };
-const emptyValues = [null, undefined, ''];
 const Field = /*#__PURE__*/React.memo(_ref => {
   var _formik$values$field;
   let {
@@ -48,69 +44,14 @@ const Field = /*#__PURE__*/React.memo(_ref => {
   const {
     stateData
   } = (0, _StateProvider.useStateContext)();
-  const [options, setOptions] = React.useState([]);
+  const options = (0, _useCascadingLookup.default)({
+    column,
+    formik,
+    lookups,
+    dependsOn,
+    api
+  });
   const inputValue = ((_formik$values$field = formik.values[field]) === null || _formik$values$field === void 0 || (_formik$values$field = _formik$values$field.split(", ")) === null || _formik$values$field === void 0 ? void 0 : _formik$values$field.map(Number)) || [];
-  const dependencyValues = React.useMemo(() => {
-    const toReturn = {};
-    if (!dependsOn || !Array.isArray(dependsOn)) return toReturn;
-    for (const dependency of dependsOn) {
-      toReturn[dependency] = formik.values[dependency];
-    }
-    return toReturn;
-  }, [dependsOn, ...dependsOn.map(field => formik.values[field])]);
-  const initialOptions = React.useMemo(() => {
-    if (dependsOn.length) {
-      return []; // Start empty for cascading combos
-    }
-    return lookups ? lookups[column.lookup] : [];
-  }, [lookups, column.lookup, dependsOn]);
-
-  // Fetch cascading combo options
-  const fetchCascadingOptions = async () => {
-    if (!dependsOn.length || !column.lookup) return;
-    try {
-      // Only fetch if all dependencies have values
-      const allDependenciesHaveValues = Object.values(dependencyValues).every(value => !emptyValues.includes(value));
-      if (!allDependenciesHaveValues) {
-        setOptions([]);
-        return;
-      }
-      const requestBody = {
-        lookups: [{
-          lookup: column.lookup,
-          where: dependencyValues
-        }]
-      };
-      const response = await (0, _httpRequest.transport)({
-        url: "".concat(api, "/combo"),
-        data: requestBody,
-        method: 'POST'
-      });
-      if (response.data && response.data.success && response.data.lookups) {
-        const fetchedOptions = response.data.lookups[column.lookup] || [];
-        setOptions(fetchedOptions);
-
-        // Clear current value if selected options are not in the new options
-        const validValues = inputValue.filter(val => fetchedOptions.find(opt => opt.value === val));
-        if (validValues.length !== inputValue.length) {
-          formik.setFieldValue(field, validValues.length > 0 ? validValues.join(', ') : '');
-        }
-      }
-    } catch (error) {
-      setOptions([]);
-    }
-  };
-
-  // Initialize options
-  React.useEffect(() => {
-    if (dependsOn.length) {
-      fetchCascadingOptions();
-    } else {
-      setOptions(initialOptions);
-    }
-  }, [dependencyValues, initialOptions]);
-
-  // Memoize filtered options to avoid recalculation on each render
   const filteredOptions = React.useMemo(() => {
     let processedOptions = [...options];
     const {
@@ -124,17 +65,11 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     }
     return processedOptions;
   }, [options, column.filter, stateData]);
-
-  // Memoize filtered combos to avoid recalculation on each render
-  const filteredCombos = React.useMemo(() => filteredOptions.filter(option => inputValue.includes(option.value)) || [], [filteredOptions, inputValue]);
-
-  // Memoize disabled state
-  const isDisabled = React.useMemo(() => mode !== 'copy' && fieldConfigs.disabled, [mode, fieldConfigs.disabled]);
-
-  // Memoize event handler to prevent unnecessary re-renders
-  const handleAutoCompleteChange = React.useCallback((_, newValue) => {
+  const filteredCombos = filteredOptions.filter(option => inputValue.includes(option.value)) || [];
+  const isDisabled = mode !== 'copy' && fieldConfigs.disabled; // Memoize event handler to prevent unnecessary re-renders
+  const handleAutoCompleteChange = (_, newValue) => {
     formik === null || formik === void 0 || formik.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
-  }, [formik === null || formik === void 0 ? void 0 : formik.setFieldValue, field]);
+  };
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
     key: field,

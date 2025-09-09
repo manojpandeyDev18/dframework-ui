@@ -4,103 +4,31 @@ import FormControl from '@mui/material/FormControl';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { useStateContext } from "../../useRouter/StateProvider";
-import { transport } from "../../Grid/httpRequest";
+import useCascadingLookup from '../../../hooks/useCascadingLookup';
 
 const consts = {
     limitTags: 5
 }
 
-const emptyValues = [null, undefined, ''];
-
 const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldConfigs = {}, mode, api, ...otherProps }) => {
     const { stateData } = useStateContext();
-    const [options, setOptions] = React.useState([]);
+    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api });
     const inputValue = formik.values[field]?.split(", ")?.map(Number) || [];
 
-    const dependencyValues = React.useMemo(() => {
-        const toReturn = {};
-        if (!dependsOn || !Array.isArray(dependsOn)) return toReturn;
-        for(const dependency of dependsOn) {
-            toReturn[dependency] = formik.values[dependency];
-        }
-        return toReturn;
-    }, [dependsOn, ...((dependsOn).map(field => formik.values[field]))]);
-
-    const initialOptions = React.useMemo(() => {
-        if (dependsOn.length) {
-            return []; // Start empty for cascading combos
-        }
-        return lookups ? lookups[column.lookup] : [];
-    }, [lookups, column.lookup, dependsOn]);
-
-    // Fetch cascading combo options
-    const fetchCascadingOptions = async () => {
-        if (!dependsOn.length || !column.lookup) return;
-        try {
-            // Only fetch if all dependencies have values
-            const allDependenciesHaveValues = Object.values(dependencyValues).every(value => !emptyValues.includes(value));
-            if (!allDependenciesHaveValues) {
-                setOptions([]);
-                return;
-            }
-
-            const requestBody = {
-                lookups: [{ lookup: column.lookup, where: dependencyValues }]
-            };
-            const response = await transport({ url: `${api}/combo`, data: requestBody, method: 'POST' });
-            if (response.data && response.data.success && response.data.lookups) {
-                const fetchedOptions = response.data.lookups[column.lookup] || [];
-                setOptions(fetchedOptions);
-                
-                // Clear current value if selected options are not in the new options
-                const validValues = inputValue.filter(val => 
-                    fetchedOptions.find(opt => opt.value === val)
-                );
-                
-                if (validValues.length !== inputValue.length) {
-                    formik.setFieldValue(field, validValues.length > 0 ? validValues.join(', ') : '');
-                }
-            }
-        } catch (error) {
-            setOptions([]);
-        }
-    };
-
-    // Initialize options
-    React.useEffect(() => {
-        if (dependsOn.length) {
-            fetchCascadingOptions();
-        } else {
-            setOptions(initialOptions);
-        }
-    }, [dependencyValues, initialOptions]);
-
-    // Memoize filtered options to avoid recalculation on each render
     const filteredOptions = React.useMemo(() => {
         let processedOptions = [...options];
-        
         const { filter } = column;
         if (typeof filter === "function" && processedOptions.length) {
             processedOptions = filter({ options: processedOptions, stateData }) || processedOptions;
         }
-        
         return processedOptions;
     }, [options, column.filter, stateData]);
-    
-    // Memoize filtered combos to avoid recalculation on each render
-    const filteredCombos = React.useMemo(() => 
-        filteredOptions.filter(option => inputValue.includes(option.value)) || []
-    , [filteredOptions, inputValue]);
-    
-    // Memoize disabled state
-    const isDisabled = React.useMemo(() => 
-        mode !== 'copy' && fieldConfigs.disabled
-    , [mode, fieldConfigs.disabled]);
-    
-    // Memoize event handler to prevent unnecessary re-renders
-    const handleAutoCompleteChange = React.useCallback((_, newValue) => {
+
+    const filteredCombos = filteredOptions.filter(option => inputValue.includes(option.value)) || [];
+    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;    // Memoize event handler to prevent unnecessary re-renders
+    const handleAutoCompleteChange = (_, newValue) => {
         formik?.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
-    }, [formik?.setFieldValue, field]);
+    };
 
     return (
         <FormControl
@@ -114,7 +42,7 @@ const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fiel
                 multiple
                 id={field}
                 limitTags={column.limitTags || consts.limitTags}
-                options={filteredOptions || []}
+                options={filteredOptions  || []}
                 getOptionLabel={(option) => option.label || ''}
                 defaultValue={filteredCombos}
                 renderInput={(params) => <TextField {...params} variant="standard" />}

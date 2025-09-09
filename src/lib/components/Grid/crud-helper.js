@@ -4,6 +4,7 @@ import { transport, HTTP_STATUS_CODES } from "./httpRequest";
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
 const timeInterval = 200;
+const emptyValues = [null, 0];
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
 
@@ -222,7 +223,7 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     const lookupsToFetch = [];
     const fields = model.formDef || model.columns;
     fields?.forEach(field => {
-        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !([null, 0].includes(id)) && !field.dependsOn) {
+        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !(emptyValues.includes(id)) && !field.dependsOn) {
             lookupsToFetch.push({ lookup: field.lookup });
         }
     });

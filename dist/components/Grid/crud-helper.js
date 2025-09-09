@@ -32,6 +32,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
 const timeInterval = 200;
+const emptyValues = [null, 0];
 const isLocalTime = dateValue => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
 
 /**
@@ -313,7 +314,7 @@ const getRecord = async _ref4 => {
   const lookupsToFetch = [];
   const fields = model.formDef || model.columns;
   fields === null || fields === void 0 || fields.forEach(field => {
-    if (field.lookup && !lookupsToFetch.includes(field.lookup) && ![null, 0].includes(id) && !field.dependsOn) {
+    if (field.lookup && !lookupsToFetch.includes(field.lookup) && !emptyValues.includes(id) && !field.dependsOn) {
       lookupsToFetch.push({
         lookup: field.lookup
       });
