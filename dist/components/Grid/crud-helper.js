@@ -32,6 +32,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
 const timeInterval = 200;
+const emptyValues = [null, 0];
 const isLocalTime = dateValue => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
 
 /**
@@ -106,6 +107,7 @@ const getList = async _ref => {
     }
   }
   const lookups = [];
+  const lookupWithDeps = [];
   const dateColumns = [];
   gridColumns.forEach(_ref2 => {
     let {
@@ -114,7 +116,8 @@ const getList = async _ref => {
       field,
       keepLocal = false,
       keepLocalDate,
-      filterable = true
+      filterable = true,
+      dependsOn
     } = _ref2;
     if (dateDataTypes.includes(type)) {
       dateColumns.push({
@@ -128,6 +131,10 @@ const getList = async _ref => {
     }
     if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
       lookups.push(lookup);
+      lookupWithDeps.push({
+        lookup,
+        dependsOn
+      });
     }
   });
   const where = [];
@@ -179,6 +186,9 @@ const getList = async _ref => {
   });
   if (lookups) {
     requestData.lookups = lookups.join(',');
+  }
+  if (lookupWithDeps.length) {
+    requestData.lookupWithDeps = JSON.stringify(lookupWithDeps);
   }
   if (model !== null && model !== void 0 && model.limitToSurveyed) {
     requestData.limitToSurveyed = model === null || model === void 0 ? void 0 : model.limitToSurveyed;
@@ -309,7 +319,7 @@ const getRecord = async _ref4 => {
   const lookupsToFetch = [];
   const fields = model.formDef || model.columns;
   fields === null || fields === void 0 || fields.forEach(field => {
-    if (field.lookup && !lookupsToFetch.includes(field.lookup) && !([null, 0].includes(id) && field.parentComboField)) {
+    if (field.lookup && !lookupsToFetch.includes(field.lookup) && !emptyValues.includes(id) && !field.dependsOn) {
       lookupsToFetch.push(field.lookup);
     }
   });

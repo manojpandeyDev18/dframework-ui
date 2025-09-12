@@ -4,6 +4,7 @@ import { transport, HTTP_STATUS_CODES } from "./httpRequest";
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
 const timeInterval = 200;
+const emptyValues = [null, 0];
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
 
@@ -54,8 +55,9 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
     }
 
     const lookups = [];
+    const lookupWithDeps = []; // for backward compatibility having two lookups arrays
     const dateColumns = [];
-    gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true }) => {
+    gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true, dependsOn }) => {
         if (dateDataTypes.includes(type)) {
             dateColumns.push({ field, keepLocal, keepLocalDate });
         }
@@ -64,6 +66,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         }
         if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
             lookups.push(lookup);
+            lookupWithDeps.push({ lookup, dependsOn });
         }
     });
 
@@ -109,8 +112,12 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         fileName: model.overrideFileName
     };
 
-    if (lookups) {
+    if (lookups.length) {
         requestData.lookups = lookups.join(',');
+    }
+
+    if (lookupWithDeps.length) {
+        requestData.lookupWithDeps = JSON.stringify(lookupWithDeps);
     }
 
     if (model?.limitToSurveyed) {
@@ -222,7 +229,7 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     const lookupsToFetch = [];
     const fields = model.formDef || model.columns;
     fields?.forEach(field => {
-        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !([null, 0].includes(id) && field.parentComboField)) {
+        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !(emptyValues.includes(id)) && !field.dependsOn) {
             lookupsToFetch.push(field.lookup);
         }
     });

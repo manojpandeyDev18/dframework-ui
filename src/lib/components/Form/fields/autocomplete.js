@@ -4,26 +4,21 @@ import FormControl from '@mui/material/FormControl';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { useStateContext } from "../../useRouter/StateProvider";
+import useCascadingLookup from '../../../hooks/useCascadingLookup';
+
 const consts = {
     limitTags: 5
 }
-const Field = ({ column, field, formik, lookups, otherProps, fieldConfigs = {}, mode }) => {
-    const { stateData } = useStateContext();
+
+const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldConfigs = {}, mode, api, ...otherProps }) => {
+    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, isAutoComplete: true });
     const inputValue = formik.values[field]?.split(", ")?.map(Number) || [];
-    const options = React.useMemo(
-        () => (lookups ? lookups[column.lookup] : []),
-        [lookups, column.lookup]
-    );
-    const { filter } = column;
-    if (typeof filter === "function" && options.length) {
-        filter({ options, stateData });
-    }
 
     const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
     const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
     const handleAutoCompleteChange = (_, newValue) => {
         formik?.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
-    }
+    };
 
     return (
         <FormControl
@@ -49,7 +44,7 @@ const Field = ({ column, field, formik, lookups, otherProps, fieldConfigs = {}, 
             {formik.touched[field] && formik.errors[field] && <FormHelperText>{formik.errors[field]}</FormHelperText>}
         </FormControl>
     )
-}
+});
 
 export default Field;
 
