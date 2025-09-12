@@ -55,6 +55,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
     }
 
     const lookups = [];
+    const lookupWithDeps = []; // for backward compatibility having two lookups arrays
     const dateColumns = [];
     gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true, dependsOn }) => {
         if (dateDataTypes.includes(type)) {
@@ -64,7 +65,8 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
             return;
         }
         if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
-            lookups.push({ lookup, dependsOn });
+            lookups.push(lookup);
+            lookupWithDeps.push({ lookup, dependsOn });
         }
     });
 
@@ -110,8 +112,12 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         fileName: model.overrideFileName
     };
 
-    if (lookups) {
-        requestData.lookups = JSON.stringify(lookups);
+    if (lookups.length) {
+        requestData.lookups = lookups.join(',');
+    }
+
+    if (lookupWithDeps.length) {
+        requestData.lookupWithDeps = JSON.stringify(lookupWithDeps);
     }
 
     if (model?.limitToSurveyed) {
@@ -224,10 +230,10 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     const fields = model.formDef || model.columns;
     fields?.forEach(field => {
         if (field.lookup && !lookupsToFetch.includes(field.lookup) && !(emptyValues.includes(id)) && !field.dependsOn) {
-            lookupsToFetch.push({ lookup: field.lookup });
+            lookupsToFetch.push(field.lookup);
         }
     });
-    searchParams.set("lookups", JSON.stringify(lookupsToFetch));
+    searchParams.set("lookups", lookupsToFetch);
     if (where && Object.keys(where)?.length) {
         searchParams.set("where", JSON.stringify(where));
     }

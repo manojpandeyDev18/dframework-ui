@@ -41,9 +41,6 @@ const Field = /*#__PURE__*/React.memo(_ref => {
       api
     } = _ref,
     otherProps = _objectWithoutProperties(_ref, _excluded);
-  const {
-    stateData
-  } = (0, _StateProvider.useStateContext)();
   const options = (0, _useCascadingLookup.default)({
     column,
     formik,
@@ -53,20 +50,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     isAutoComplete: true
   });
   const inputValue = ((_formik$values$field = formik.values[field]) === null || _formik$values$field === void 0 || (_formik$values$field = _formik$values$field.split(", ")) === null || _formik$values$field === void 0 ? void 0 : _formik$values$field.map(Number)) || [];
-  const filteredOptions = React.useMemo(() => {
-    let processedOptions = [...options];
-    const {
-      filter
-    } = column;
-    if (typeof filter === "function" && processedOptions.length) {
-      processedOptions = filter({
-        options: processedOptions,
-        stateData
-      }) || processedOptions;
-    }
-    return processedOptions;
-  }, [options, column.filter, stateData]);
-  const filteredCombos = filteredOptions.filter(option => inputValue.includes(option.value)) || [];
+  const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
   const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
   const handleAutoCompleteChange = (_, newValue) => {
     formik === null || formik === void 0 || formik.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
@@ -80,7 +64,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     multiple: true,
     id: field,
     limitTags: column.limitTags || consts.limitTags,
-    options: filteredOptions || [],
+    options: options || [],
     getOptionLabel: option => option.label || '',
     defaultValue: filteredCombos,
     renderInput: params => /*#__PURE__*/React.createElement(_TextField.default, _extends({}, params, {

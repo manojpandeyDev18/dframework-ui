@@ -107,6 +107,7 @@ const getList = async _ref => {
     }
   }
   const lookups = [];
+  const lookupWithDeps = [];
   const dateColumns = [];
   gridColumns.forEach(_ref2 => {
     let {
@@ -129,7 +130,8 @@ const getList = async _ref => {
       return;
     }
     if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
-      lookups.push({
+      lookups.push(lookup);
+      lookupWithDeps.push({
         lookup,
         dependsOn
       });
@@ -183,7 +185,10 @@ const getList = async _ref => {
     fileName: model.overrideFileName
   });
   if (lookups) {
-    requestData.lookups = JSON.stringify(lookups);
+    requestData.lookups = lookups.join(',');
+  }
+  if (lookupWithDeps.length) {
+    requestData.lookupWithDeps = JSON.stringify(lookupWithDeps);
   }
   if (model !== null && model !== void 0 && model.limitToSurveyed) {
     requestData.limitToSurveyed = model === null || model === void 0 ? void 0 : model.limitToSurveyed;
@@ -315,12 +320,10 @@ const getRecord = async _ref4 => {
   const fields = model.formDef || model.columns;
   fields === null || fields === void 0 || fields.forEach(field => {
     if (field.lookup && !lookupsToFetch.includes(field.lookup) && !emptyValues.includes(id) && !field.dependsOn) {
-      lookupsToFetch.push({
-        lookup: field.lookup
-      });
+      lookupsToFetch.push(field.lookup);
     }
   });
-  searchParams.set("lookups", JSON.stringify(lookupsToFetch));
+  searchParams.set("lookups", lookupsToFetch);
   if (where && (_Object$keys = Object.keys(where)) !== null && _Object$keys !== void 0 && _Object$keys.length) {
     searchParams.set("where", JSON.stringify(where));
   }
