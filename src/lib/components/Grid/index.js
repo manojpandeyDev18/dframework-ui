@@ -859,14 +859,7 @@ const GridBase = memo(({
             //     </GridToolbarContainer>
             // </div>
             
-            <Toolbar sx={{
-    display: "flex",
-    alignItems: "center",
-    gap: 1,
-    px: 1,
-    // allow wrapping on very small screens if needed
-    flexWrap: "wrap",
-  }}>
+            <Toolbar>
                 <Box style={{
       display: "flex",
       alignItems: "center",

@@ -1189,16 +1189,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       //         </Box>
       //     </GridToolbarContainer>
       // </div>
-      _react.default.createElement(_xDataGridPremium.Toolbar, {
-        sx: {
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          px: 1,
-          // allow wrapping on very small screens if needed
-          flexWrap: "wrap"
-        }
-      }, /*#__PURE__*/_react.default.createElement(_Box.default, {
+      _react.default.createElement(_xDataGridPremium.Toolbar, null, /*#__PURE__*/_react.default.createElement(_Box.default, {
         style: {
           display: "flex",
           alignItems: "center",
