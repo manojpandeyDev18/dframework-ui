@@ -1144,7 +1144,6 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     const addText = model.customAddText || (model.title ? "Add ".concat(model.title) : 'Add');
     return /*#__PURE__*/_react.default.createElement("div", {
       style: {
-        justifyContent: 'space-between',
         padding: '10px'
       }
     }, /*#__PURE__*/_react.default.createElement("div", null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
