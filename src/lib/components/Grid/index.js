@@ -1089,7 +1089,7 @@ const GridBase = memo(({
                         showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
                         density="compact"
-                        headeFilters={true}
+                        headerFilters={true}
                         disableDensitySelector={true}
                         apiRef={apiRef}
                         disableAggregation={true}
