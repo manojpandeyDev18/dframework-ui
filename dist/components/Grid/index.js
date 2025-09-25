@@ -1198,16 +1198,19 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       sx: {
         display: 'flex',
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
+        borderBottom: 'none'
       }
     }), /*#__PURE__*/_react.default.createElement(_Box.default, {
       sx: {
         display: 'flex',
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 1
+        alignItems: 'center'
       }
     }, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+      sx: {
+        width: "149px"
+      },
       startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
       onClick: clearFilters,
       size: "small"

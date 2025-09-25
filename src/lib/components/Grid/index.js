@@ -834,14 +834,14 @@ const GridBase = memo(({
                     {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
                     {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
                 </div>
-                <GridToolbarContainer {...props} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                <GridToolbarContainer {...props} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', borderBottom: 'none' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     {effectivePermissions.showColumnsOrder && (
                         <GridToolbarColumnsButton />
                     )}
                     {effectivePermissions.filter && (<>
                         <GridToolbarFilterButton />
-                        <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
+                        <Button sx={{ width: "149px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
                     </>)}
 
                     {effectivePermissions.export && (
