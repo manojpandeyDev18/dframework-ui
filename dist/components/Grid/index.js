@@ -1191,11 +1191,26 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       // </div>
       _react.default.createElement(_xDataGridPremium.Toolbar, {
         sx: {
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 1
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          px: 1,
+          // allow wrapping on very small screens if needed
+          flexWrap: "wrap"
         }
-      }, /*#__PURE__*/_react.default.createElement(_Box.default, null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+      }, /*#__PURE__*/_react.default.createElement(_Box.default, {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          // adjust spacing between left items
+          flex: 1,
+          // <-- key: grow to push remaining siblings to the end
+          minWidth: 0,
+          // allow children to shrink properly
+          flexWrap: "wrap" // optional: allows left items to wrap on narrow screens
+        }
+      }, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
         variant: "h6",
         component: "h3",
         textAlign: "center",
@@ -1240,7 +1255,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         size: "medium",
         variant: "contained",
         className: classes.buttons
-      }, "Remove")), /*#__PURE__*/_react.default.createElement(_Box.default, null, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+      }, "Remove")), effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
         sx: {
           minWidth: "159px"
         },
@@ -1261,7 +1276,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         gridRef: apiRef,
         columns: gridColumns,
         setIsGridPreferenceFetched: setIsGridPreferenceFetched
-      })))
+      }))
     );
   };
   const getGridRowId = row => {
