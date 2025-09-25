@@ -19,6 +19,8 @@ import CopyIcon from '@mui/icons-material/FileCopy';
 import ArticleIcon from '@mui/icons-material/Article';
 import EditIcon from '@mui/icons-material/Edit';
 import FilterListOffIcon from '@mui/icons-material/FilterListOff';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import React, { useMemo, useEffect, memo, useRef, useState, useCallback } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -880,11 +882,11 @@ const GridBase = memo(({
                      {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
                 </Box> */}
                 {effectivePermissions.showColumnsOrder && (
-                    <GridToolbarColumnsButton />
+                    <Button startIcon={<ViewColumnIcon />} onClick={() => apiRef.current.showPreferences('columns')} />
                 )}
             
                 {effectivePermissions.filter && (<>
-                    <GridToolbarFilterButton />
+                    <Button startIcon={<FilterListIcon />} onClick={() => apiRef.current.showFilterPanel()} />
                     <Button sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
                 </>)}
 

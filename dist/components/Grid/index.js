@@ -48,6 +48,8 @@ var _FileCopy = _interopRequireDefault(require("@mui/icons-material/FileCopy"));
 var _Article = _interopRequireDefault(require("@mui/icons-material/Article"));
 var _Edit = _interopRequireDefault(require("@mui/icons-material/Edit"));
 var _FilterListOff = _interopRequireDefault(require("@mui/icons-material/FilterListOff"));
+var _ViewColumn = _interopRequireDefault(require("@mui/icons-material/ViewColumn"));
+var _FilterList = _interopRequireDefault(require("@mui/icons-material/FilterList"));
 var _react = _interopRequireWildcard(require("react"));
 var _Add = _interopRequireDefault(require("@mui/icons-material/Add"));
 var _Remove = _interopRequireDefault(require("@mui/icons-material/Remove"));
@@ -1189,7 +1191,13 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       //         </Box>
       //     </GridToolbarContainer>
       // </div>
-      _react.default.createElement(_xDataGridPremium.Toolbar, null, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+      _react.default.createElement(_xDataGridPremium.Toolbar, null, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_Button.default, {
+        startIcon: /*#__PURE__*/_react.default.createElement(_ViewColumn.default, null),
+        onClick: () => apiRef.current.showPreferences('columns')
+      }), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_Button.default, {
+        startIcon: /*#__PURE__*/_react.default.createElement(_FilterList.default, null),
+        onClick: () => apiRef.current.showFilterPanel()
+      }), /*#__PURE__*/_react.default.createElement(_Button.default, {
         sx: {
           minWidth: "159px"
         },
