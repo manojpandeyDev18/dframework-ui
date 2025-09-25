@@ -42,6 +42,8 @@ import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
 import Box from '@mui/material/Box';
+import { CircularProgress} from "@mui/material";
+import { GridOverlay } from "@mui/x-data-grid-premium";
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -848,7 +850,7 @@ const GridBase = memo(({
                         <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
                     )}
                     {preferenceName &&
-                        <GridPreferences preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                        <GridPreferences sx={{ width: "237px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                     }
                     </Box>
                 </GridToolbarContainer>
@@ -989,6 +991,17 @@ const GridBase = memo(({
     const breadCrumbs = searchParamKey
         ? [{ text: searchParams.get(searchParamKey) || pageTitle }]
         : [{ text: pageTitle }];
+
+    function CustomLoadingOverlay() {
+  return (
+    <GridOverlay>
+      <Box>
+        <CircularProgress style={{ display: "flex", margin: "auto" }} />
+      </Box>
+    </GridOverlay>
+  );
+}
+    
     return (
         <>
             <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
@@ -1049,7 +1062,8 @@ const GridBase = memo(({
                         slots={{
                             headerFilterMenu: false,
                             toolbar: CustomToolbar,
-                            footer: Footer
+                            footer: Footer,
+                            loadingOverlay: CustomLoadingOverlay
                         }}
                         slotProps={{
                             footer: {

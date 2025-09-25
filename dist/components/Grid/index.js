@@ -1221,6 +1221,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       tTranslate: tTranslate,
       tOpts: tOpts
     }), preferenceName && /*#__PURE__*/_react.default.createElement(_GridPreference.default, {
+      sx: {
+        width: "237px"
+      },
       preferenceName: preferenceName,
       gridRef: apiRef,
       columns: gridColumns,
@@ -1382,6 +1385,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
   }] : [{
     text: pageTitle
   }];
+  function CustomLoadingOverlay() {
+    return /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridOverlay, null, /*#__PURE__*/_react.default.createElement(_Box.default, null, /*#__PURE__*/_react.default.createElement(_material.CircularProgress, {
+      style: {
+        display: "flex",
+        margin: "auto"
+      }
+    })));
+  }
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_PageTitle.default, {
     navigate: navigate,
     showBreadcrumbs: !hideBreadcrumb && !hideBreadcrumbInGrid,
@@ -1451,7 +1462,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     slots: {
       headerFilterMenu: false,
       toolbar: CustomToolbar,
-      footer: _footer.Footer
+      footer: _footer.Footer,
+      loadingOverlay: CustomLoadingOverlay
     },
     slotProps: {
       footer: {
