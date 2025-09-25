@@ -1058,12 +1058,37 @@ const GridBase = memo(({
                                 apiRef
                             },
                             panel: {
-                                disablePortal: false,
-                                container: () => document.body,
+                                disablePortal: true,
                                 placement: "bottom-start",
+                                modifiers: [
+                                    {
+                                        name: 'flip',
+                                        enabled: false,
+                                    },
+                                    {
+                                        name: 'preventOverflow',
+                                        enabled: false,
+                                    },
+                                    {
+                                        name: 'hide',
+                                        enabled: false,
+                                    }
+                                ],
                                 sx: {
+                                    position: 'absolute !important',
+                                    top: '100% !important',
+                                    left: '0 !important',
+                                    right: 'auto !important',
+                                    bottom: 'auto !important',
+                                    transform: 'none !important',
                                     minWidth: 660,
                                     maxWidth: 800,
+                                    marginTop: '8px !important',
+                                    zIndex: 1400,
+                                    boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)',
+                                    border: '1px solid #e0e0e0',
+                                    borderRadius: '4px',
+                                    backgroundColor: '#fff',
                                     "& .MuiDataGrid-filterForm": {
                                         display: "flex",
                                         flexDirection: "row",
@@ -1078,12 +1103,7 @@ const GridBase = memo(({
                                         flexDirection: "column",
                                         gap: 2,
                                         padding: 2
-                                    },
-                                    zIndex: 1400,
-                                    boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)',
-                                    border: '1px solid #e0e0e0',
-                                    borderRadius: '4px',
-                                    backgroundColor: '#fff'
+                                    }
                                 }
                             }
                         }}
