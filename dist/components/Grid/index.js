@@ -1472,6 +1472,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     showToolbar: true,
     hideFooterSelectedRowCount: rowsSelected,
     density: "compact",
+    headeFilters: true,
     disableDensitySelector: true,
     apiRef: apiRef,
     disableAggregation: true,
