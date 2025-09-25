@@ -808,7 +808,7 @@ const GridBase = memo(({
         setupGridPreference({ preferenceName, Username, preferenceApi, defaultPreferenceEnums });
     }, [preferenceApi]);
 
-    const CustomToolbar = function (props) {
+    const CustomToolbar = function () {
         const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
         return (
             <Toolbar> 
@@ -1041,7 +1041,7 @@ const GridBase = memo(({
                         onRowClick={onRowClick}
                         slots={{
                             // headerFilterMenu: false,
-                            toolbar: CustomToolbar,
+                            // toolbar: CustomToolbar,
                             footer: Footer,
                             loadingOverlay: CustomLoadingOverlay
                         }}

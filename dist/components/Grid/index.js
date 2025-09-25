@@ -1141,7 +1141,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       defaultPreferenceEnums
     });
   }, [preferenceApi]);
-  const CustomToolbar = function CustomToolbar(props) {
+  const CustomToolbar = function CustomToolbar() {
     const addText = model.customAddText || (model.title ? "Add ".concat(model.title) : 'Add');
     return /*#__PURE__*/_react.default.createElement(_xDataGridPremium.Toolbar, null, /*#__PURE__*/_react.default.createElement(_material.Tooltip, {
       title: gridTitle
@@ -1421,7 +1421,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     onRowClick: onRowClick,
     slots: {
       // headerFilterMenu: false,
-      toolbar: CustomToolbar,
+      // toolbar: CustomToolbar,
       footer: _footer.Footer,
       loadingOverlay: CustomLoadingOverlay
     },
