@@ -1209,7 +1209,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       }
     }, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
       sx: {
-        width: "149px"
+        minWidth: "159px"
       },
       startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
       onClick: clearFilters,
@@ -1222,7 +1222,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       tOpts: tOpts
     }), preferenceName && /*#__PURE__*/_react.default.createElement(_GridPreference.default, {
       sx: {
-        width: "237px"
+        minWidth: "227px"
       },
       preferenceName: preferenceName,
       gridRef: apiRef,

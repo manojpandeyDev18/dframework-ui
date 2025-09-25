@@ -843,14 +843,14 @@ const GridBase = memo(({
                     )}
                     {effectivePermissions.filter && (<>
                         <GridToolbarFilterButton />
-                        <Button sx={{ width: "149px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
+                        <Button sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
                     </>)}
 
                     {effectivePermissions.export && (
                         <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
                     )}
                     {preferenceName &&
-                        <GridPreferences sx={{ width: "237px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                        <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                     }
                     </Box>
                 </GridToolbarContainer>
