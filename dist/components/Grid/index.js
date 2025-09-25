@@ -1143,7 +1143,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
   }, [preferenceApi]);
   const CustomToolbar = function CustomToolbar(props) {
     const addText = model.customAddText || (model.title ? "Add ".concat(model.title) : 'Add');
-    return /*#__PURE__*/_react.default.createElement(_xDataGridPremium.Toolbar, props, /*#__PURE__*/_react.default.createElement(_material.Tooltip, {
+    return /*#__PURE__*/_react.default.createElement(_xDataGridPremium.Toolbar, null, /*#__PURE__*/_react.default.createElement(_material.Tooltip, {
       title: gridTitle
     }, /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
       variant: "h6",
@@ -1191,9 +1191,6 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       variant: "contained",
       className: classes.buttons
     }, "Remove"))), effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
-      sx: {
-        minWidth: "159px"
-      },
       startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
       onClick: clearFilters,
       size: "small"
@@ -1204,9 +1201,6 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       tTranslate: tTranslate,
       tOpts: tOpts
     }), preferenceName && /*#__PURE__*/_react.default.createElement(_GridPreference.default, {
-      sx: {
-        minWidth: "227px"
-      },
       preferenceName: preferenceName,
       gridRef: apiRef,
       columns: gridColumns,
@@ -1427,7 +1421,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     onRowClick: onRowClick,
     slots: {
       // headerFilterMenu: false,
-      // toolbar: CustomToolbar,
+      toolbar: CustomToolbar,
       footer: _footer.Footer,
       loadingOverlay: CustomLoadingOverlay
     },

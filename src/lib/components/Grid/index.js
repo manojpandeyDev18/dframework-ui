@@ -811,7 +811,7 @@ const GridBase = memo(({
     const CustomToolbar = function (props) {
         const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
         return (
-            <Toolbar {...props}>
+            <Toolbar> 
                 <Tooltip title={gridTitle}>
                     <>
                         {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
@@ -838,14 +838,14 @@ const GridBase = memo(({
                 )}
                 {effectivePermissions.filter && (<>
                     <GridToolbarFilterButton />
-                    <ToolbarButton sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</ToolbarButton>
+                    <ToolbarButton startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</ToolbarButton>
                 </>)}
 
                 {effectivePermissions.export && (
                     <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
                 )}
                 {preferenceName &&
-                    <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                    <GridPreferences preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                 }
             </Toolbar>
         );
@@ -1041,7 +1041,7 @@ const GridBase = memo(({
                         onRowClick={onRowClick}
                         slots={{
                             // headerFilterMenu: false,
-                            // toolbar: CustomToolbar,
+                            toolbar: CustomToolbar,
                             footer: Footer,
                             loadingOverlay: CustomLoadingOverlay
                         }}
