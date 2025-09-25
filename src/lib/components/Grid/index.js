@@ -1018,20 +1018,7 @@ const GridBase = memo(({
                             },
                             "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
                                 display: "none"
-                            },
-                            "& .MuiDataGrid-panelContent": {
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 2, // spacing between filter fields
-                                minWidth: 500, // 👈 or whatever width works for your layout
-                            },
-                            "& .MuiDataGrid-filterForm": {
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 2,
-                                flexWrap: "wrap", // 👈 prevents overlap when small
-                            },
+                            }
                         }}
                         unstable_headerFilters={showHeaderFilters}
                         checkboxSelection={forAssignment}
@@ -1071,19 +1058,19 @@ const GridBase = memo(({
                                 apiRef
                             },
                             panel: {
-                                disablePortal: false,
-                                container: () => document.body,
-                                placement: "bottom-end",
-                                sx: {
-      minWidth: 660, // 👈 directly control width here
-      "& .MuiDataGrid-filterForm": {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 2,
-        width: "615px"
-      },
-      zIndex: 1400
-    }
+                                // disablePortal: false,
+                                // container: () => document.body,
+                                // placement: "bottom-end",
+    //                             sx: {
+    //   minWidth: 660, // 👈 directly control width here
+    //   "& .MuiDataGrid-filterForm": {
+    //     flexDirection: "row",
+    //     flexWrap: "wrap",
+    //     gap: 2,
+    //     width: "615px"
+    //   },
+    //   zIndex: 1400
+    // }
                             }
                         }}
                         showToolbar
