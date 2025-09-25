@@ -1513,17 +1513,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         apiRef
       },
       panel: {
-        placement: "bottom-end"
-        //                             sx: {
-        //   minWidth: 660, // 👈 directly control width here
-        //   "& .MuiDataGrid-filterForm": {
-        //     flexDirection: "row",
-        //     flexWrap: "wrap",
-        //     gap: 2,
-        //     width: "615px"
-        //   },
-        //   zIndex: 1400
-        // }
+        placement: "bottom-end",
+        sx: {
+          minWidth: 660,
+          "& .MuiDataGrid-filterForm": {
+            width: "615px"
+          }
+          //   zIndex: 1400
+        }
       }
     },
     showToolbar: true,
