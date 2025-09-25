@@ -841,10 +841,10 @@ const GridBase = memo(({
                     {effectivePermissions.showColumnsOrder && (
                         <GridToolbarColumnsButton />
                     )}
-                    {/* {effectivePermissions.filter && (<>
+                    {effectivePermissions.filter && (<>
                         <GridToolbarFilterButton />
                         <Button sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
-                    </>)} */}
+                    </>)}
 
                     {effectivePermissions.export && (
                         <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
