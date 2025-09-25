@@ -1057,20 +1057,37 @@ const GridBase = memo(({
                                 pagination: true,
                                 apiRef
                             },
-                            panel: {
-                                // disablePortal: false,
-                                // container: () => document.body,
-                                // placement: "bottom-end",
-    //                             sx: {
-    //   minWidth: 660, // 👈 directly control width here
-    //   "& .MuiDataGrid-filterForm": {
-    //     flexDirection: "row",
-    //     flexWrap: "wrap",
-    //     gap: 2,
-    //     width: "615px"
-    //   },
-    //   zIndex: 1400
-    // }
+                            // panel: {
+                            // disablePortal: false,
+                            // container: () => document.body,
+                            // placement: "bottom-end",
+                            //                             sx: {
+                            //   minWidth: 660, // 👈 directly control width here
+                            //   "& .MuiDataGrid-filterForm": {
+                            //     flexDirection: "row",
+                            //     flexWrap: "wrap",
+                            //     gap: 2,
+                            //     width: "615px"
+                            //   },
+                            //   zIndex: 1400
+                            // }
+                            // },
+                            filterPanel: {
+                                PopperProps: {
+                                    modifiers: [
+                                        {
+                                            name: 'flip',
+                                            enabled: false,
+                                        },
+                                        {
+                                            name: 'preventOverflow',
+                                            options: {
+                                                altBoundary: true,
+                                                tether: false,
+                                            },
+                                        },
+                                    ],
+                                },
                             }
                         }}
                         showToolbar
