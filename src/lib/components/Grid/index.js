@@ -1071,7 +1071,8 @@ const GridBase = memo(({
                                 apiRef
                             },
                             panel: {
-                                disablePortal: true,
+                                disablePortal: false,
+                                container: () => document.body,
                                 placement: "bottom-end",
                                 sx: {
       minWidth: 660, // 👈 directly control width here
@@ -1081,7 +1082,7 @@ const GridBase = memo(({
         gap: 2,
         width: "615px"
       },
-      zIndex: 1400
+      zIndex: 1500
     }
                             }
                         }}

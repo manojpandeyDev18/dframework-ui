@@ -1471,7 +1471,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         apiRef
       },
       panel: {
-        disablePortal: true,
+        disablePortal: false,
+        container: () => document.body,
         placement: "bottom-end",
         sx: {
           minWidth: 660,
@@ -1482,7 +1483,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
             gap: 2,
             width: "615px"
           },
-          zIndex: 1400
+          zIndex: 1500
         }
       }
     },
