@@ -1432,6 +1432,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       loadingOverlay: CustomLoadingOverlay
     },
     slotProps: {
+      toolbar: {
+        showQuickFilter: false
+      },
       footer: {
         pagination: true,
         apiRef

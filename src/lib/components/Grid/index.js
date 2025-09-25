@@ -1046,6 +1046,7 @@ const GridBase = memo(({
                             loadingOverlay: CustomLoadingOverlay
                         }}
                         slotProps={{
+                            toolbar: { showQuickFilter: false },
                             footer: {
                                 pagination: true,
                                 apiRef
