@@ -1408,16 +1408,18 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         display: "none"
       },
       "& .MuiDataGrid-panelContent": {
-        minWidth: 560,
         display: "flex",
         flexDirection: "column",
-        gap: 2
+        gap: 2,
+        // spacing between filter fields
+        minWidth: 500 // 👈 or whatever width works for your layout
       },
       "& .MuiDataGrid-filterForm": {
         display: "flex",
         flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 2
+        alignItems: "center",
+        gap: 2,
+        flexWrap: "wrap" // 👈 prevents overlap when small
       }
     },
     unstable_headerFilters: showHeaderFilters,
