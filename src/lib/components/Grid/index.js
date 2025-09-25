@@ -936,7 +936,12 @@ const GridBase = memo(({
         });
     }, [isLoading]);
 
-    const updateFilters = (e) => {
+    const updateFilters = useCallback((e) => {
+        // Prevent unnecessary updates if filter model hasn't actually changed
+        if (JSON.stringify(e) === JSON.stringify(filterModel)) {
+            return;
+        }
+
         const { items } = e;
         const updatedItems = items.map(item => {
             const { field, operator, type, value } = item;
@@ -958,22 +963,24 @@ const GridBase = memo(({
             const updatedValue = isNumber ? null : value;
             return { field, operator, type, value: updatedValue };
         });
-        e.items = updatedItems;
-        setFilterModel(e);
+        
+        const newFilterModel = { ...e, items: updatedItems };
+        setFilterModel(newFilterModel);
+        
         const shouldClearChartFilter =
-            (e.items.findIndex(ele => ele.isChartFilter && !(['isEmpty', 'isNotEmpty'].includes(ele.operator))) === -1) ||
+            (newFilterModel.items.findIndex(ele => ele.isChartFilter && !(['isEmpty', 'isNotEmpty'].includes(ele.operator))) === -1) ||
             (
                 chartFilters?.items?.length &&
                 (
-                    (!e.items.length) ||
-                    (chartFilters.items.findIndex(ele => ele.columnField === e.items[0]?.field) > -1)
+                    (!newFilterModel.items.length) ||
+                    (chartFilters.items.findIndex(ele => ele.columnField === newFilterModel.items[0]?.field) > -1)
                 )
             );
 
         if (shouldClearChartFilter && clearChartFilter) {
             clearChartFilter();
         }
-    };
+    }, [filterModel, gridColumns, emptyIsAnyOfOperatorFilters, isElasticScreen, chartFilters, clearChartFilter]);
 
     const updateSort = (e) => {
         const sort = e.map((ele) => {
@@ -1033,7 +1040,7 @@ const GridBase = memo(({
                                 flexWrap: "wrap", // 👈 prevents overlap when small
                             },
                         }}
-                        unstable_headerFilters={showHeaderFilters}
+                        headerFilters={showHeaderFilters}
                         checkboxSelection={forAssignment}
                         loading={isLoading}
                         className="pagination-fix"
@@ -1060,7 +1067,6 @@ const GridBase = memo(({
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
                         slots={{
-                            headerFilterMenu: false,
                             toolbar: CustomToolbar,
                             footer: Footer,
                             loadingOverlay: CustomLoadingOverlay
@@ -1071,16 +1077,21 @@ const GridBase = memo(({
                                 apiRef
                             },
                             panel: {
-                                disablePortal: false,
-                                container: () => apiRef?.current?.rootElementRef?.current || document.querySelector('.MuiDataGrid-root'),
+                                disablePortal: true,
                                 placement: "bottom-end",
                                 sx: {
-                                    minWidth: 660, // 👈 directly control width here
+                                    minWidth: 660,
                                     "& .MuiDataGrid-filterForm": {
                                         flexDirection: "row",
                                         flexWrap: "wrap",
                                         gap: 2,
                                         width: "615px"
+                                    },
+                                    "& .MuiDataGrid-panelContent": {
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 2,
+                                        minWidth: 500
                                     },
                                     zIndex: 1500
                                 }
