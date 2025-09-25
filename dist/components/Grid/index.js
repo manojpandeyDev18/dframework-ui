@@ -1143,13 +1143,20 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
   }, [preferenceApi]);
   const CustomToolbar = function CustomToolbar(props) {
     const addText = model.customAddText || (model.title ? "Add ".concat(model.title) : 'Add');
-    return /*#__PURE__*/_react.default.createElement("div", {
+    return /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, props, /*#__PURE__*/_react.default.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
-        padding: '10px'
+        width: '100%',
+        alignItems: 'center'
       }
-    }, /*#__PURE__*/_react.default.createElement("div", null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+    }, /*#__PURE__*/_react.default.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        flexWrap: 'wrap'
+      }
+    }, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
       variant: "h6",
       component: "h3",
       textAlign: "center",
@@ -1194,18 +1201,11 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       size: "medium",
       variant: "contained",
       className: classes.buttons
-    }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, _extends({}, props, {
-      sx: {
+    }, "Remove")), /*#__PURE__*/_react.default.createElement("div", {
+      style: {
         display: 'flex',
-        flexDirection: 'row',
         alignItems: 'center',
-        borderBottom: 'none'
-      }
-    }), /*#__PURE__*/_react.default.createElement(_Box.default, {
-      sx: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center'
+        gap: '8px'
       }
     }, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
       sx: {
@@ -1418,32 +1418,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
         display: "none"
       },
-      "& .MuiDataGrid-panelContent": {
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        minWidth: 500,
-        padding: 2
-      },
-      "& .MuiDataGrid-filterForm": {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 2,
-        flexWrap: "wrap",
-        minWidth: "615px"
-      },
-      "& .MuiDataGrid-panel": {
-        position: "absolute !important",
-        zIndex: 1400,
-        boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
-        border: "1px solid #e0e0e0",
-        borderRadius: "4px",
-        backgroundColor: "#fff",
-        marginTop: "8px"
-      },
       "& .MuiDataGrid-toolbarContainer": {
-        position: "relative"
+        position: "relative",
+        zIndex: 1
       }
     },
     unstable_headerFilters: showHeaderFilters,
@@ -1484,29 +1461,18 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         apiRef
       },
       panel: {
-        disablePortal: true,
-        anchorEl: null,
+        disablePortal: false,
+        container: () => document.body,
         placement: "bottom-start",
-        modifiers: [{
-          name: 'offset',
-          options: {
-            offset: [0, 8] // 8px below the button
-          }
-        }, {
-          name: 'preventOverflow',
-          options: {
-            boundary: 'viewport',
-            altBoundary: true,
-            padding: 8
-          }
-        }],
         sx: {
           minWidth: 660,
           maxWidth: 800,
           "& .MuiDataGrid-filterForm": {
+            display: "flex",
             flexDirection: "row",
             flexWrap: "wrap",
             gap: 2,
+            alignItems: "center",
             width: "100%",
             minWidth: "615px"
           },
@@ -1517,10 +1483,6 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
             padding: 2
           },
           zIndex: 1400,
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          marginTop: '8px',
           boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)',
           border: '1px solid #e0e0e0',
           borderRadius: '4px',
