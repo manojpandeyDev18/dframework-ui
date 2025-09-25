@@ -895,7 +895,6 @@ const GridBase = memo(({
                      {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
                      {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
                 </Box>
-                <Box>
                 {effectivePermissions.showColumnsOrder && (
                     <Button startIcon={<ViewColumnIcon />} onClick={() => apiRef.current.showPreferences('columns')}>{"COLUMNS"}</Button>
                 )}
@@ -911,7 +910,6 @@ const GridBase = memo(({
                 {preferenceName &&
                     <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                 }
-                </Box>
             </Toolbar>
         );
     };
