@@ -1143,20 +1143,13 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
   }, [preferenceApi]);
   const CustomToolbar = function CustomToolbar(props) {
     const addText = model.customAddText || (model.title ? "Add ".concat(model.title) : 'Add');
-    return /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, props, /*#__PURE__*/_react.default.createElement("div", {
+    return /*#__PURE__*/_react.default.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
-        width: '100%',
-        alignItems: 'center'
+        padding: '10px'
       }
-    }, /*#__PURE__*/_react.default.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        flexWrap: 'wrap'
-      }
-    }, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+    }, /*#__PURE__*/_react.default.createElement("div", null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
       variant: "h6",
       component: "h3",
       textAlign: "center",
@@ -1201,11 +1194,18 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       size: "medium",
       variant: "contained",
       className: classes.buttons
-    }, "Remove")), /*#__PURE__*/_react.default.createElement("div", {
-      style: {
+    }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, _extends({}, props, {
+      sx: {
         display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
-        gap: '8px'
+        borderBottom: 'none'
+      }
+    }), /*#__PURE__*/_react.default.createElement(_Box.default, {
+      sx: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center'
       }
     }, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
       sx: {
@@ -1418,9 +1418,19 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
         display: "none"
       },
-      "& .MuiDataGrid-toolbarContainer": {
-        position: "relative",
-        zIndex: 1
+      "& .MuiDataGrid-panelContent": {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        // spacing between filter fields
+        minWidth: 500 // 👈 or whatever width works for your layout
+      },
+      "& .MuiDataGrid-filterForm": {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 2,
+        flexWrap: "wrap" // 👈 prevents overlap when small
       }
     },
     unstable_headerFilters: showHeaderFilters,
@@ -1461,48 +1471,17 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         apiRef
       },
       panel: {
-        disablePortal: true,
-        placement: "bottom-start",
-        modifiers: [{
-          name: 'flip',
-          enabled: false
-        }, {
-          name: 'preventOverflow',
-          enabled: false
-        }, {
-          name: 'hide',
-          enabled: false
-        }],
+        placement: "bottom-end",
         sx: {
-          position: 'absolute !important',
-          top: '100% !important',
-          left: '0 !important',
-          right: 'auto !important',
-          bottom: 'auto !important',
-          transform: 'none !important',
           minWidth: 660,
-          maxWidth: 800,
-          marginTop: '8px !important',
-          zIndex: 1400,
-          boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)',
-          border: '1px solid #e0e0e0',
-          borderRadius: '4px',
-          backgroundColor: '#fff',
+          // 👈 directly control width here
           "& .MuiDataGrid-filterForm": {
-            display: "flex",
             flexDirection: "row",
             flexWrap: "wrap",
             gap: 2,
-            alignItems: "center",
-            width: "100%",
-            minWidth: "615px"
+            width: "615px"
           },
-          "& .MuiDataGrid-panelContent": {
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            padding: 2
-          }
+          zIndex: 1400
         }
       }
     },
