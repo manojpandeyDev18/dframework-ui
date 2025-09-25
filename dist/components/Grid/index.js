@@ -1194,20 +1194,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       size: "medium",
       variant: "contained",
       className: classes.buttons
-    }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, _extends({}, props, {
-      sx: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottom: 'none'
-      }
-    }), /*#__PURE__*/_react.default.createElement(_Box.default, {
-      sx: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center'
-      }
-    }, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+    }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, props, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
       sx: {
         minWidth: "159px"
       },
@@ -1228,7 +1215,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       gridRef: apiRef,
       columns: gridColumns,
       setIsGridPreferenceFetched: setIsGridPreferenceFetched
-    }))));
+    })));
   };
   const getGridRowId = row => {
     return row[idProperty];
@@ -1453,6 +1440,15 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         pagination: true,
         apiRef
       },
+      baseToolTip: {
+        PopperProps: {
+          disablePortal: true,
+          modifiers: [{
+            name: "flip",
+            enable: false
+          }]
+        }
+      }
       // panel: {
       // disablePortal: false,
       // container: () => document.body,
@@ -1468,20 +1464,6 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       //   zIndex: 1400
       // }
       // },
-      filterPanel: {
-        PopperProps: {
-          modifiers: [{
-            name: 'flip',
-            enabled: false
-          }, {
-            name: 'preventOverflow',
-            options: {
-              altBoundary: true,
-              tether: false
-            }
-          }]
-        }
-      }
     },
     showToolbar: true,
     hideFooterSelectedRowCount: rowsSelected,

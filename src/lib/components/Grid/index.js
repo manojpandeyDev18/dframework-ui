@@ -836,8 +836,8 @@ const GridBase = memo(({
                     {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
                     {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
                 </div>
-                <GridToolbarContainer {...props} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', borderBottom: 'none' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <GridToolbarContainer {...props}>
+                    {/* <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}> */}
                     {effectivePermissions.showColumnsOrder && (
                         <GridToolbarColumnsButton />
                     )}
@@ -852,7 +852,7 @@ const GridBase = memo(({
                     {preferenceName &&
                         <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                     }
-                    </Box>
+                    {/* </Box> */}
                 </GridToolbarContainer>
                 </div>
         );
@@ -1057,6 +1057,17 @@ const GridBase = memo(({
                                 pagination: true,
                                 apiRef
                             },
+                            baseToolTip: {
+                                PopperProps:{
+                                    disablePortal: true,
+                                    modifiers: [   
+                                        {
+                                            name: "flip",
+                                            enable: false
+                                        }
+                                    ]
+                                }
+                            },
                             // panel: {
                             // disablePortal: false,
                             // container: () => document.body,
@@ -1072,23 +1083,6 @@ const GridBase = memo(({
                             //   zIndex: 1400
                             // }
                             // },
-                            filterPanel: {
-                                PopperProps: {
-                                    modifiers: [
-                                        {
-                                            name: 'flip',
-                                            enabled: false,
-                                        },
-                                        {
-                                            name: 'preventOverflow',
-                                            options: {
-                                                altBoundary: true,
-                                                tether: false,
-                                            },
-                                        },
-                                    ],
-                                },
-                            }
                         }}
                         showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
