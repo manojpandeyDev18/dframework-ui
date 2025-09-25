@@ -255,7 +255,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 onClick={handleOpen}
                 title={tTranslate('Preference', tOpts)}
                 startIcon={<SettingsIcon />}
-                sx={{ minWidth: "227px" }}
+                sx={{ minWidth: "67px", maxWidth: "227px" }}
             >
                 {tTranslate('Preferences', tOpts)} {currentPreference && `(${currentPreference})`}
             </Button>
