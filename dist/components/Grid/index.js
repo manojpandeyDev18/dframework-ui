@@ -1195,7 +1195,10 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       className: classes.buttons
     }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, _extends({}, props, {
       sx: {
-        display: 'flex'
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 1
       }
     }), effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
       startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
