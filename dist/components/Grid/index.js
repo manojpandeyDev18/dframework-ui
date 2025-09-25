@@ -1461,12 +1461,13 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       panel: {
         placement: "bottom-end",
         sx: {
-          minWidth: 560,
+          minWidth: 660,
           // 👈 directly control width here
           "& .MuiDataGrid-filterForm": {
             flexDirection: "row",
             flexWrap: "wrap",
-            gap: 2
+            gap: 2,
+            width: "615px"
           }
         }
       }

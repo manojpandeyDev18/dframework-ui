@@ -1059,11 +1059,12 @@ const GridBase = memo(({
                             panel: {
                                 placement: "bottom-end",
                                 sx: {
-      minWidth: 560, // 👈 directly control width here
+      minWidth: 660, // 👈 directly control width here
       "& .MuiDataGrid-filterForm": {
         flexDirection: "row",
         flexWrap: "wrap",
-        gap: 2
+        gap: 2,
+        width: "615px"
       }
     }
                             }
