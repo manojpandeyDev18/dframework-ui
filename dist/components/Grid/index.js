@@ -1141,11 +1141,76 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       defaultPreferenceEnums
     });
   }, [preferenceApi]);
-  const CustomToolbar = function CustomToolbar() {
+  const CustomToolbar = function CustomToolbar(props) {
     const addText = model.customAddText || (model.title ? "Add ".concat(model.title) : 'Add');
-    return /*#__PURE__*/_react.default.createElement(_xDataGridPremium.Toolbar, null, /*#__PURE__*/_react.default.createElement(_material.Tooltip, {
-      title: gridTitle
-    }), effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
+    return /*#__PURE__*/_react.default.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        padding: '10px'
+      }
+    }, /*#__PURE__*/_react.default.createElement("div", null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+      variant: "h6",
+      component: "h3",
+      textAlign: "center",
+      sx: {
+        ml: 1
+      }
+    }, " ", tTranslate(model.gridSubTitle, tOpts)), currentPreference && model.showPreferenceInHeader && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+      className: "preference-name-text",
+      variant: "h6",
+      component: "h6",
+      textAlign: "center",
+      sx: {
+        ml: 1
+      }
+    }, tTranslate('Applied Preference', tOpts), " - ", currentPreference), (isReadOnly || !canAdd && !forAssignment) && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+      variant: "h6",
+      component: "h3",
+      textAlign: "center",
+      sx: {
+        ml: 1
+      }
+    }, " ", !canAdd || isReadOnly ? "" : model.title), !forAssignment && canAdd && !isReadOnly && /*#__PURE__*/_react.default.createElement(_Button.default, {
+      startIcon: !showAddIcon ? null : /*#__PURE__*/_react.default.createElement(_Add.default, null),
+      onClick: onAdd,
+      size: "medium",
+      variant: "contained",
+      className: classes.buttons
+    }, addText), selectionApi.length && data.records.length ? /*#__PURE__*/_react.default.createElement(_Button.default, {
+      onClick: selectAll,
+      size: "medium",
+      variant: "contained",
+      className: classes.buttons
+    }, selectedSet.current.size === data.records.length ? "Deselect All" : "Select All") : /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null), available && /*#__PURE__*/_react.default.createElement(_Button.default, {
+      startIcon: !showAddIcon ? null : /*#__PURE__*/_react.default.createElement(_Add.default, null),
+      onClick: onAssign,
+      size: "medium",
+      variant: "contained",
+      className: classes.buttons
+    }, "Assign"), assigned && /*#__PURE__*/_react.default.createElement(_Button.default, {
+      startIcon: !showAddIcon ? null : /*#__PURE__*/_react.default.createElement(_Remove.default, null),
+      onClick: onUnassign,
+      size: "medium",
+      variant: "contained",
+      className: classes.buttons
+    }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarContainer, _extends({}, props, {
+      sx: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottom: 'none'
+      }
+    }), /*#__PURE__*/_react.default.createElement(_Box.default, {
+      sx: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center'
+      }
+    }, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+      sx: {
+        minWidth: "159px"
+      },
       startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
       onClick: clearFilters,
       size: "small"
@@ -1156,11 +1221,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       tTranslate: tTranslate,
       tOpts: tOpts
     }), preferenceName && /*#__PURE__*/_react.default.createElement(_GridPreference.default, {
+      sx: {
+        minWidth: "227px"
+      },
       preferenceName: preferenceName,
       gridRef: apiRef,
       columns: gridColumns,
       setIsGridPreferenceFetched: setIsGridPreferenceFetched
-    }));
+    }))));
   };
   const getGridRowId = row => {
     return row[idProperty];
@@ -1333,25 +1401,55 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     breadcrumbColor: breadcrumbColor
   }), /*#__PURE__*/_react.default.createElement(_material.Card, {
     style: gridStyle || customStyle,
-    elevation: 0
-  }, /*#__PURE__*/_react.default.createElement(_material.CardContent, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.DataGridPremium
-  // sx={{
-  //     "& .MuiTablePagination-selectLabel": {
-  //         marginTop: 2
-  //     },
-  //     "& .MuiTablePagination-displayedRows": {
-  //         marginTop: 2
-  //     },
-  //     "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
-  //         display: "none"
-  //     }
-  // }}
-  , {
+    elevation: 0,
+    sx: {
+      '& .MuiCardContent-root': {
+        p: 0
+      }
+    }
+  }, /*#__PURE__*/_react.default.createElement(_material.CardContent, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.DataGridPremium, {
+    sx: {
+      "& .MuiTablePagination-selectLabel": {
+        marginTop: 2
+      },
+      "& .MuiTablePagination-displayedRows": {
+        marginTop: 2
+      },
+      "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
+        display: "none"
+      },
+      "& .MuiDataGrid-panelContent": {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        minWidth: 500,
+        padding: 2
+      },
+      "& .MuiDataGrid-filterForm": {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 2,
+        flexWrap: "wrap",
+        minWidth: "615px"
+      },
+      "& .MuiDataGrid-panel": {
+        position: "absolute !important",
+        zIndex: 1400,
+        boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
+        border: "1px solid #e0e0e0",
+        borderRadius: "4px",
+        backgroundColor: "#fff",
+        marginTop: "8px"
+      },
+      "& .MuiDataGrid-toolbarContainer": {
+        position: "relative"
+      }
+    },
     unstable_headerFilters: showHeaderFilters,
     checkboxSelection: forAssignment,
-    loading: isLoading
-    // className="pagination-fix"
-    ,
+    loading: isLoading,
+    className: "pagination-fix",
     onCellClick: onCellClickHandler,
     onCellDoubleClick: onCellDoubleClick,
     columns: gridColumns,
@@ -1375,108 +1473,64 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     getRowId: getGridRowId,
     onRowClick: onRowClick,
     slots: {
+      headerFilterMenu: false,
       toolbar: CustomToolbar,
       footer: _footer.Footer,
       loadingOverlay: CustomLoadingOverlay
     },
     slotProps: {
-      toolbar: {
-        showQuickFilter: false
-      },
       footer: {
         pagination: true,
         apiRef
       },
-      // Correct slot name (lowercase 't')
-      baseTooltip: {
-        PopperProps: {
-          // Render tooltip inside the grid DOM; avoids body portal jumps
-          disablePortal: true,
-          modifiers: [{
-            name: 'flip',
-            enabled: false
-          },
-          // don't auto-flip tooltips
-          {
-            name: 'preventOverflow',
-            enabled: true,
-            options: {
-              altBoundary: true,
-              tether: false,
-              boundary: 'clippingParents'
-            }
-          }]
-        },
-        placement: 'bottom-start',
-        disableInteractive: false
-      },
-      // Filter panel specific configuration (v8)
-      filterPanel: {
-        PopperProps: {
-          disablePortal: true,
-          // important: keep filter panel in grid DOM
-          placement: 'bottom-start',
-          modifiers: [{
-            name: 'flip',
-            enabled: false
-          },
-          // lock below header while typing
-          {
-            name: 'preventOverflow',
-            enabled: true,
-            options: {
-              altBoundary: true,
-              tether: false,
-              boundary: 'clippingParents'
-            }
-          }]
-        },
-        // styling for the filter panel content
-        sx: {
-          minWidth: 660,
-          '& .MuiDataGrid-filterForm': {
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: 2,
-            width: '615px'
-          },
-          zIndex: 1400
-        }
-      },
-      // fallback generic panel in case some MUI builds expect 'panel'
       panel: {
-        PopperProps: {
-          disablePortal: true,
-          placement: 'bottom-start',
-          modifiers: [{
-            name: 'flip',
-            enabled: false
-          }, {
-            name: 'preventOverflow',
-            enabled: true,
-            options: {
-              altBoundary: true,
-              tether: false
-            }
-          }]
-        },
+        disablePortal: true,
+        anchorEl: null,
+        placement: "bottom-start",
+        modifiers: [{
+          name: 'offset',
+          options: {
+            offset: [0, 8] // 8px below the button
+          }
+        }, {
+          name: 'preventOverflow',
+          options: {
+            boundary: 'viewport',
+            altBoundary: true,
+            padding: 8
+          }
+        }],
         sx: {
           minWidth: 660,
-          '& .MuiDataGrid-filterForm': {
-            flexDirection: 'row',
-            flexWrap: 'wrap',
+          maxWidth: 800,
+          "& .MuiDataGrid-filterForm": {
+            flexDirection: "row",
+            flexWrap: "wrap",
             gap: 2,
-            width: '615px'
+            width: "100%",
+            minWidth: "615px"
           },
-          zIndex: 1400
+          "& .MuiDataGrid-panelContent": {
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            padding: 2
+          },
+          zIndex: 1400,
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          marginTop: '8px',
+          boxShadow: '0px 5px 15px rgba(0, 0, 0, 0.2)',
+          border: '1px solid #e0e0e0',
+          borderRadius: '4px',
+          backgroundColor: '#fff'
         }
       }
     },
     showToolbar: true,
     hideFooterSelectedRowCount: rowsSelected,
-    density: "compact"
-    // headerFilters={true}
-    ,
+    density: "compact",
     disableDensitySelector: true,
     apiRef: apiRef,
     disableAggregation: true,
