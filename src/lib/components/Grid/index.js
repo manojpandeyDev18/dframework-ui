@@ -41,6 +41,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
+import Box from '@mui/material/Box';
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
