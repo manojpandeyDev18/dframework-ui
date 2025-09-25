@@ -1472,7 +1472,10 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       },
       panel: {
         disablePortal: false,
-        container: () => document.body,
+        container: () => {
+          var _apiRef$current;
+          return (apiRef === null || apiRef === void 0 || (_apiRef$current = apiRef.current) === null || _apiRef$current === void 0 || (_apiRef$current = _apiRef$current.rootElementRef) === null || _apiRef$current === void 0 ? void 0 : _apiRef$current.current) || document.querySelector('.MuiDataGrid-root');
+        },
         placement: "bottom-end",
         sx: {
           minWidth: 660,

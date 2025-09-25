@@ -1072,18 +1072,18 @@ const GridBase = memo(({
                             },
                             panel: {
                                 disablePortal: false,
-                                container: () => document.body,
+                                container: () => apiRef?.current?.rootElementRef?.current || document.querySelector('.MuiDataGrid-root'),
                                 placement: "bottom-end",
                                 sx: {
-      minWidth: 660, // 👈 directly control width here
-      "& .MuiDataGrid-filterForm": {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 2,
-        width: "615px"
-      },
-      zIndex: 1500
-    }
+                                    minWidth: 660, // 👈 directly control width here
+                                    "& .MuiDataGrid-filterForm": {
+                                        flexDirection: "row",
+                                        flexWrap: "wrap",
+                                        gap: 2,
+                                        width: "615px"
+                                    },
+                                    zIndex: 1500
+                                }
                             }
                         }}
                         showToolbar
