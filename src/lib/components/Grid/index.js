@@ -809,6 +809,8 @@ const GridBase = memo(({
         return (
             <div
                 style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
                     padding: '10px'
                 }}
             >
