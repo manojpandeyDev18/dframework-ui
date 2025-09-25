@@ -1006,24 +1006,24 @@ const GridBase = memo(({
         <>
             <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
                 breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />
-            <Card style={gridStyle || customStyle} elevation={0} sx={{ '& .MuiCardContent-root': { p: 0 } }}>
+            <Card style={gridStyle || customStyle} elevation={0} >
                 <CardContent>
                     <DataGridPremium
-                        sx={{
-                            "& .MuiTablePagination-selectLabel": {
-                                marginTop: 2
-                            },
-                            "& .MuiTablePagination-displayedRows": {
-                                marginTop: 2
-                            },
-                            "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
-                                display: "none"
-                            }
-                        }}
+                        // sx={{
+                        //     "& .MuiTablePagination-selectLabel": {
+                        //         marginTop: 2
+                        //     },
+                        //     "& .MuiTablePagination-displayedRows": {
+                        //         marginTop: 2
+                        //     },
+                        //     "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
+                        //         display: "none"
+                        //     }
+                        // }}
                         unstable_headerFilters={showHeaderFilters}
                         checkboxSelection={forAssignment}
                         loading={isLoading}
-                        className="pagination-fix"
+                        // className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}
                         columns={gridColumns}

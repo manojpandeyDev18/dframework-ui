@@ -1401,28 +1401,25 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     breadcrumbColor: breadcrumbColor
   }), /*#__PURE__*/_react.default.createElement(_material.Card, {
     style: gridStyle || customStyle,
-    elevation: 0,
-    sx: {
-      '& .MuiCardContent-root': {
-        p: 0
-      }
-    }
-  }, /*#__PURE__*/_react.default.createElement(_material.CardContent, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.DataGridPremium, {
-    sx: {
-      "& .MuiTablePagination-selectLabel": {
-        marginTop: 2
-      },
-      "& .MuiTablePagination-displayedRows": {
-        marginTop: 2
-      },
-      "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
-        display: "none"
-      }
-    },
+    elevation: 0
+  }, /*#__PURE__*/_react.default.createElement(_material.CardContent, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.DataGridPremium
+  // sx={{
+  //     "& .MuiTablePagination-selectLabel": {
+  //         marginTop: 2
+  //     },
+  //     "& .MuiTablePagination-displayedRows": {
+  //         marginTop: 2
+  //     },
+  //     "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
+  //         display: "none"
+  //     }
+  // }}
+  , {
     unstable_headerFilters: showHeaderFilters,
     checkboxSelection: forAssignment,
-    loading: isLoading,
-    className: "pagination-fix",
+    loading: isLoading
+    // className="pagination-fix"
+    ,
     onCellClick: onCellClickHandler,
     onCellDoubleClick: onCellDoubleClick,
     columns: gridColumns,
