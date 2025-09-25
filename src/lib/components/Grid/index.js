@@ -1111,19 +1111,19 @@ const GridBase = memo(({
                                 pagination: true,
                                 apiRef
                             },
-    //                         panel: {
-    //                             placement: "bottom-end",
-    //                             sx: {
-    //   minWidth: 660, // 👈 directly control width here
-    //   "& .MuiDataGrid-filterForm": {
-    //     flexDirection: "row",
-    //     flexWrap: "wrap",
-    //     gap: 2,
-    //     width: "615px"
-    //   },
-    //   zIndex: 1400
-    // }
-    //                         }
+                            panel: {
+                                placement: "bottom-end",
+                                sx: {
+      minWidth: 660, // 👈 directly control width here
+      "& .MuiDataGrid-filterForm": {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 2,
+        width: "615px"
+      },
+      zIndex: 1400
+    }
+                            }
                         }}
                         showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
