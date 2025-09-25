@@ -860,9 +860,10 @@ const GridBase = memo(({
             // </div>
             <Toolbar>
                 {effectivePermissions.showColumnsOrder && (
-                <ToolbarButton onClick={() => apiRef.current.showPreferences('columns')}>
-                    Columns
-                </ToolbarButton>
+                // <ToolbarButton onClick={() => apiRef.current.showPreferences('columns')}>
+                //     Columns
+                // </ToolbarButton>
+                <GridToolbarColumnsButton />
             )}
             
             {effectivePermissions.filter && (

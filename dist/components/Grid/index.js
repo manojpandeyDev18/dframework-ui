@@ -1189,9 +1189,12 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       //         </Box>
       //     </GridToolbarContainer>
       // </div>
-      _react.default.createElement(_xDataGridPremium.Toolbar, null, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
-        onClick: () => apiRef.current.showPreferences('columns')
-      }, "Columns"), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
+      _react.default.createElement(_xDataGridPremium.Toolbar, null, effectivePermissions.showColumnsOrder &&
+      /*#__PURE__*/
+      // <ToolbarButton onClick={() => apiRef.current.showPreferences('columns')}>
+      //     Columns
+      // </ToolbarButton>
+      _react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
         onClick: () => apiRef.current.showFilterPanel()
       }, "Filter"), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
         onClick: clearFilters,
