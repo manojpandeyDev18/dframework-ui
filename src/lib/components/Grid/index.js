@@ -1006,7 +1006,7 @@ const GridBase = memo(({
                             "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
                                 display: "none"
                             },
-                            "& .MuiDataGrid-paper .MuiDataGrid-panelWrapper .MuiDataGrid-panelContent .MuiDataGrid-filterForm": {
+                            "& .MuiPopper-root .MuiDataGrid-paper .MuiDataGrid-panelWrapper .MuiDataGrid-panelContent .MuiDataGrid-filterForm": {
                                 width: "563px"
                             }
                         }}
