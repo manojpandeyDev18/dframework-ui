@@ -394,7 +394,7 @@ const GridPreferences = _ref => {
     title: tTranslate('Preference', tOpts),
     startIcon: /*#__PURE__*/_react.default.createElement(_Settings.default, null),
     sx: {
-      maxWidth: "227px"
+      minWidth: "227px"
     }
   }, tTranslate('Preferences', tOpts), " ", currentPreference && "(".concat(currentPreference, ")")), /*#__PURE__*/_react.default.createElement(_material.Menu, {
     id: "grid-preference-menu",
