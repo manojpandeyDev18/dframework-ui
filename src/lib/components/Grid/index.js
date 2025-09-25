@@ -1044,6 +1044,7 @@ const GridBase = memo(({
                                 placement: "bottom-end"
                             }
                         }}
+                        showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
                         density="compact"
                         disableDensitySelector={true}

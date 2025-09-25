@@ -1431,6 +1431,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         placement: "bottom-end"
       }
     },
+    showToolbar: true,
     hideFooterSelectedRowCount: rowsSelected,
     density: "compact",
     disableDensitySelector: true,
