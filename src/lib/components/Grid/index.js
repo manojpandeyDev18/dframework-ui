@@ -860,7 +860,7 @@ const GridBase = memo(({
             // </div>
             
             <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-                <div>
+                <Box>
                      {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
                      {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
                      {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
@@ -878,8 +878,8 @@ const GridBase = memo(({
                      }
                      {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
                      {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
-                 </div> 
-                 <div>
+                 </Box> 
+                 <Box>
                 {effectivePermissions.showColumnsOrder && (
                     <GridToolbarColumnsButton />
                 )}
@@ -895,7 +895,7 @@ const GridBase = memo(({
                 {preferenceName &&
                     <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                 }
-                </div>
+                </Box>
             </Toolbar>
         );
     };
