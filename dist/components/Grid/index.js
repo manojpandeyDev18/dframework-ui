@@ -1406,6 +1406,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       },
       "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
         display: "none"
+      },
+      "& .MuiDataGrid-filterForm": {
+        width: "563px"
       }
     },
     unstable_headerFilters: showHeaderFilters,

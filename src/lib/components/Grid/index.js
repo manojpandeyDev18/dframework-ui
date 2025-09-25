@@ -1005,6 +1005,9 @@ const GridBase = memo(({
                             },
                             "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
                                 display: "none"
+                            },
+                            "& .MuiDataGrid-filterForm": {
+                                width: "563px"
                             }
                         }}
                         unstable_headerFilters={showHeaderFilters}
