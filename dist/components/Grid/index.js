@@ -1317,12 +1317,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       }
     });
   }, [isLoading]);
-  const updateFilters = (0, _react.useCallback)(e => {
+  const updateFilters = e => {
     var _chartFilters$items2;
-    // Prevent unnecessary updates if filter model hasn't actually changed
-    if (JSON.stringify(e) === JSON.stringify(filterModel)) {
-      return;
-    }
     const {
       items
     } = e;
@@ -1359,18 +1355,16 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         value: updatedValue
       };
     });
-    const newFilterModel = _objectSpread(_objectSpread({}, e), {}, {
-      items: updatedItems
-    });
-    setFilterModel(newFilterModel);
-    const shouldClearChartFilter = newFilterModel.items.findIndex(ele => ele.isChartFilter && !['isEmpty', 'isNotEmpty'].includes(ele.operator)) === -1 || (chartFilters === null || chartFilters === void 0 || (_chartFilters$items2 = chartFilters.items) === null || _chartFilters$items2 === void 0 ? void 0 : _chartFilters$items2.length) && (!newFilterModel.items.length || chartFilters.items.findIndex(ele => {
-      var _newFilterModel$items;
-      return ele.columnField === ((_newFilterModel$items = newFilterModel.items[0]) === null || _newFilterModel$items === void 0 ? void 0 : _newFilterModel$items.field);
+    e.items = updatedItems;
+    setFilterModel(e);
+    const shouldClearChartFilter = e.items.findIndex(ele => ele.isChartFilter && !['isEmpty', 'isNotEmpty'].includes(ele.operator)) === -1 || (chartFilters === null || chartFilters === void 0 || (_chartFilters$items2 = chartFilters.items) === null || _chartFilters$items2 === void 0 ? void 0 : _chartFilters$items2.length) && (!e.items.length || chartFilters.items.findIndex(ele => {
+      var _e$items$;
+      return ele.columnField === ((_e$items$ = e.items[0]) === null || _e$items$ === void 0 ? void 0 : _e$items$.field);
     }) > -1);
     if (shouldClearChartFilter && clearChartFilter) {
       clearChartFilter();
     }
-  }, [filterModel, gridColumns, emptyIsAnyOfOperatorFilters, isElasticScreen, chartFilters, clearChartFilter]);
+  };
   const updateSort = e => {
     const sort = e.map(ele => {
       const field = gridColumns.filter(element => element.field === ele.field)[0] || {};
@@ -1439,7 +1433,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         flexWrap: "wrap" // 👈 prevents overlap when small
       }
     },
-    headerFilters: showHeaderFilters,
+    unstable_headerFilters: showHeaderFilters,
     checkboxSelection: forAssignment,
     loading: isLoading,
     className: "pagination-fix",
@@ -1466,6 +1460,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     getRowId: getGridRowId,
     onRowClick: onRowClick,
     slots: {
+      headerFilterMenu: false,
       toolbar: CustomToolbar,
       footer: _footer.Footer,
       loadingOverlay: CustomLoadingOverlay
@@ -1476,23 +1471,19 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         apiRef
       },
       panel: {
-        disablePortal: true,
+        disablePortal: false,
+        container: () => document.body,
         placement: "bottom-end",
         sx: {
           minWidth: 660,
+          // 👈 directly control width here
           "& .MuiDataGrid-filterForm": {
             flexDirection: "row",
             flexWrap: "wrap",
             gap: 2,
             width: "615px"
           },
-          "& .MuiDataGrid-panelContent": {
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            minWidth: 500
-          },
-          zIndex: 1500
+          zIndex: 1400
         }
       }
     },

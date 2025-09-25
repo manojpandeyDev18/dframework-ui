@@ -936,12 +936,7 @@ const GridBase = memo(({
         });
     }, [isLoading]);
 
-    const updateFilters = useCallback((e) => {
-        // Prevent unnecessary updates if filter model hasn't actually changed
-        if (JSON.stringify(e) === JSON.stringify(filterModel)) {
-            return;
-        }
-
+    const updateFilters = (e) => {
         const { items } = e;
         const updatedItems = items.map(item => {
             const { field, operator, type, value } = item;
@@ -963,24 +958,22 @@ const GridBase = memo(({
             const updatedValue = isNumber ? null : value;
             return { field, operator, type, value: updatedValue };
         });
-        
-        const newFilterModel = { ...e, items: updatedItems };
-        setFilterModel(newFilterModel);
-        
+        e.items = updatedItems;
+        setFilterModel(e);
         const shouldClearChartFilter =
-            (newFilterModel.items.findIndex(ele => ele.isChartFilter && !(['isEmpty', 'isNotEmpty'].includes(ele.operator))) === -1) ||
+            (e.items.findIndex(ele => ele.isChartFilter && !(['isEmpty', 'isNotEmpty'].includes(ele.operator))) === -1) ||
             (
                 chartFilters?.items?.length &&
                 (
-                    (!newFilterModel.items.length) ||
-                    (chartFilters.items.findIndex(ele => ele.columnField === newFilterModel.items[0]?.field) > -1)
+                    (!e.items.length) ||
+                    (chartFilters.items.findIndex(ele => ele.columnField === e.items[0]?.field) > -1)
                 )
             );
 
         if (shouldClearChartFilter && clearChartFilter) {
             clearChartFilter();
         }
-    }, [filterModel, gridColumns, emptyIsAnyOfOperatorFilters, isElasticScreen, chartFilters, clearChartFilter]);
+    };
 
     const updateSort = (e) => {
         const sort = e.map((ele) => {
@@ -1040,7 +1033,7 @@ const GridBase = memo(({
                                 flexWrap: "wrap", // 👈 prevents overlap when small
                             },
                         }}
-                        headerFilters={showHeaderFilters}
+                        unstable_headerFilters={showHeaderFilters}
                         checkboxSelection={forAssignment}
                         loading={isLoading}
                         className="pagination-fix"
@@ -1067,6 +1060,7 @@ const GridBase = memo(({
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
                         slots={{
+                            headerFilterMenu: false,
                             toolbar: CustomToolbar,
                             footer: Footer,
                             loadingOverlay: CustomLoadingOverlay
@@ -1077,24 +1071,19 @@ const GridBase = memo(({
                                 apiRef
                             },
                             panel: {
-                                disablePortal: true,
+                                disablePortal: false,
+                                container: () => document.body,
                                 placement: "bottom-end",
                                 sx: {
-                                    minWidth: 660,
-                                    "& .MuiDataGrid-filterForm": {
-                                        flexDirection: "row",
-                                        flexWrap: "wrap",
-                                        gap: 2,
-                                        width: "615px"
-                                    },
-                                    "& .MuiDataGrid-panelContent": {
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: 2,
-                                        minWidth: 500
-                                    },
-                                    zIndex: 1500
-                                }
+      minWidth: 660, // 👈 directly control width here
+      "& .MuiDataGrid-filterForm": {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 2,
+        width: "615px"
+      },
+      zIndex: 1400
+    }
                             }
                         }}
                         showToolbar
