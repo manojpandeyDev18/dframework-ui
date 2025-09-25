@@ -1040,8 +1040,8 @@ const GridBase = memo(({
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
                         slots={{
-                            headerFilterMenu: false,
-                            toolbar: CustomToolbar,
+                            // headerFilterMenu: false,
+                            // toolbar: CustomToolbar,
                             footer: Footer,
                             loadingOverlay: CustomLoadingOverlay
                         }}

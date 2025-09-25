@@ -1426,8 +1426,8 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
     getRowId: getGridRowId,
     onRowClick: onRowClick,
     slots: {
-      headerFilterMenu: false,
-      toolbar: CustomToolbar,
+      // headerFilterMenu: false,
+      // toolbar: CustomToolbar,
       footer: _footer.Footer,
       loadingOverlay: CustomLoadingOverlay
     },
