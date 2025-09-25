@@ -1189,12 +1189,52 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       //         </Box>
       //     </GridToolbarContainer>
       // </div>
-      _react.default.createElement(_xDataGridPremium.Toolbar, null, effectivePermissions.showColumnsOrder &&
-      /*#__PURE__*/
-      // <ToolbarButton onClick={() => apiRef.current.showPreferences('columns')}>
-      //     Columns
-      // </ToolbarButton>
-      _react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+      _react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement("div", null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+        variant: "h6",
+        component: "h3",
+        textAlign: "center",
+        sx: {
+          ml: 1
+        }
+      }, " ", tTranslate(model.gridSubTitle, tOpts)), currentPreference && model.showPreferenceInHeader && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+        className: "preference-name-text",
+        variant: "h6",
+        component: "h6",
+        textAlign: "center",
+        sx: {
+          ml: 1
+        }
+      }, tTranslate('Applied Preference', tOpts), " - ", currentPreference), (isReadOnly || !canAdd && !forAssignment) && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+        variant: "h6",
+        component: "h3",
+        textAlign: "center",
+        sx: {
+          ml: 1
+        }
+      }, " ", !canAdd || isReadOnly ? "" : model.title), !forAssignment && canAdd && !isReadOnly && /*#__PURE__*/_react.default.createElement(_Button.default, {
+        startIcon: !showAddIcon ? null : /*#__PURE__*/_react.default.createElement(_Add.default, null),
+        onClick: onAdd,
+        size: "medium",
+        variant: "contained",
+        className: classes.buttons
+      }, addText), selectionApi.length && data.records.length ? /*#__PURE__*/_react.default.createElement(_Button.default, {
+        onClick: selectAll,
+        size: "medium",
+        variant: "contained",
+        className: classes.buttons
+      }, selectedSet.current.size === data.records.length ? "Deselect All" : "Select All") : /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null), available && /*#__PURE__*/_react.default.createElement(_Button.default, {
+        startIcon: !showAddIcon ? null : /*#__PURE__*/_react.default.createElement(_Add.default, null),
+        onClick: onAssign,
+        size: "medium",
+        variant: "contained",
+        className: classes.buttons
+      }, "Assign"), assigned && /*#__PURE__*/_react.default.createElement(_Button.default, {
+        startIcon: !showAddIcon ? null : /*#__PURE__*/_react.default.createElement(_Remove.default, null),
+        onClick: onUnassign,
+        size: "medium",
+        variant: "contained",
+        className: classes.buttons
+      }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.Toolbar, null, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
         sx: {
           minWidth: "159px"
         },
@@ -1215,7 +1255,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         gridRef: apiRef,
         columns: gridColumns,
         setIsGridPreferenceFetched: setIsGridPreferenceFetched
-      }))
+      })))
     );
   };
   const getGridRowId = row => {

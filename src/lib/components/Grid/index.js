@@ -858,6 +858,26 @@ const GridBase = memo(({
             //         </Box>
             //     </GridToolbarContainer>
             // </div>
+            <div>
+            <div>
+                     {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
+                     {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
+                     {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
+                     {!forAssignment && canAdd && !isReadOnly && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" className={classes.buttons} >{addText}</Button>}
+                     {(selectionApi.length && data.records.length) ? (
+                         <Button
+                             onClick={selectAll}
+                             size="medium"
+                             variant="contained"
+                             className={classes.buttons}
+                         >
+                             {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
+                         </Button>) :
+                         <></>
+                     }
+                     {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
+                     {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
+                 </div> 
             <Toolbar>
                 {effectivePermissions.showColumnsOrder && (
                     <GridToolbarColumnsButton />
@@ -875,6 +895,7 @@ const GridBase = memo(({
                     <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                 }
             </Toolbar>
+            </div>
         );
     };
 
