@@ -1,7 +1,8 @@
 import Button from '@mui/material/Button';
 import {
     DataGridPremium,
-    GridToolbarContainer,
+    Toolbar,
+    ToolbarButton,
     GridToolbarColumnsButton,
     GridToolbarFilterButton,
     getGridDateOperators,
@@ -810,51 +811,43 @@ const GridBase = memo(({
     const CustomToolbar = function (props) {
         const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
         return (
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '10px'
-                }}
-            >
-                <div>
-                    {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
-                    {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
-                    {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
-                    {!forAssignment && canAdd && !isReadOnly && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" className={classes.buttons} >{addText}</Button>}
-                    {(selectionApi.length && data.records.length) ? (
-                        <Button
-                            onClick={selectAll}
-                            size="medium"
-                            variant="contained"
-                            className={classes.buttons}
-                        >
-                            {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
-                        </Button>) :
-                        <></>
-                    }
-                    {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
-                    {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
-                </div>
-                <GridToolbarContainer {...props}>
-                    {/* <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}> */}
-                    {effectivePermissions.showColumnsOrder && (
-                        <GridToolbarColumnsButton />
-                    )}
-                    {effectivePermissions.filter && (<>
-                        <GridToolbarFilterButton />
-                        <Button sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
-                    </>)}
+            <Toolbar {...props}>
+                <Tooltip title={gridTitle}>
+                    <>
+                        {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
+                        {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
+                        {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
+                        {!forAssignment && canAdd && !isReadOnly && <ToolbarButton startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" className={classes.buttons} >{addText}</ToolbarButton>}
+                        {(selectionApi.length && data.records.length) ? (
+                            <ToolbarButton
+                                onClick={selectAll}
+                                size="medium"
+                                variant="contained"
+                                className={classes.buttons}
+                            >
+                                {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
+                            </ToolbarButton>) :
+                            <></>
+                        }
+                        {available && <ToolbarButton startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</ToolbarButton>}
+                        {assigned && <ToolbarButton startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</ToolbarButton>}
+                    </>
+                </Tooltip>
+                {effectivePermissions.showColumnsOrder && (
+                    <GridToolbarColumnsButton />
+                )}
+                {effectivePermissions.filter && (<>
+                    <GridToolbarFilterButton />
+                    <ToolbarButton sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</ToolbarButton>
+                </>)}
 
-                    {effectivePermissions.export && (
-                        <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
-                    )}
-                    {preferenceName &&
-                        <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
-                    }
-                    {/* </Box> */}
-                </GridToolbarContainer>
-                </div>
+                {effectivePermissions.export && (
+                    <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
+                )}
+                {preferenceName &&
+                    <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                }
+            </Toolbar>
         );
     };
 
