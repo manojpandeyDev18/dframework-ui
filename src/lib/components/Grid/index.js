@@ -860,14 +860,7 @@ const GridBase = memo(({
             // </div>
             
             <Toolbar>
-                <Box style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 8,          // adjust spacing between left items
-      flex: 1,         // <-- key: grow to push remaining siblings to the end
-      minWidth: 0,     // allow children to shrink properly
-      flexWrap: "wrap" // optional: allows left items to wrap on narrow screens
-    }}>
+                <Box >
                      {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
                      {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
                      {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
