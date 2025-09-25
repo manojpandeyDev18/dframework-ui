@@ -43,7 +43,7 @@ import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
 import Box from '@mui/material/Box';
-import { CircularProgress} from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { GridOverlay } from "@mui/x-data-grid-premium";
 
 const defaultPageSize = 10;
@@ -811,9 +811,9 @@ const GridBase = memo(({
     const CustomToolbar = function () {
         const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
         return (
-            <Toolbar> 
+            <Toolbar>
                 <Tooltip title={gridTitle}>
-                    <>
+                    {/* <>
                         {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
                         {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
                         {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
@@ -831,7 +831,7 @@ const GridBase = memo(({
                         }
                         {available && <ToolbarButton startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</ToolbarButton>}
                         {assigned && <ToolbarButton startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</ToolbarButton>}
-                    </>
+                    </> */}
                 </Tooltip>
                 {effectivePermissions.showColumnsOrder && (
                     <GridToolbarColumnsButton />
@@ -986,15 +986,15 @@ const GridBase = memo(({
         : [{ text: pageTitle }];
 
     function CustomLoadingOverlay() {
-  return (
-    <GridOverlay>
-      <Box>
-        <CircularProgress style={{ display: "flex", margin: "auto" }} />
-      </Box>
-    </GridOverlay>
-  );
-}
-    
+        return (
+            <GridOverlay>
+                <Box>
+                    <CircularProgress style={{ display: "flex", margin: "auto" }} />
+                </Box>
+            </GridOverlay>
+        );
+    }
+
     return (
         <>
             <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
@@ -1040,53 +1040,90 @@ const GridBase = memo(({
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
                         slots={{
-                            // headerFilterMenu: false,
-                            // toolbar: CustomToolbar,
-                            footer: Footer,
-                            loadingOverlay: CustomLoadingOverlay
-                        }}
-                        slotProps={{
-                            toolbar: { showQuickFilter: false },
-                            footer: {
-                                pagination: true,
-                                apiRef
-                            },
-                            baseToolTip: {
-                                PopperProps:{
-                                    disablePortal: false,
-                                    modifiers: [   
-                                        {
-                                            name: "flip",
-                                            enable: true
-                                        },
-                                        {
-                                            name: "preventOverflow",
-                                            enabled: true,
-                                            options: {
-                                                boundary: 'viewport',
-                                                altBoundary: true,
-                                                tether: false
-                                            }
-                                        }
-                                    ]
-                                }
-                            },
-                            panel: {
-                                disablePortal: false,
-                                container: () => document.body,
-                                placement: "bottom-start",
-                                sx: {
-                                    minWidth: 660,
-                                    "& .MuiDataGrid-filterForm": {
-                                        flexDirection: "row",
-                                        flexWrap: "wrap",
-                                        gap: 2,
-                                        width: "615px"
-                                    },
-                                    zIndex: 1400
-                                }
-                            },
-                        }}
+    toolbar: CustomToolbar,
+    footer: Footer,
+    loadingOverlay: CustomLoadingOverlay,
+  }}
+  slotProps={{
+    toolbar: { showQuickFilter: false },
+
+    footer: {
+      pagination: true,
+      apiRef,
+    },
+
+    // Correct slot name (lowercase 't')
+    baseTooltip: {
+      PopperProps: {
+        // Render tooltip inside the grid DOM; avoids body portal jumps
+        disablePortal: true,
+        modifiers: [
+          { name: 'flip', enabled: false }, // don't auto-flip tooltips
+          {
+            name: 'preventOverflow',
+            enabled: true,
+            options: { altBoundary: true, tether: false, boundary: 'clippingParents' },
+          },
+        ],
+      },
+      placement: 'bottom-start',
+      disableInteractive: false,
+    },
+
+    // Filter panel specific configuration (v8)
+    filterPanel: {
+      PopperProps: {
+        disablePortal: true, // important: keep filter panel in grid DOM
+        placement: 'bottom-start',
+        modifiers: [
+          { name: 'flip', enabled: false }, // lock below header while typing
+          {
+            name: 'preventOverflow',
+            enabled: true,
+            options: {
+              altBoundary: true,
+              tether: false,
+              boundary: 'clippingParents',
+            },
+          },
+        ],
+      },
+      // styling for the filter panel content
+      sx: {
+        minWidth: 660,
+        '& .MuiDataGrid-filterForm': {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 2,
+          width: '615px',
+        },
+        zIndex: 1400,
+      },
+    },
+
+    // fallback generic panel in case some MUI builds expect 'panel'
+    panel: {
+      PopperProps: {
+        disablePortal: true,
+        placement: 'bottom-start',
+        modifiers: [
+          { name: 'flip', enabled: false },
+          { name: 'preventOverflow', enabled: true, options: { altBoundary: true, tether: false } },
+        ],
+      },
+      sx: {
+        minWidth: 660,
+        '& .MuiDataGrid-filterForm': {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 2,
+          width: '615px',
+        },
+        zIndex: 1400,
+      },
+    },
+  }}
+
                         showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
                         density="compact"
