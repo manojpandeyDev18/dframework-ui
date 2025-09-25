@@ -860,25 +860,20 @@ const GridBase = memo(({
             // </div>
             <Toolbar>
                 {effectivePermissions.showColumnsOrder && (
-                // <ToolbarButton onClick={() => apiRef.current.showPreferences('columns')}>
-                //     Columns
-                // </ToolbarButton>
-                <GridToolbarColumnsButton />
-            )}
+                    <GridToolbarColumnsButton />
+                )}
             
-            {effectivePermissions.filter && (
-                <>
-                    <ToolbarButton onClick={() => apiRef.current.showFilterPanel()}>
-                        Filter
-                    </ToolbarButton>
-                    <ToolbarButton 
-                        onClick={clearFilters}
-                        startIcon={<FilterListOffIcon />}
-                    >
-                        Clear Filter
-                    </ToolbarButton>
-                </>
-            )}
+                {effectivePermissions.filter && (<>
+                    <GridToolbarFilterButton />
+                    <Button sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
+                </>)}
+
+                {effectivePermissions.export && (
+                    <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
+                )}
+                {preferenceName &&
+                    <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                }
             </Toolbar>
         );
     };

@@ -1194,12 +1194,28 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       // <ToolbarButton onClick={() => apiRef.current.showPreferences('columns')}>
       //     Columns
       // </ToolbarButton>
-      _react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
-        onClick: () => apiRef.current.showFilterPanel()
-      }, "Filter"), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.ToolbarButton, {
+      _react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+        sx: {
+          minWidth: "159px"
+        },
+        startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
         onClick: clearFilters,
-        startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null)
-      }, "Clear Filter")))
+        size: "small"
+      }, "CLEAR FILTER")), effectivePermissions.export && /*#__PURE__*/_react.default.createElement(_helper.CustomExportButton, {
+        handleExport: handleExport,
+        showPivotExportBtn: model.pivotApi,
+        exportFormats: model.exportFormats || {},
+        tTranslate: tTranslate,
+        tOpts: tOpts
+      }), preferenceName && /*#__PURE__*/_react.default.createElement(_GridPreference.default, {
+        sx: {
+          minWidth: "227px"
+        },
+        preferenceName: preferenceName,
+        gridRef: apiRef,
+        columns: gridColumns,
+        setIsGridPreferenceFetched: setIsGridPreferenceFetched
+      }))
     );
   };
   const getGridRowId = row => {
