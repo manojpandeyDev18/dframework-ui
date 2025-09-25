@@ -833,7 +833,8 @@ const GridBase = memo(({
                     {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
                     {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
                 </div>
-                <GridToolbarContainer {...props} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                <GridToolbarContainer {...props} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                     {effectivePermissions.showColumnsOrder && (
                         <GridToolbarColumnsButton />
                     )}
@@ -848,6 +849,7 @@ const GridBase = memo(({
                     {preferenceName &&
                         <GridPreferences preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                     }
+                    </Box>
                 </GridToolbarContainer>
                 </div>
         );

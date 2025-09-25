@@ -1197,10 +1197,16 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       sx: {
         display: 'flex',
         flexDirection: 'row',
+        alignItems: 'center'
+      }
+    }), /*#__PURE__*/_react.default.createElement(Box, {
+      sx: {
+        display: 'flex',
+        flexDirection: 'row',
         alignItems: 'center',
         gap: 1
       }
-    }), effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+    }, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
       startIcon: /*#__PURE__*/_react.default.createElement(_FilterListOff.default, null),
       onClick: clearFilters,
       size: "small"
@@ -1215,7 +1221,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       gridRef: apiRef,
       columns: gridColumns,
       setIsGridPreferenceFetched: setIsGridPreferenceFetched
-    })));
+    }))));
   };
   const getGridRowId = row => {
     return row[idProperty];
