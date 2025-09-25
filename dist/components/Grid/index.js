@@ -1189,7 +1189,13 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       //         </Box>
       //     </GridToolbarContainer>
       // </div>
-      _react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement("div", null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+      _react.default.createElement(_xDataGridPremium.Toolbar, {
+        sx: {
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1
+        }
+      }, /*#__PURE__*/_react.default.createElement("div", null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
         variant: "h6",
         component: "h3",
         textAlign: "center",
@@ -1234,7 +1240,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         size: "medium",
         variant: "contained",
         className: classes.buttons
-      }, "Remove")), /*#__PURE__*/_react.default.createElement(_xDataGridPremium.Toolbar, null, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
+      }, "Remove")), /*#__PURE__*/_react.default.createElement("div", null, effectivePermissions.showColumnsOrder && /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarColumnsButton, null), effectivePermissions.filter && /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.GridToolbarFilterButton, null), /*#__PURE__*/_react.default.createElement(_Button.default, {
         sx: {
           minWidth: "159px"
         },
