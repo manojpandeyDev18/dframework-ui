@@ -1071,6 +1071,7 @@ const GridBase = memo(({
                                 apiRef
                             },
                             panel: {
+                                disablePortal: true,
                                 placement: "bottom-end",
                                 sx: {
       minWidth: 660, // 👈 directly control width here
@@ -1079,7 +1080,8 @@ const GridBase = memo(({
         flexWrap: "wrap",
         gap: 2,
         width: "615px"
-      }
+      },
+      zIndex: 1400
     }
                             }
                         }}
