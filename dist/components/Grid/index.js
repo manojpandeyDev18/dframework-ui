@@ -1193,10 +1193,26 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       // </div>
       _react.default.createElement(_xDataGridPremium.Toolbar, {
         sx: {
-          display: 'flex',
-          justifyContent: 'space-between'
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          px: 1,
+          // allow wrapping on very small screens if needed
+          flexWrap: "wrap"
         }
-      }, /*#__PURE__*/_react.default.createElement(_Box.default, null, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
+      }, /*#__PURE__*/_react.default.createElement(_Box.default, {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          // adjust spacing between left items
+          flex: 1,
+          // <-- key: grow to push remaining siblings to the end
+          minWidth: 0,
+          // allow children to shrink properly
+          flexWrap: "wrap" // optional: allows left items to wrap on narrow screens
+        }
+      }, model.gridSubTitle && /*#__PURE__*/_react.default.createElement(_Typography.default, {
         variant: "h6",
         component: "h3",
         textAlign: "center",
