@@ -1018,22 +1018,8 @@ const GridBase = memo(({
                             },
                             "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
                                 display: "none"
-                            },
-                            "& .MuiDataGrid-panelContent": {
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 2, // spacing between filter fields
-                                minWidth: 500, // 👈 or whatever width works for your layout
-                            },
-                            "& .MuiDataGrid-filterForm": {
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 2,
-                                flexWrap: "wrap", // 👈 prevents overlap when small
-                            },
+                            }
                         }}
-                        unstable_headerFilters={showHeaderFilters}
                         checkboxSelection={forAssignment}
                         loading={isLoading}
                         className="pagination-fix"
@@ -1051,7 +1037,7 @@ const GridBase = memo(({
                         sortingMode={paginationMode}
                         filterMode={paginationMode}
                         processRowUpdate={processRowUpdate}
-                        keepNonExistentRowsSelected
+                        // keepNonExistentRowsSelected
                         onSortModelChange={updateSort}
                         onFilterModelChange={updateFilters}
                         rowSelection={selection}
@@ -1060,7 +1046,6 @@ const GridBase = memo(({
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
                         slots={{
-                            headerFilterMenu: false,
                             toolbar: CustomToolbar,
                             footer: Footer,
                             loadingOverlay: CustomLoadingOverlay
@@ -1070,19 +1055,19 @@ const GridBase = memo(({
                                 pagination: true,
                                 apiRef
                             },
-                            panel: {
-                                placement: "bottom-end",
-                                sx: {
-      minWidth: 660, // 👈 directly control width here
-      "& .MuiDataGrid-filterForm": {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 2,
-        width: "615px"
-      },
-      zIndex: 1400
-    }
-                            }
+    //                         panel: {
+    //                             placement: "bottom-end",
+    //                             sx: {
+    //   minWidth: 660, // 👈 directly control width here
+    //   "& .MuiDataGrid-filterForm": {
+    //     flexDirection: "row",
+    //     flexWrap: "wrap",
+    //     gap: 2,
+    //     width: "615px"
+    //   },
+    //   zIndex: 1400
+    // }
+    //                         }
                         }}
                         showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
