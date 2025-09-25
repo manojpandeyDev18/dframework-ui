@@ -1052,30 +1052,39 @@ const GridBase = memo(({
                             },
                             baseToolTip: {
                                 PopperProps:{
-                                    disablePortal: true,
+                                    disablePortal: false,
                                     modifiers: [   
                                         {
                                             name: "flip",
-                                            enable: false
+                                            enable: true
+                                        },
+                                        {
+                                            name: "preventOverflow",
+                                            enabled: true,
+                                            options: {
+                                                boundary: 'viewport',
+                                                altBoundary: true,
+                                                tether: false
+                                            }
                                         }
                                     ]
                                 }
                             },
-                            // panel: {
-                            // disablePortal: false,
-                            // container: () => document.body,
-                            // placement: "bottom-end",
-                            //                             sx: {
-                            //   minWidth: 660, // 👈 directly control width here
-                            //   "& .MuiDataGrid-filterForm": {
-                            //     flexDirection: "row",
-                            //     flexWrap: "wrap",
-                            //     gap: 2,
-                            //     width: "615px"
-                            //   },
-                            //   zIndex: 1400
-                            // }
-                            // },
+                            panel: {
+                                disablePortal: false,
+                                container: () => document.body,
+                                placement: "bottom-start",
+                                sx: {
+                                    minWidth: 660,
+                                    "& .MuiDataGrid-filterForm": {
+                                        flexDirection: "row",
+                                        flexWrap: "wrap",
+                                        gap: 2,
+                                        width: "615px"
+                                    },
+                                    zIndex: 1400
+                                }
+                            },
                         }}
                         showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
