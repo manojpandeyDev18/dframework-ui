@@ -545,7 +545,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         let operators = [];
         if (overrides.valueOptions === constants.lookup) {
           overrides.valueOptions = lookupOptions;
-          const lookupFilters = [...(0, _xDataGridPremium.getGridStringOperators)()].filter(op => ['is', 'not', 'isAnyOf'].includes(op.value));
+          const lookupFilters = [...(0, _xDataGridPremium.getGridDateOperators)(), ...(0, _xDataGridPremium.getGridStringOperators)()].filter(op => ['is', 'not', 'isAnyOf'].includes(op.value));
           operators = lookupFilters;
         }
         if (column.type === constants.boolean) {
