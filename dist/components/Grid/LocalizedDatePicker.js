@@ -100,7 +100,7 @@ const LocalizedDatePicker = props => {
         variant: "outlined",
         label: "Value",
         sx: {
-          height: "41px"
+          height: "40px"
         }
       }
     },

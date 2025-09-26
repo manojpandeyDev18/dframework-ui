@@ -64,7 +64,7 @@ const LocalizedDatePicker = (props) => {
                 format={format}
                 value={Dateformatvalue}
                 onChange={handleFilterChange}
-                slotProps={{ textField: { variant: "outlined", label: "Value", sx: { height: "41px" } } }}
+                slotProps={{ textField: { variant: "outlined", label: "Value", sx: { height: "40px" } } }}
                 localeText={{
                     fieldMonthPlaceholder: () => {
                         const monthAbbreviation = getMonthAbbreviation(format);
