@@ -69,7 +69,7 @@ const CustomDropdownMenu = (props) => {
             <InputLabel></InputLabel>
             <Select
                 label={column.field}
-                variant="outlined"
+                variant="standard"
                 value={value}
                 onChange={(e) => handleFilterChange(e)}
                 multiple={Array.isArray(value)}

@@ -85,7 +85,7 @@ const CustomDropdownMenu = props => {
     className: "w-100"
   }, /*#__PURE__*/_react.default.createElement(_material.InputLabel, null), /*#__PURE__*/_react.default.createElement(_material.Select, {
     label: column.field,
-    variant: "outlined",
+    variant: "standard",
     value: value,
     onChange: e => handleFilterChange(e),
     multiple: Array.isArray(value),
