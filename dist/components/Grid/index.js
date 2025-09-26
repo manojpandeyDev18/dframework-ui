@@ -154,19 +154,12 @@ const auditColumnMappings = [{
   header: 'Modified By'
 }];
 const booleanIconRenderer = params => {
-  if (params.value) {
-    return /*#__PURE__*/_react.default.createElement(_Check.default, {
-      style: {
-        color: 'green'
-      }
-    });
-  } else {
-    return /*#__PURE__*/_react.default.createElement(_Close.default, {
-      style: {
-        color: 'gray'
-      }
-    });
-  }
+  // if (params.value) {
+  //     return <CheckIcon style={{ color: 'green' }} />;
+  // } else {
+  //     return <CloseIcon style={{ color: 'gray' }} />;
+  // }
+  return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null);
 };
 const useStyles = (0, _makeStyles.default)({
   buttons: {
@@ -388,14 +381,16 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       event.stopPropagation();
       handleSelectRow(params);
     };
-    return /*#__PURE__*/_react.default.createElement(_Checkbox.default, {
-      onClick: handleCheckboxClick,
-      checked: isCheckedLocal,
-      color: "primary",
-      inputProps: {
-        'aria-label': 'checkbox'
-      }
-    });
+    return (
+      /*#__PURE__*/
+      // <Checkbox
+      //     onClick={handleCheckboxClick}
+      //     checked={isCheckedLocal}
+      //     color="primary"
+      //     inputProps={{ 'aria-label': 'checkbox' }}
+      // />
+      _react.default.createElement(_react.default.Fragment, null)
+    );
   };
   const gridColumnTypes = {
     "radio": {

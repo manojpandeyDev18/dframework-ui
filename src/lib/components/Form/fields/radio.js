@@ -1,12 +1,12 @@
 import React from "react";
 import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, FormHelperText, useTheme } from "@mui/material";
 
-const Field = ({ field, formik, orientation = "row", label, lookups, fieldconfigs={}, mode, ...otherProps }) => {
+const Field = ({ field, formik, orientation = "row", label, lookups, fieldconfigs={}, mode, column, isadd, ...otherProps }) => {
     const handleChange = (event) => {
         formik.setFieldValue(field, event.target.value);
     }
 
-    const options = lookups ? lookups[otherProps.column.lookup] : [];
+    const options = lookups ? lookups[column.lookup] : [];
     const theme = useTheme();
     const isError = formik.touched[field] && Boolean(formik.errors[field]);
     const isDisabled = mode !== 'copy' && fieldconfigs.disabled;

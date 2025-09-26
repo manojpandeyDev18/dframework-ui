@@ -1,7 +1,7 @@
 import TextField from '@mui/material/TextField';
 import React from 'react';
 
-const field = ({ column, field, formik, otherProps }) => {
+const field = ({ column, field, formik, isadd, ...otherProps }) => {
     const rows = column.rows || (column.multiline ? 5 : 1);
     return <TextField
         type="text"

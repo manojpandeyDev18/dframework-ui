@@ -85,11 +85,12 @@ const auditColumnMappings = [
     { key: 'addModifiedByColumn', field: 'ModifiedByUser', type: 'string', header: 'Modified By' }
 ];
 const booleanIconRenderer = (params) => {
-    if (params.value) {
-        return <CheckIcon style={{ color: 'green' }} />;
-    } else {
-        return <CloseIcon style={{ color: 'gray' }} />;
-    }
+    // if (params.value) {
+    //     return <CheckIcon style={{ color: 'green' }} />;
+    // } else {
+    //     return <CloseIcon style={{ color: 'gray' }} />;
+    // }
+    return <></>
 };
 
 const useStyles = makeStyles({
@@ -241,12 +242,13 @@ const GridBase = memo(({
         };
 
         return (
-            <Checkbox
-                onClick={handleCheckboxClick}
-                checked={isCheckedLocal}
-                color="primary"
-                inputProps={{ 'aria-label': 'checkbox' }}
-            />
+            // <Checkbox
+            //     onClick={handleCheckboxClick}
+            //     checked={isCheckedLocal}
+            //     color="primary"
+            //     inputProps={{ 'aria-label': 'checkbox' }}
+            // />
+            <></>
         );
     };
 

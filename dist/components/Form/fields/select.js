@@ -19,7 +19,7 @@ var _InputLabel = _interopRequireDefault(require("@mui/material/InputLabel"));
 var _Select = _interopRequireDefault(require("@mui/material/Select"));
 var _MenuItem = _interopRequireDefault(require("@mui/material/MenuItem"));
 var _useCascadingLookup = _interopRequireDefault(require("../../../hooks/useCascadingLookup"));
-const _excluded = ["column", "field", "formik", "lookups", "dependsOn", "api"];
+const _excluded = ["column", "field", "formik", "lookups", "dependsOn", "api", "isadd"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
@@ -32,7 +32,8 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
       formik,
       lookups,
       dependsOn = [],
-      api
+      api,
+      isadd
     } = _ref,
     otherProps = _objectWithoutProperties(_ref, _excluded);
   const userSelected = _react.default.useRef(false);

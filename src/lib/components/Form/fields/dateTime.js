@@ -3,7 +3,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import dayjs from 'dayjs';
 import { useStateContext } from '../../useRouter/StateProvider'
 
-const Field = ({ column, field, formik, otherProps }) => {
+const Field = ({ column, field, formik, isadd, ...otherProps }) => {
     const { systemDateTimeFormat, stateData } = useStateContext();
     return <DateTimePicker
         {...otherProps}

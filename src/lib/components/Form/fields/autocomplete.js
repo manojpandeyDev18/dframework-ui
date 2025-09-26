@@ -10,7 +10,7 @@ const consts = {
     limitTags: 5
 }
 
-const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldconfigs = {}, mode, api, ...otherProps }) => {
+const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldconfigs = {}, mode, api, isadd, ...otherProps }) => {
     const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, isAutoComplete: true });
     const inputValue = formik.values[field]?.split(", ")?.map(Number) || [];
 
