@@ -95,6 +95,9 @@ const LocalizedDatePicker = props => {
     format: format,
     value: Dateformatvalue,
     onChange: handleFilterChange,
+    sx: {
+      height: "40px"
+    },
     slotProps: {
       textField: {
         variant: "outlined",

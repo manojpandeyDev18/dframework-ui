@@ -64,6 +64,7 @@ const LocalizedDatePicker = (props) => {
                 format={format}
                 value={Dateformatvalue}
                 onChange={handleFilterChange}
+                sx= {{ height: "40px" }}
                 slotProps={{ textField: { variant: "outlined", label: "Value", sx: { height: "40px", "& .MuiInputBase-input": {
     height: 40
   }, } } }}
