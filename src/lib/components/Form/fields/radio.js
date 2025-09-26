@@ -1,7 +1,7 @@
 import React from "react";
 import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, FormHelperText, useTheme } from "@mui/material";
 
-const Field = ({ field, formik, orientation = "row", label, lookups, fieldConfigs={}, mode, ...otherProps }) => {
+const Field = ({ field, formik, orientation = "row", label, lookups, fieldconfigs={}, mode, ...otherProps }) => {
     const handleChange = (event) => {
         formik.setFieldValue(field, event.target.value);
     }
@@ -9,7 +9,7 @@ const Field = ({ field, formik, orientation = "row", label, lookups, fieldConfig
     const options = lookups ? lookups[otherProps.column.lookup] : [];
     const theme = useTheme();
     const isError = formik.touched[field] && Boolean(formik.errors[field]);
-    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
+    const isDisabled = mode !== 'copy' && fieldconfigs.disabled;
     return (
         <>
             <FormControl component="fieldset" error={isError}>
