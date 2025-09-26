@@ -4,7 +4,7 @@ import {
     gridFilterModelSelector
 } from '@mui/x-data-grid-premium';
 
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, OutlinedInput } from '@mui/material';
 
 const GridOperators = {
     IsAnyOf: 'isAnyOf'
