@@ -359,26 +359,26 @@ const GridBase = memo(({
 
                 overrides.filterOperators = operators.map((operator) => ({
                     ...operator,
-                    // InputComponent: operator.InputComponent
-                    //     ? (params) => (
-                    //         <CustomDropdownMenu
-                    //             column={{
-                    //                 ...column,
-                    //                 ...(column.type === constants.boolean
-                    //                     ? {
-                    //                         customLookup: [
-                    //                             { value: true, label: 'Yes' },
-                    //                             { value: false, label: 'No' }
-                    //                         ]
-                    //                     }
-                    //                     : {}),
-                    //                 dataRef
-                    //             }}
-                    //             {...params}
-                    //             autoHighlight
-                    //         />
-                    //     )
-                    //     : undefined
+                    InputComponent: operator.InputComponent
+                        ? (params) => (
+                            <CustomDropdownMenu
+                                column={{
+                                    ...column,
+                                    ...(column.type === constants.boolean
+                                        ? {
+                                            customLookup: [
+                                                { value: true, label: 'Yes' },
+                                                { value: false, label: 'No' }
+                                            ]
+                                        }
+                                        : {}),
+                                    dataRef
+                                }}
+                                {...params}
+                                autoHighlight
+                            />
+                        )
+                        : undefined
                 }));
             }
             if (column.linkTo || column.link) {
