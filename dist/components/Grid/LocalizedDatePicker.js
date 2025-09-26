@@ -98,10 +98,10 @@ const LocalizedDatePicker = props => {
     slotProps: {
       textField: {
         variant: "outlined",
-        label: "Value"
-      },
-      sx: {
-        height: "42px"
+        label: "Value",
+        sx: {
+          height: "42px"
+        }
       }
     },
     localeText: {
