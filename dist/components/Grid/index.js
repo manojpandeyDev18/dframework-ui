@@ -154,12 +154,19 @@ const auditColumnMappings = [{
   header: 'Modified By'
 }];
 const booleanIconRenderer = params => {
-  // if (params.value) {
-  //     return <CheckIcon style={{ color: 'green' }} />;
-  // } else {
-  //     return <CloseIcon style={{ color: 'gray' }} />;
-  // }
-  return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null);
+  if (params.value) {
+    return /*#__PURE__*/_react.default.createElement(_Check.default, {
+      style: {
+        color: 'green'
+      }
+    });
+  } else {
+    return /*#__PURE__*/_react.default.createElement(_Close.default, {
+      style: {
+        color: 'gray'
+      }
+    });
+  }
 };
 const useStyles = (0, _makeStyles.default)({
   buttons: {
@@ -1467,6 +1474,12 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
           "& .MuiDataGrid-filterForm": {
             width: "615px"
           }
+        }
+      },
+      filterPanel: {
+        // This will be passed to all filter value inputs
+        InputProps: {
+          variant: 'outlined'
         }
       }
     },

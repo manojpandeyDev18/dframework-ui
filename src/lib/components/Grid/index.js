@@ -85,12 +85,11 @@ const auditColumnMappings = [
     { key: 'addModifiedByColumn', field: 'ModifiedByUser', type: 'string', header: 'Modified By' }
 ];
 const booleanIconRenderer = (params) => {
-    // if (params.value) {
-    //     return <CheckIcon style={{ color: 'green' }} />;
-    // } else {
-    //     return <CloseIcon style={{ color: 'gray' }} />;
-    // }
-    return <></>
+    if (params.value) {
+        return <CheckIcon style={{ color: 'green' }} />;
+    } else {
+        return <CloseIcon style={{ color: 'gray' }} />;
+    }
 };
 
 const useStyles = makeStyles({
@@ -1070,6 +1069,10 @@ const GridBase = memo(({
                                         width: "615px"
                                     }
                                 }
+                            },
+                            filterPanel: {
+                                // This will be passed to all filter value inputs
+                                InputProps: { variant: 'outlined' }
                             }
                         }}
                         showToolbar
