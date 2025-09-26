@@ -80,6 +80,7 @@ const CustomDropdownMenu = props => {
   }, [apiRef, column.applyZeroFilter, currentFieldFilters, item, applyValue]);
   const value = (_currentFieldFilters$ = (_currentFieldFilters$2 = currentFieldFilters[0]) === null || _currentFieldFilters$2 === void 0 ? void 0 : _currentFieldFilters$2.value) !== null && _currentFieldFilters$ !== void 0 ? _currentFieldFilters$ : '';
   console.log("Custom Dropdown Menu ", options);
+  console.log("Custom Dropdown Menu value ", value);
   return /*#__PURE__*/_react.default.createElement(_material.FormControl, {
     variant: "standard",
     className: "w-100"
