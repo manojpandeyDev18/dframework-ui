@@ -100,7 +100,10 @@ const LocalizedDatePicker = props => {
         variant: "outlined",
         label: "Value",
         sx: {
-          height: "40px"
+          height: "40px",
+          "& .MuiInputBase-input": {
+            height: 40
+          }
         }
       }
     },
