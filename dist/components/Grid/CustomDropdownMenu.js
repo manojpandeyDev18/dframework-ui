@@ -97,12 +97,9 @@ const CustomDropdownMenu = props => {
         }
       }
     },
-    input: /*#__PURE__*/_react.default.createElement(_material.OutlinedInput, {
-      focused: true
-    }),
     sx: {
       width: "201px",
-      height: "45px"
+      height: "42px"
     }
   }, (_options = options) === null || _options === void 0 ? void 0 : _options.map((option, index) => /*#__PURE__*/_react.default.createElement(_material.MenuItem, {
     key: index,

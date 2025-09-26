@@ -4,7 +4,7 @@ import {
     gridFilterModelSelector
 } from '@mui/x-data-grid-premium';
 
-import { FormControl, InputLabel, MenuItem, Select, OutlinedInput } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 const GridOperators = {
     IsAnyOf: 'isAnyOf'
@@ -82,8 +82,7 @@ const CustomDropdownMenu = (props) => {
                         }
                     }
                 }}
-                input={<OutlinedInput focused />}
-                sx={{ width: "201px", height: "45px" }}
+                sx={{ width: "201px", height: "42px" }}
             >
                 {options?.map((option, index) => (
                     <MenuItem key={index} value={option.value}>
