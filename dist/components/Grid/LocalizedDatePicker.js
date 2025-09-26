@@ -99,6 +99,9 @@ const LocalizedDatePicker = props => {
       textField: {
         variant: "outlined",
         label: "Value"
+      },
+      sx: {
+        height: "42px"
       }
     },
     localeText: {
