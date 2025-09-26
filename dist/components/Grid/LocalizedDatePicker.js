@@ -97,7 +97,7 @@ const LocalizedDatePicker = props => {
     onChange: handleFilterChange,
     slotProps: {
       textField: {
-        variant: "standard",
+        variant: "outlined",
         label: "Value"
       }
     },
