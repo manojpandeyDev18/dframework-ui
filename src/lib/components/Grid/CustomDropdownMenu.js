@@ -66,8 +66,8 @@ const CustomDropdownMenu = (props) => {
     console.log("Custom Dropdown Menu value ", value);
 
     return (
-        <FormControl variant="standard" className="w-100">
-            <InputLabel></InputLabel>
+        <FormControl variant="outlined">
+            <InputLabel>{"Values"}</InputLabel>
             <Select
                 label={column.field}
                 variant="outlined"
