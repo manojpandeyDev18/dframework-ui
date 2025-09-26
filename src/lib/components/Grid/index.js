@@ -348,7 +348,7 @@ const GridBase = memo(({
 
                 if (overrides.valueOptions === constants.lookup) {
                     overrides.valueOptions = lookupOptions;
-                    const lookupFilters = [...getGridDateOperators(), ...getGridStringOperators()]
+                    const lookupFilters = [...getGridStringOperators()]
                         .filter((op) => ['is', 'not', 'isAnyOf'].includes(op.value));
                     operators = lookupFilters;
                 }
