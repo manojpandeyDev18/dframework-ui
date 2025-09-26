@@ -70,7 +70,7 @@ const useStyles = makeStyles({
     }
 });
 
-const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, handleSubmit }) => {
+const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookups, fieldconfigs, mode, handleSubmit }) => {
     const [skipped, setSkipped] = React.useState(new Set());
 
     const { activeStep, setActiveStep } = React.useContext(ActiveStepContext);
@@ -139,7 +139,7 @@ const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookup
                 })}
             </Stepper>
             <React.Fragment>
-                <RenderColumns formElements={currentStep.items} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} />
+                <RenderColumns formElements={currentStep.items} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldconfigs={fieldconfigs} mode={mode} />
                 <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2, mr: 2 }}>
                     {activeStep !== 0 ? <Button color="inherit" disabled={activeStep === 0} onClick={handleBack} variant="contained" sx={{ mr: 2 }}> {'Back'}</Button> : null}
                     <Button onClick={handleNext} variant="contained">{isLastStep() ? "Finish" : "Next"}</Button>
@@ -149,7 +149,7 @@ const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookup
     );
 };
 
-const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, isAdd, api }) => {
+const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lookups, fieldconfigs, mode, isadd, api }) => {
     const classes = useStyles();
     if (!formElements?.length) {
         return null;
@@ -170,7 +170,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
                                 : null
                             }
                             <Grid size={{ xs: isGridComponent ? 12 : 9 }} className={classes.childStyles}>
-                                <Component isAdd={isAdd} model={model} fieldConfigs={fieldConfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} api={api} {...otherProps} />
+                                <Component isadd={isadd} model={model} fieldconfigs={fieldconfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} api={api} {...otherProps} />
                             </Grid>
                         </Grid >
                     );
@@ -213,9 +213,9 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
     return { formElements, tabColumns: tabsData };
 };
 
-const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldConfigs, mode, handleSubmit, api }) => {
+const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldconfigs, mode, handleSubmit, api }) => {
     const classes = useStyles();
-    const isAdd = [0, undefined, null, ''].includes(displayId);
+    const isadd = [0, undefined, null, ''].includes(displayId);
     const { formElements, tabColumns } = React.useMemo(() => {
         const showTabs = model.formConfig?.showTabbed;
         const searchParams = new URLSearchParams(window.location.search);
@@ -224,9 +224,9 @@ const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displa
     }, [model]);
     return (
         <div>
-            <RenderColumns isAdd={isAdd} formElements={formElements} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} api={api} />
+            <RenderColumns isadd={isadd} formElements={formElements} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldconfigs={fieldconfigs} mode={mode} api={api} />
             <div className={classes.renderSteps}>
-                <RenderSteps tabColumns={tabColumns} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} handleSubmit={handleSubmit} />
+                <RenderSteps tabColumns={tabColumns} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldconfigs={fieldconfigs} mode={mode} handleSubmit={handleSubmit} />
             </div>
         </div>
     );

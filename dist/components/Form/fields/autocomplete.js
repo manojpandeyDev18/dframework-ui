@@ -19,7 +19,7 @@ var _Autocomplete = _interopRequireDefault(require("@mui/material/Autocomplete")
 var _TextField = _interopRequireDefault(require("@mui/material/TextField"));
 var _StateProvider = require("../../useRouter/StateProvider");
 var _useCascadingLookup = _interopRequireDefault(require("../../../hooks/useCascadingLookup"));
-const _excluded = ["column", "field", "formik", "lookups", "dependsOn", "fieldConfigs", "mode", "api"];
+const _excluded = ["column", "field", "formik", "lookups", "dependsOn", "fieldconfigs", "mode", "api"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
@@ -36,7 +36,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
       formik,
       lookups,
       dependsOn = [],
-      fieldConfigs = {},
+      fieldconfigs = {},
       mode,
       api
     } = _ref,
@@ -51,7 +51,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
   });
   const inputValue = ((_formik$values$field = formik.values[field]) === null || _formik$values$field === void 0 || (_formik$values$field = _formik$values$field.split(", ")) === null || _formik$values$field === void 0 ? void 0 : _formik$values$field.map(Number)) || [];
   const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
-  const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
+  const isDisabled = mode !== 'copy' && fieldconfigs.disabled;
   const handleAutoCompleteChange = (_, newValue) => {
     formik === null || formik === void 0 || formik.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
   };

@@ -10,12 +10,12 @@ const consts = {
     limitTags: 5
 }
 
-const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldConfigs = {}, mode, api, ...otherProps }) => {
+const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldconfigs = {}, mode, api, ...otherProps }) => {
     const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, isAutoComplete: true });
     const inputValue = formik.values[field]?.split(", ")?.map(Number) || [];
 
     const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
-    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
+    const isDisabled = mode !== 'copy' && fieldconfigs.disabled;
     const handleAutoCompleteChange = (_, newValue) => {
         formik?.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
     };

@@ -110,7 +110,7 @@ const Form = _ref => {
   const [deleteError, setDeleteError] = (0, _react.useState)(null);
   const [errorMessage, setErrorMessage] = (0, _react.useState)("");
   const url = (stateData === null || stateData === void 0 || (_stateData$gridSettin = stateData.gridSettings) === null || _stateData$gridSettin === void 0 || (_stateData$gridSettin = _stateData$gridSettin.permissions) === null || _stateData$gridSettin === void 0 ? void 0 : _stateData$gridSettin.Url) || '';
-  const fieldConfigs = typeof model.applyFieldConfig === consts.function ? model.applyFieldConfig({
+  const fieldconfigs = typeof model.applyFieldConfig === consts.function ? model.applyFieldConfig({
     data,
     lookups
   }) : defaultFieldConfigs;
@@ -406,7 +406,7 @@ const Form = _ref => {
     model: model,
     formik: formik,
     data: data,
-    fieldConfigs: fieldConfigs,
+    fieldconfigs: fieldconfigs,
     onChange: handleChange,
     lookups: lookups,
     id: id,

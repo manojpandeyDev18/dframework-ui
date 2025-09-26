@@ -35,19 +35,19 @@ function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 const Field = _ref => {
-  var _formik$values$field, _fieldConfigs$disable;
+  var _formik$values$field, _fieldconfigs$disable;
   let {
-    isAdd,
+    isadd,
     column,
     field,
     formik,
     otherProps,
-    fieldConfigs = {},
+    fieldconfigs = {},
     mode
   } = _ref;
   const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(",") : [];
-  const isDisabled = mode === 'copy' || (((_fieldConfigs$disable = fieldConfigs.disabled) !== null && _fieldConfigs$disable !== void 0 ? _fieldConfigs$disable : typeof column.disabled === "function") ? column.disabled(window.location.pathname) : column.disabled || false);
-  const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
+  const isDisabled = mode === 'copy' || (((_fieldconfigs$disable = fieldconfigs.disabled) !== null && _fieldconfigs$disable !== void 0 ? _fieldconfigs$disable : typeof column.disabled === "function") ? column.disabled(window.location.pathname) : column.disabled || false);
+  const fixedOptions = column.hasDefault && !isadd ? [inputValue[0]] : [];
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
     var _newValue$pop, _newValue;
     let item = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};

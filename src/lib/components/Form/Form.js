@@ -71,7 +71,7 @@ const Form = ({
   const [deleteError, setDeleteError] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const url = stateData?.gridSettings?.permissions?.Url || '';
-  const fieldConfigs = typeof model.applyFieldConfig === consts.function
+  const fieldconfigs = typeof model.applyFieldConfig === consts.function
     ? model.applyFieldConfig({ data, lookups })
     : defaultFieldConfigs;
   const gridApi = useMemo(() => `${url}${model.api || api || ''}`, [url, model.api, api]);
@@ -357,7 +357,7 @@ const Form = ({
               model={model}
               formik={formik}
               data={data}
-              fieldConfigs={fieldConfigs}
+              fieldconfigs={fieldconfigs}
               onChange={handleChange}
               lookups={lookups}
               id={id}

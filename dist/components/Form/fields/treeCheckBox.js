@@ -72,7 +72,7 @@ function treeCheckBox(_ref) {
     field,
     formik,
     lookups,
-    fieldConfigs,
+    fieldconfigs,
     mode
   } = _ref;
   const options = lookups ? lookups[column.lookup] : [];
@@ -80,7 +80,7 @@ function treeCheckBox(_ref) {
   const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(", ") : [];
   let isDisabled;
   if (mode !== 'copy') {
-    isDisabled = fieldConfigs === null || fieldConfigs === void 0 ? void 0 : fieldConfigs.disabled;
+    isDisabled = fieldconfigs === null || fieldconfigs === void 0 ? void 0 : fieldconfigs.disabled;
   }
   const handleChange = (_, newValue) => {
     formik.setFieldValue(field, (newValue === null || newValue === void 0 ? void 0 : newValue.join(', ')) || '');

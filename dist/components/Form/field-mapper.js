@@ -163,7 +163,7 @@ const RenderSteps = _ref => {
     onChange,
     combos,
     lookups,
-    fieldConfigs,
+    fieldconfigs,
     mode,
     handleSubmit
   } = _ref;
@@ -239,7 +239,7 @@ const RenderSteps = _ref => {
     onChange: onChange,
     combos: combos,
     lookups: lookups,
-    fieldConfigs: fieldConfigs,
+    fieldconfigs: fieldconfigs,
     mode: mode
   }), /*#__PURE__*/React.createElement(_Box.default, {
     sx: {
@@ -270,9 +270,9 @@ const RenderColumns = _ref3 => {
     onChange,
     combos,
     lookups,
-    fieldConfigs,
+    fieldconfigs,
     mode,
-    isAdd,
+    isadd,
     api
   } = _ref3;
   const classes = useStyles();
@@ -309,9 +309,9 @@ const RenderColumns = _ref3 => {
       },
       className: classes.childStyles
     }, /*#__PURE__*/React.createElement(Component, _extends({
-      isAdd: isAdd,
+      isadd: isadd,
       model: model,
-      fieldConfigs: fieldConfigs[field],
+      fieldconfigs: fieldconfigs[field],
       mode: mode,
       column: column,
       field: field,
@@ -392,13 +392,13 @@ const FormLayout = _ref6 => {
     onChange,
     lookups,
     id: displayId,
-    fieldConfigs,
+    fieldconfigs,
     mode,
     handleSubmit,
     api
   } = _ref6;
   const classes = useStyles();
-  const isAdd = [0, undefined, null, ''].includes(displayId);
+  const isadd = [0, undefined, null, ''].includes(displayId);
   const {
     formElements,
     tabColumns
@@ -422,7 +422,7 @@ const FormLayout = _ref6 => {
     };
   }, [model]);
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(RenderColumns, {
-    isAdd: isAdd,
+    isadd: isadd,
     formElements: formElements,
     model: model,
     formik: formik,
@@ -430,7 +430,7 @@ const FormLayout = _ref6 => {
     onChange: onChange,
     combos: combos,
     lookups: lookups,
-    fieldConfigs: fieldConfigs,
+    fieldconfigs: fieldconfigs,
     mode: mode,
     api: api
   }), /*#__PURE__*/React.createElement("div", {
@@ -443,7 +443,7 @@ const FormLayout = _ref6 => {
     onChange: onChange,
     combos: combos,
     lookups: lookups,
-    fieldConfigs: fieldConfigs,
+    fieldconfigs: fieldconfigs,
     mode: mode,
     handleSubmit: handleSubmit
   })));

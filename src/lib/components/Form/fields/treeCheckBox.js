@@ -50,13 +50,13 @@ const buildTree = (data = []) => {
  * @param {string} props.mode - The mode of the form, such as 'edit' or 'copy'.
  * @returns {JSX.Element} The rendered tree view component.
  */
-export default function treeCheckBox({ column, field, formik, lookups, fieldConfigs, mode }) {
+export default function treeCheckBox({ column, field, formik, lookups, fieldconfigs, mode }) {
   const options = lookups ? lookups[column.lookup] : [];
   const tree = buildTree(options);
   const inputValue = formik.values[field]?.length ? formik.values[field].split(", ") : [];
   let isDisabled;
   if (mode !== 'copy') {
-    isDisabled = fieldConfigs?.disabled;
+    isDisabled = fieldconfigs?.disabled;
   }
   const handleChange = (_, newValue) => {
     formik.setFieldValue(field, newValue?.join(', ') || '');

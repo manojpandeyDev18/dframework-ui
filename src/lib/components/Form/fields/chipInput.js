@@ -6,10 +6,10 @@ import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
 import { useCallback } from 'react';
 
-const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mode }) => {
+const Field = ({ isadd, column, field, formik, otherProps, fieldconfigs = {}, mode }) => {
     const inputValue = formik.values[field]?.length ? formik.values[field].split(",") : [];
-    const isDisabled = mode === 'copy' || (fieldConfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
-    const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
+    const isDisabled = mode === 'copy' || (fieldconfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
+    const fixedOptions = column.hasDefault && !isadd ? [inputValue[0]] : [];
 
     const handleAutoCompleteChange = useCallback((e, newValue, action, item = {}) => {
         const lastElement = newValue.pop()?.trim();

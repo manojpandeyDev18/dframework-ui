@@ -3,8 +3,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { useStateContext } from '../../useRouter/StateProvider';
 
-const Field = ({ column, field, formik, otherProps, fieldConfigs = {}, mode }) => {
-    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
+const Field = ({ column, field, formik, otherProps, fieldconfigs = {}, mode }) => {
+    const isDisabled = mode !== 'copy' && fieldconfigs.disabled;
     const { systemDateTimeFormat, stateData } = useStateContext(); //provider
     return <DatePicker
         {...otherProps}

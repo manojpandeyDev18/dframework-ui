@@ -18,10 +18,10 @@ const Field = _ref => {
     field,
     formik,
     otherProps,
-    fieldConfigs = {},
+    fieldconfigs = {},
     mode
   } = _ref;
-  const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
+  const isDisabled = mode !== 'copy' && fieldconfigs.disabled;
   const {
     systemDateTimeFormat,
     stateData
