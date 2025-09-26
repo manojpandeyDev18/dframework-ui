@@ -1,18 +1,13 @@
 import Button from '@mui/material/Button';
 import {
     DataGridPremium,
-    GridToolbarContainer,
-    GridToolbarColumnsButton,
-    GridToolbarFilterButton,
     getGridDateOperators,
     GRID_CHECKBOX_SELECTION_COL_DEF,
     getGridStringOperators,
     getGridBooleanOperators,
     GridActionsCellItem,
     useGridApiRef,
-    useGridApiContext,
-    Toolbar,
-    ToolbarButton
+    Toolbar
 } from '@mui/x-data-grid-premium';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CopyIcon from '@mui/icons-material/FileCopy';
@@ -814,53 +809,7 @@ const GridBase = memo(({
 
     const CustomToolbar = function (props) {
         const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
-        return (
-            // <div
-            //     style={{
-            //         display: 'flex',
-            //         justifyContent: 'space-between',
-            //         padding: '10px'
-            //     }}
-            // >
-            //     <div>
-            //         {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
-            //         {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
-            //         {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
-            //         {!forAssignment && canAdd && !isReadOnly && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" className={classes.buttons} >{addText}</Button>}
-            //         {(selectionApi.length && data.records.length) ? (
-            //             <Button
-            //                 onClick={selectAll}
-            //                 size="medium"
-            //                 variant="contained"
-            //                 className={classes.buttons}
-            //             >
-            //                 {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
-            //             </Button>) :
-            //             <></>
-            //         }
-            //         {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
-            //         {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
-            //     </div> 
-            //     <GridToolbarContainer {...props}>
-            //         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            //         {effectivePermissions.showColumnsOrder && (
-            //             <GridToolbarColumnsButton />
-            //         )}
-            //         {effectivePermissions.filter && (<>
-            //             <GridToolbarFilterButton />
-            //             <Button sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
-            //         </>)}
-
-            //         {effectivePermissions.export && (
-            //             <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
-            //         )}
-            //         {preferenceName &&
-            //             <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
-            //         }
-            //         </Box>
-            //     </GridToolbarContainer>
-            // </div>
-            
+        return ( 
             <Toolbar sx={{
                 display: "flex",
                 alignItems: "center",
@@ -1114,12 +1063,11 @@ const GridBase = memo(({
                             panel: {
                                 placement: "bottom-end",
                                 sx: {
-      minWidth: 660,
-      "& .MuiDataGrid-filterForm": {
-        width: "615px"
-      },
-    //   zIndex: 1400
-    }
+                                    minWidth: 660,
+                                    "& .MuiDataGrid-filterForm": {
+                                        width: "615px"
+                                    }
+                                }
                             }
                         }}
                         showToolbar
