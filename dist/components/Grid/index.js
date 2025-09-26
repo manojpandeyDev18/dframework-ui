@@ -76,6 +76,8 @@ var _Checkbox = _interopRequireDefault(require("@mui/material/Checkbox"));
 var _reactI18next = require("react-i18next");
 var _helper = require("./helper");
 var _Box = _interopRequireDefault(require("@mui/material/Box"));
+var _LocalizationProvider = require("@mui/x-date-pickers/LocalizationProvider");
+var _AdapterDayjs = _interopRequireDefault(require("@mui/x-date-pickers/AdapterDayjs"));
 const _excluded = ["model", "columns", "api", "defaultSort", "setActiveRecord", "parentFilters", "parent", "where", "title", "permissions", "selected", "assigned", "available", "disableCellRedirect", "onAssignChange", "customStyle", "onCellClick", "showRowsSelected", "chartFilters", "clearChartFilter", "showFullScreenLoader", "customFilters", "onRowDoubleClick", "onRowClick", "gridStyle", "reRenderKey", "additionalFilters", "onCellDoubleClickOverride", "onAddOverride", "dynamicColumns", "readOnly", "baseFilters"];
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
@@ -1419,7 +1421,9 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
         p: 0
       }
     }
-  }, /*#__PURE__*/_react.default.createElement(_material.CardContent, null, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.DataGridPremium, {
+  }, /*#__PURE__*/_react.default.createElement(_material.CardContent, null, /*#__PURE__*/_react.default.createElement(_LocalizationProvider.LocalizationProvider, {
+    dateAdapter: _AdapterDayjs.default
+  }, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.DataGridPremium, {
     sx: {
       "& .MuiTablePagination-selectLabel": {
         marginTop: 2
@@ -1502,7 +1506,7 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       filterValueTrue: 'Yes',
       filterValueFalse: 'No'
     }
-  }), errorMessage && /*#__PURE__*/_react.default.createElement(_index2.DialogComponent, {
+  })), errorMessage && /*#__PURE__*/_react.default.createElement(_index2.DialogComponent, {
     open: !!errorMessage,
     onConfirm: clearError,
     onCancel: clearError,

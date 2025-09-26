@@ -44,6 +44,8 @@ import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
 import Box from '@mui/material/Box';
 import { CircularProgress} from "@mui/material";
 import { GridOverlay } from "@mui/x-data-grid-premium";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import AdapterDayjs from '@mui/x-date-pickers/AdapterDayjs';
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -1014,6 +1016,7 @@ const GridBase = memo(({
                 breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />
             <Card style={gridStyle || customStyle} elevation={0} sx={{ '& .MuiCardContent-root': { p: 0 } }}>
                 <CardContent>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DataGridPremium
                         sx={{
                             "& .MuiTablePagination-selectLabel": {
@@ -1096,6 +1099,7 @@ const GridBase = memo(({
                         }}
 
                     />
+                    </LocalizationProvider>
                     {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
                     }
                     {isDeleting && !errorMessage && (
