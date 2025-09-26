@@ -62,6 +62,7 @@ const CustomDropdownMenu = (props) => {
     );
 
     const value = currentFieldFilters[0]?.value ?? '';
+    console.log("Custom Dropdown Menu ", options);
 
     return (
         <FormControl variant="standard" className="w-100">

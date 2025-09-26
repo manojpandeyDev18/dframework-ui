@@ -79,12 +79,13 @@ const CustomDropdownMenu = props => {
     }));
   }, [apiRef, column.applyZeroFilter, currentFieldFilters, item, applyValue]);
   const value = (_currentFieldFilters$ = (_currentFieldFilters$2 = currentFieldFilters[0]) === null || _currentFieldFilters$2 === void 0 ? void 0 : _currentFieldFilters$2.value) !== null && _currentFieldFilters$ !== void 0 ? _currentFieldFilters$ : '';
+  console.log("Custom Dropdown Menu ", options);
   return /*#__PURE__*/_react.default.createElement(_material.FormControl, {
     variant: "standard",
     className: "w-100"
   }, /*#__PURE__*/_react.default.createElement(_material.InputLabel, null), /*#__PURE__*/_react.default.createElement(_material.Select, {
     label: column.field,
-    variant: "standard",
+    variant: "outlined",
     value: value,
     onChange: e => handleFilterChange(e),
     multiple: Array.isArray(value),
