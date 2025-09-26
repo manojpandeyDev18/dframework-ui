@@ -83,9 +83,7 @@ const CustomDropdownMenu = props => {
   console.log("Custom Dropdown Menu value ", value);
   return /*#__PURE__*/_react.default.createElement(_material.FormControl, {
     variant: "outlined"
-  }, /*#__PURE__*/_react.default.createElement(_material.InputLabel, {
-    shrink: true
-  }, "Values"), /*#__PURE__*/_react.default.createElement(_material.Select, {
+  }, /*#__PURE__*/_react.default.createElement(_material.InputLabel, null, "Values"), /*#__PURE__*/_react.default.createElement(_material.Select, {
     label: "Values",
     variant: "outlined",
     value: value,
@@ -99,9 +97,12 @@ const CustomDropdownMenu = props => {
         }
       }
     },
+    input: /*#__PURE__*/_react.default.createElement(OutlinedInput, {
+      focused: true
+    }),
     sx: {
       width: "201px",
-      height: "39px"
+      height: "45px"
     }
   }, (_options = options) === null || _options === void 0 ? void 0 : _options.map((option, index) => /*#__PURE__*/_react.default.createElement(_material.MenuItem, {
     key: index,

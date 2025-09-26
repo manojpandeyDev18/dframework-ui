@@ -67,7 +67,7 @@ const CustomDropdownMenu = (props) => {
 
     return (
         <FormControl variant="outlined">
-            <InputLabel shrink>{"Values"}</InputLabel>
+            <InputLabel>{"Values"}</InputLabel>
             <Select
                 label="Values"
                 variant="outlined"
@@ -82,7 +82,8 @@ const CustomDropdownMenu = (props) => {
                         }
                     }
                 }}
-                sx={{ width: "201px", height: "39px" }}
+                input={<OutlinedInput focused />}
+                sx={{ width: "201px", height: "45px" }}
             >
                 {options?.map((option, index) => (
                     <MenuItem key={index} value={option.value}>
