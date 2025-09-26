@@ -18,7 +18,7 @@ var _DateTimePicker = require("@mui/x-date-pickers/DateTimePicker");
 var _xDataGridPremium = require("@mui/x-data-grid-premium");
 var _utc = _interopRequireDefault(require("dayjs/plugin/utc.js"));
 var _LocalizationProvider = require("@mui/x-date-pickers/LocalizationProvider");
-var _AdapterDayjs = _interopRequireDefault(require("@mui/x-date-pickers/AdapterDayjs"));
+var _AdapterDayjs = require("@mui/x-date-pickers/AdapterDayjs");
 var _StateProvider = require("../useRouter/StateProvider");
 var _utils = _interopRequireDefault(require("../utils"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
@@ -89,7 +89,7 @@ const LocalizedDatePicker = props => {
   const ComponentToRender = componentMap[columnType];
   const Dateformatvalue = columnType === "dateTimeLocal" ? item !== null && item !== void 0 && item.value ? (0, _dayjs.default)(item === null || item === void 0 ? void 0 : item.value.$d) : null : item !== null && item !== void 0 && item.value ? (0, _dayjs.default)(item.value) : null;
   return /*#__PURE__*/_react.default.createElement(_LocalizationProvider.LocalizationProvider, {
-    dateAdapter: _AdapterDayjs.default
+    dateAdapter: _AdapterDayjs.AdapterDayjs
   }, /*#__PURE__*/_react.default.createElement(ComponentToRender, {
     fullWidth: true,
     format: format,
