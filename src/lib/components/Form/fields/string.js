@@ -1,8 +1,9 @@
 import TextField from '@mui/material/TextField';
 import React from 'react';
 
-const field = ({ column, field, formik, ...otherProps }) => {
+const field = ({ column, field, formik, label, ...otherProps }) => {
     const rows = column.rows || (column.multiline ? 5 : 1);
+    console.log("Other props are ", otherProps);
     return <TextField
         type="text"
         variant={column.variant || "standard"}
