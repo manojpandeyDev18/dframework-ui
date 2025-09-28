@@ -62,9 +62,7 @@ const DialogComponent = _ref => {
     id: "alert-dialog-title"
   }, title), /*#__PURE__*/_react.default.createElement(_DialogContent.default, {
     dividers: true
-  }, /*#__PURE__*/_react.default.createElement(_DialogContentText.default, {
-    component: "div"
-  }, children)), (onCancel || onConfirm) && /*#__PURE__*/_react.default.createElement(_DialogActions.default, null, onCancel && /*#__PURE__*/_react.default.createElement(_Button.default, {
+  }, /*#__PURE__*/_react.default.createElement(_DialogContentText.default, null, children)), (onCancel || onConfirm) && /*#__PURE__*/_react.default.createElement(_DialogActions.default, null, onCancel && /*#__PURE__*/_react.default.createElement(_Button.default, {
     onClick: onCancel
   }, cancelText), onConfirm && /*#__PURE__*/_react.default.createElement(_Button.default, {
     onClick: onConfirm,

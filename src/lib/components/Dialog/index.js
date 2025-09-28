@@ -41,7 +41,7 @@ const DialogComponent = ({ open, onConfirm, title = "Confirm", onCancel, okText,
                 {title}
             </DialogTitle>
             <DialogContent dividers>
-                <DialogContentText component="div">{children}</DialogContentText>
+                <DialogContentText>{children}</DialogContentText>
             </DialogContent>
             {(onCancel || onConfirm) && (
                 < DialogActions >
