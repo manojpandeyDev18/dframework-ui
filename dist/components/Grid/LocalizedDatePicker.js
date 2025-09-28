@@ -104,7 +104,7 @@ const LocalizedDatePicker = props => {
         label: "Value",
         sx: {
           height: "40px",
-          "& .MuiInputBase-input": {
+          "& .MuiPickersInputBase-root": {
             height: 40
           }
         }
