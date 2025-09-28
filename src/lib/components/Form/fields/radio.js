@@ -1,7 +1,7 @@
 import React from "react";
 import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, FormHelperText, useTheme } from "@mui/material";
 
-const Field = ({ field, formik, orientation = "row", label, lookups, fieldconfigs={}, mode, column, isadd, ...otherProps }) => {
+const Field = ({ field, formik, orientation = "row", label, lookups, fieldconfigs={}, mode, column, ...otherProps }) => {
     const handleChange = (event) => {
         formik.setFieldValue(field, event.target.value);
     }
