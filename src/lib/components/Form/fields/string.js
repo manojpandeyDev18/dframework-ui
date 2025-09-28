@@ -16,6 +16,7 @@ const field = ({ column, field, formik, ...otherProps }) => {
         required={column.required}
         multiline={column.multiline}
         rows={rows}
+        label=""
         fullWidth
         name={field}
         value={formik.values[field]}

@@ -35,6 +35,7 @@ const field = _ref => {
     required: column.required,
     multiline: column.multiline,
     rows: rows,
+    label: "",
     fullWidth: true,
     name: field,
     value: formik.values[field],
