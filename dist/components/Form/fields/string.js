@@ -22,7 +22,6 @@ const field = _ref => {
     } = _ref,
     otherProps = _objectWithoutProperties(_ref, _excluded);
   const rows = column.rows || (column.multiline ? 5 : 1);
-  console.log("Other props are ", otherProps);
   return /*#__PURE__*/_react.default.createElement(_TextField.default, _extends({
     type: "text",
     variant: column.variant || "standard",
