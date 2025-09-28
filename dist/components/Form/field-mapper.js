@@ -398,7 +398,7 @@ const FormLayout = _ref6 => {
     api
   } = _ref6;
   const classes = useStyles();
-  const isadd = [0, undefined, null, ''].includes(displayId);
+  const isadd = [0, undefined, null, ''].includes(displayId) ? "True" : "False";
   const {
     formElements,
     tabColumns
