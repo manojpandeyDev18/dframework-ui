@@ -23,7 +23,8 @@
     "react-helmet-async": "^2.0.5",
     "react-i18next": "^15.0.0",
     "react-router-dom": "^7.6.2",
-    "yup": "^1.6.1"
+    "yup": "^1.6.1",
+    "lodash.debounce": "^4.0.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.8",
@@ -63,5 +64,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "peerDependenciesMeta": {
+    "lodash.debounce": {
+      "optional": true
+    }
   }
 }
