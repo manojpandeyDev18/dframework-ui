@@ -22,6 +22,10 @@ const field = _ref => {
     } = _ref,
     otherprops = _objectWithoutProperties(_ref, _excluded);
   const rows = column.rows || (column.multiline ? 5 : 1);
+  const value = useMemo(() => {
+    var _formik$values$field;
+    return (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 ? _formik$values$field : column.defaultValue;
+  }, [formik, column]);
   return /*#__PURE__*/_react.default.createElement(_TextField.default, _extends({
     type: "text",
     variant: column.variant || "standard",
@@ -39,14 +43,12 @@ const field = _ref => {
     label: "",
     fullWidth: true,
     name: field,
-    value: formik.values[field],
+    value: value,
     onChange: formik.handleChange,
     onBlur: formik.handleBlur,
     error: formik.touched[field] && Boolean(formik.errors[field]),
     helperText: formik.touched[field] && formik.errors[field],
     autoComplete: column.autoComplete
-  }, otherprops, {
-    defaultValue: column.defaultValue
-  }));
+  }, otherprops));
 };
 var _default = exports.default = field;

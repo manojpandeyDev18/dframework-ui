@@ -65,8 +65,9 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     id: field,
     limitTags: column.limitTags || consts.limitTags,
     options: options || [],
-    getOptionLabel: option => option.label || '',
-    defaultValue: filteredCombos,
+    getOptionLabel: option => option.label || ''
+    // defaultValue={filteredCombos}
+    ,
     renderInput: params => /*#__PURE__*/React.createElement(_TextField.default, _extends({}, params, {
       variant: "standard"
     })),

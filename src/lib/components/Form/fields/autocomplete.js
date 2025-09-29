@@ -34,7 +34,7 @@ const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fiel
                 limitTags={column.limitTags || consts.limitTags}
                 options={options || []}
                 getOptionLabel={(option) => option.label || ''}
-                defaultValue={filteredCombos}
+                // defaultValue={filteredCombos}
                 renderInput={(params) => <TextField {...params} variant="standard" />}
                 onChange={handleAutoCompleteChange}
                 value={filteredCombos}

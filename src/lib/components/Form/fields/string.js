@@ -3,6 +3,7 @@ import React from 'react';
 
 const field = ({ column, field, formik, label, ...otherprops }) => {
     const rows = column.rows || (column.multiline ? 5 : 1);
+    const value = useMemo(()=> formik.values[field] ?? column.defaultValue, [formik, column]);
     return <TextField
         type="text"
         variant={column.variant || "standard"}
@@ -19,14 +20,14 @@ const field = ({ column, field, formik, label, ...otherprops }) => {
         label=""
         fullWidth
         name={field}
-        value={formik.values[field]}
+        value={value}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={formik.touched[field] && Boolean(formik.errors[field])}
         helperText={formik.touched[field] && formik.errors[field]}
         autoComplete={column.autoComplete}
         {...otherprops}
-        defaultValue={column.defaultValue}
+        // defaultValue={column.defaultValue}
     />;
 };
 

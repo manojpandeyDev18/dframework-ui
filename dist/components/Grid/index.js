@@ -390,16 +390,14 @@ const GridBase = /*#__PURE__*/(0, _react.memo)(_ref => {
       event.stopPropagation();
       handleSelectRow(params);
     };
-    return (
-      /*#__PURE__*/
-      // <Checkbox
-      //     onClick={handleCheckboxClick}
-      //     checked={isCheckedLocal}
-      //     color="primary"
-      //     inputProps={{ 'aria-label': 'checkbox' }}
-      // />
-      _react.default.createElement(_react.default.Fragment, null)
-    );
+    return /*#__PURE__*/_react.default.createElement(_Checkbox.default, {
+      onClick: handleCheckboxClick,
+      checked: isCheckedLocal,
+      color: "primary",
+      inputProps: {
+        'aria-label': 'checkbox'
+      }
+    });
   };
   const gridColumnTypes = {
     "radio": {

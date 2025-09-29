@@ -243,13 +243,12 @@ const GridBase = memo(({
         };
 
         return (
-            // <Checkbox
-            //     onClick={handleCheckboxClick}
-            //     checked={isCheckedLocal}
-            //     color="primary"
-            //     inputProps={{ 'aria-label': 'checkbox' }}
-            // />
-            <></>
+            <Checkbox
+                onClick={handleCheckboxClick}
+                checked={isCheckedLocal}
+                color="primary"
+                inputProps={{ 'aria-label': 'checkbox' }}
+            />
         );
     };
 
