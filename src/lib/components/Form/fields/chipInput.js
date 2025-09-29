@@ -9,7 +9,7 @@ import { useCallback } from 'react';
 const Field = ({ isadd, column, field, formik, otherProps, fieldconfigs = {}, mode }) => {
     const inputValue = formik.values[field]?.length ? formik.values[field].split(",") : [];
     const isDisabled = mode === 'copy' || (fieldconfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
-    const fixedOptions = column.hasDefault && !isadd ? [inputValue[0]] : [];
+    const fixedOptions = column.hasDefault && isadd === "False" ? [inputValue[0]] : [];
 
     const handleAutoCompleteChange = useCallback((e, newValue, action, item = {}) => {
         const lastElement = newValue.pop()?.trim();
