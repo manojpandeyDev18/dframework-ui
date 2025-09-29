@@ -23,7 +23,7 @@ const Field = _ref => {
       field,
       formik
     } = _ref,
-    otherProps = _objectWithoutProperties(_ref, _excluded);
+    otherprops = _objectWithoutProperties(_ref, _excluded);
   const handleChange = event => {
     formik.setFieldValue(field, event.target.checked);
   };
@@ -35,7 +35,7 @@ const Field = _ref => {
   return /*#__PURE__*/_react.default.createElement("div", {
     key: field
   }, /*#__PURE__*/_react.default.createElement(_FormControlLabel.default, {
-    control: /*#__PURE__*/_react.default.createElement(_Checkbox.default, _extends({}, otherProps, {
+    control: /*#__PURE__*/_react.default.createElement(_Checkbox.default, _extends({}, otherprops, {
       name: field,
       disabled: isDisabled || column.disabled === true,
       checked: checked,

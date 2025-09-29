@@ -159,7 +159,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
     return (
         <>
             {
-                formElements.map(({ Component, column, field, label, otherProps }, key) => {
+                formElements.map(({ Component, column, field, label, otherprops }, key) => {
                     const isGridComponent = typeof column.relation === 'function';
                     return (
                         <Grid container spacing={2} key={key} className={classes.root} alignItems={isGridComponent ? "flex-start" : "center"}>
@@ -170,7 +170,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
                                 : null
                             }
                             <Grid size={{ xs: isGridComponent ? 12 : 9 }} className={classes.childStyles}>
-                                <Component isadd={isadd} model={model} fieldconfigs={fieldconfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} api={api} {...otherProps} />
+                                <Component isadd={isadd} model={model} fieldconfigs={fieldconfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} api={api} {...otherprops} />
                             </Grid>
                         </Grid >
                     );
@@ -191,12 +191,12 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
             continue;
         }
         const { field, label, tab } = column;
-        const otherProps = {};
+        const otherprops = {};
         if (column.options) {
-            otherProps.options = column.options;
+            otherprops.options = column.options;
         }
         if(column.dependsOn) {
-            otherProps.dependsOn = column.dependsOn
+            otherprops.dependsOn = column.dependsOn
         }
         const Component = fieldMappers[fieldType];
         if (!Component || (column.hideInAddGrid && id === '0')) {
@@ -204,7 +204,7 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
         }
 
         const target = tab && tabs[tab] ? tabColumns[tab] : formElements;
-        target.push({ Component, field, label, column: { ...column, readOnly: searchParams.has('showRelation') || column.readOnly }, otherProps });
+        target.push({ Component, field, label, column: { ...column, readOnly: searchParams.has('showRelation') || column.readOnly }, otherprops });
     }
     const tabsData = [];
     for (const tabColumn in tabColumns) {

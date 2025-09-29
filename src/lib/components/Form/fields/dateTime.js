@@ -4,10 +4,10 @@ import dayjs from 'dayjs';
 import { useStateContext } from '../../useRouter/StateProvider'
 
 
-const Field = ({ column, field, formik, ...otherProps }) => {
+const Field = ({ column, field, formik, ...otherprops }) => {
     const { systemDateTimeFormat, stateData } = useStateContext();
     return <DateTimePicker
-        {...otherProps}
+        {...otherprops}
         variant="standard"
         readOnly={column?.readOnly === true}
         key={field}

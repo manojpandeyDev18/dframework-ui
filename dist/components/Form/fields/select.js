@@ -34,7 +34,7 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
       dependsOn = [],
       api
     } = _ref,
-    otherProps = _objectWithoutProperties(_ref, _excluded);
+    otherprops = _objectWithoutProperties(_ref, _excluded);
   const userSelected = _react.default.useRef(false);
   const {
     placeHolder
@@ -84,7 +84,7 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
     variant: "standard"
   }, /*#__PURE__*/_react.default.createElement(_InputLabel.default, null, placeHolder ? placeHolder : ""), /*#__PURE__*/_react.default.createElement(_Select.default, _extends({
     IconComponent: _KeyboardArrowDown.default
-  }, otherProps, {
+  }, otherprops, {
     name: field,
     multiple: column.multiSelect === true,
     readOnly: column.readOnly === true,

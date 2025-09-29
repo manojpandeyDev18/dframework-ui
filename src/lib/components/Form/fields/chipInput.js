@@ -6,7 +6,7 @@ import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
 import { useCallback } from 'react';
 
-const Field = ({ isadd, column, field, formik, otherProps, fieldconfigs = {}, mode }) => {
+const Field = ({ isadd, column, field, formik, otherprops, fieldconfigs = {}, mode }) => {
     const inputValue = formik.values[field]?.length ? formik.values[field].split(",") : [];
     const isDisabled = mode === 'copy' || (fieldconfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
     const fixedOptions = column.hasDefault && isadd === "False" ? [inputValue[0]] : [];
@@ -30,7 +30,7 @@ const Field = ({ isadd, column, field, formik, otherProps, fieldconfigs = {}, mo
             error={formik.touched[field] && Boolean(formik.errors[field])}
         >
             <Autocomplete
-                {...otherProps}
+                {...otherprops}
                 multiple
                 id={field}
                 freeSolo={true}

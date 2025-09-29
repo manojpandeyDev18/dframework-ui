@@ -4,7 +4,7 @@ import { IconButton, InputAdornment } from '@mui/material';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
-const Field = ({ otherProps, ...props }) => {
+const Field = ({ otherprops, ...props }) => {
 	const [showPassword, setShowPassword] = React.useState(false);
 	const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -12,7 +12,7 @@ const Field = ({ otherProps, ...props }) => {
 		event.preventDefault();
 	};
     const { readOnly = false, disabled = false } = props.column || {};
-    otherProps = {
+    otherprops = {
 		type: showPassword ? 'text' : 'password',
 		InputProps: {
 			readOnly,
@@ -32,9 +32,9 @@ const Field = ({ otherProps, ...props }) => {
 				</InputAdornment>
 			)
 		},
-        ...otherProps
+        ...otherprops
     }
-    return <StringField otherProps={otherProps} {...props} />
+    return <StringField otherprops={otherprops} {...props} />
 }
 
 export default Field;

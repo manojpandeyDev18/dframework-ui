@@ -18,7 +18,7 @@ require("core-js/modules/web.dom-collections.iterator.js");
 var _react = _interopRequireWildcard(require("react"));
 var _string = _interopRequireDefault(require("./string"));
 var _lodash = _interopRequireDefault(require("lodash.debounce"));
-const _excluded = ["column", "otherProps", "formik", "field"];
+const _excluded = ["column", "otherprops", "formik", "field"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
@@ -51,7 +51,7 @@ const resolveValue = _ref => {
 const Field = _ref2 => {
   let {
       column,
-      otherProps,
+      otherprops,
       formik,
       field
     } = _ref2,
@@ -80,7 +80,7 @@ const Field = _ref2 => {
   const {
     onBlur
   } = props;
-  otherProps = _objectSpread(_objectSpread({
+  otherprops = _objectSpread(_objectSpread({
     InputProps: {
       inputProps: {
         min: resolvedMin,
@@ -104,7 +104,7 @@ const Field = _ref2 => {
       }
     },
     type: 'number'
-  }, otherProps), {}, {
+  }, otherprops), {}, {
     onChange: event => {
       debouncedSetFieldValue(field, Number(event.target.value)); // Pass the updated value to the debounced function
       if (typeof onBlur === "function") {
@@ -114,7 +114,7 @@ const Field = _ref2 => {
   });
   return /*#__PURE__*/_react.default.createElement(_string.default, _extends({
     column: column,
-    otherProps: otherProps,
+    otherprops: otherprops,
     formik: formik,
     field: field
   }, props));

@@ -40,7 +40,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
       mode,
       api
     } = _ref,
-    otherProps = _objectWithoutProperties(_ref, _excluded);
+    otherprops = _objectWithoutProperties(_ref, _excluded);
   const options = (0, _useCascadingLookup.default)({
     column,
     formik,
@@ -60,7 +60,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     key: field,
     variant: "standard",
     error: formik.touched[field] && Boolean(formik.errors[field])
-  }, /*#__PURE__*/React.createElement(_Autocomplete.default, _extends({}, otherProps, {
+  }, /*#__PURE__*/React.createElement(_Autocomplete.default, _extends({}, otherprops, {
     multiple: true,
     id: field,
     limitTags: column.limitTags || consts.limitTags,

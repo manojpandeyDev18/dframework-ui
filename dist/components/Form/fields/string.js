@@ -20,7 +20,7 @@ const field = _ref => {
       formik,
       label
     } = _ref,
-    otherProps = _objectWithoutProperties(_ref, _excluded);
+    otherprops = _objectWithoutProperties(_ref, _excluded);
   const rows = column.rows || (column.multiline ? 5 : 1);
   return /*#__PURE__*/_react.default.createElement(_TextField.default, _extends({
     type: "text",
@@ -45,7 +45,7 @@ const field = _ref => {
     error: formik.touched[field] && Boolean(formik.errors[field]),
     helperText: formik.touched[field] && formik.errors[field],
     autoComplete: column.autoComplete
-  }, otherProps, {
+  }, otherprops, {
     defaultValue: column.defaultValue
   }));
 };

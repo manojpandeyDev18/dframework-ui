@@ -16,7 +16,7 @@ var _string = _interopRequireDefault(require("./string"));
 var _material = require("@mui/material");
 var _VisibilityOff = _interopRequireDefault(require("@mui/icons-material/VisibilityOff"));
 var _Visibility = _interopRequireDefault(require("@mui/icons-material/Visibility"));
-const _excluded = ["otherProps"];
+const _excluded = ["otherprops"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -28,7 +28,7 @@ function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i 
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
 const Field = _ref => {
   let {
-      otherProps
+      otherprops
     } = _ref,
     props = _objectWithoutProperties(_ref, _excluded);
   const [showPassword, setShowPassword] = _react.default.useState(false);
@@ -40,7 +40,7 @@ const Field = _ref => {
     readOnly = false,
     disabled = false
   } = props.column || {};
-  otherProps = _objectSpread({
+  otherprops = _objectSpread({
     type: showPassword ? 'text' : 'password',
     InputProps: {
       readOnly,
@@ -57,9 +57,9 @@ const Field = _ref => {
         size: "large"
       }, showPassword ? /*#__PURE__*/_react.default.createElement(_VisibilityOff.default, null) : /*#__PURE__*/_react.default.createElement(_Visibility.default, null)))
     }
-  }, otherProps);
+  }, otherprops);
   return /*#__PURE__*/_react.default.createElement(_string.default, _extends({
-    otherProps: otherProps
+    otherprops: otherprops
   }, props));
 };
 var _default = exports.default = Field;

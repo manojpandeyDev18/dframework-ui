@@ -20,12 +20,12 @@ const field = _ref => {
       field,
       formik
     } = _ref,
-    otherProps = _objectWithoutProperties(_ref, _excluded);
+    otherprops = _objectWithoutProperties(_ref, _excluded);
   let inputValue = formik.values[field];
   if (column.isUtc) {
     inputValue = _dayjs.default.utc(inputValue).utcOffset((0, _dayjs.default)().utcOffset(), true).format();
   }
-  return /*#__PURE__*/_react.default.createElement(_TimePicker.TimePicker, _extends({}, otherProps, {
+  return /*#__PURE__*/_react.default.createElement(_TimePicker.TimePicker, _extends({}, otherprops, {
     variant: "standard",
     readOnly: column.readOnly === true,
     key: field,

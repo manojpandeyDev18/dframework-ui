@@ -23,13 +23,13 @@ const Field = _ref => {
       fieldconfigs = {},
       mode
     } = _ref,
-    otherProps = _objectWithoutProperties(_ref, _excluded);
+    otherprops = _objectWithoutProperties(_ref, _excluded);
   const isDisabled = mode !== 'copy' && fieldconfigs.disabled;
   const {
     systemDateTimeFormat,
     stateData
   } = (0, _StateProvider.useStateContext)(); //provider
-  return /*#__PURE__*/_react.default.createElement(_DatePicker.DatePicker, _extends({}, otherProps, {
+  return /*#__PURE__*/_react.default.createElement(_DatePicker.DatePicker, _extends({}, otherprops, {
     variant: "standard",
     readOnly: (column === null || column === void 0 ? void 0 : column.readOnly) === true,
     key: field,

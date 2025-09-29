@@ -2,13 +2,13 @@ import React from 'react';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
 
-const field = ({ column, field, formik, ...otherProps }) => {
+const field = ({ column, field, formik, ...otherprops }) => {
     let inputValue = formik.values[field];
     if (column.isUtc) {
         inputValue = dayjs.utc(inputValue).utcOffset(dayjs().utcOffset(), true).format();
     }
     return <TimePicker
-        {...otherProps}
+        {...otherprops}
         variant="standard"
         readOnly={column.readOnly === true}
         key={field}

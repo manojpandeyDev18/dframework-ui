@@ -41,7 +41,7 @@ const Field = _ref => {
     column,
     field,
     formik,
-    otherProps,
+    otherprops,
     fieldconfigs = {},
     mode
   } = _ref;
@@ -65,7 +65,7 @@ const Field = _ref => {
     key: field,
     variant: "standard",
     error: formik.touched[field] && Boolean(formik.errors[field])
-  }, /*#__PURE__*/React.createElement(_Autocomplete.default, _extends({}, otherProps, {
+  }, /*#__PURE__*/React.createElement(_Autocomplete.default, _extends({}, otherprops, {
     multiple: true,
     id: field,
     freeSolo: true,

@@ -24,7 +24,7 @@ const Field = _ref => {
       mode,
       column
     } = _ref,
-    otherProps = _objectWithoutProperties(_ref, _excluded);
+    otherprops = _objectWithoutProperties(_ref, _excluded);
   const handleChange = event => {
     formik.setFieldValue(field, event.target.value);
   };

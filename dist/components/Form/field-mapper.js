@@ -287,7 +287,7 @@ const RenderColumns = _ref3 => {
       column,
       field,
       label,
-      otherProps
+      otherprops
     } = _ref4;
     const isGridComponent = typeof column.relation === 'function';
     return /*#__PURE__*/React.createElement(_Grid.default, {
@@ -322,7 +322,7 @@ const RenderColumns = _ref3 => {
       combos: combos,
       lookups: lookups,
       api: api
-    }, otherProps))));
+    }, otherprops))));
   }));
 };
 const getFormConfig = function getFormConfig(_ref5) {
@@ -348,12 +348,12 @@ const getFormConfig = function getFormConfig(_ref5) {
       label,
       tab
     } = column;
-    const otherProps = {};
+    const otherprops = {};
     if (column.options) {
-      otherProps.options = column.options;
+      otherprops.options = column.options;
     }
     if (column.dependsOn) {
-      otherProps.dependsOn = column.dependsOn;
+      otherprops.dependsOn = column.dependsOn;
     }
     const Component = fieldMappers[fieldType];
     if (!Component || column.hideInAddGrid && id === '0') {
@@ -367,7 +367,7 @@ const getFormConfig = function getFormConfig(_ref5) {
       column: _objectSpread(_objectSpread({}, column), {}, {
         readOnly: searchParams.has('showRelation') || column.readOnly
       }),
-      otherProps
+      otherprops
     });
   }
   const tabsData = [];
