@@ -64,11 +64,11 @@ const CustomDropdownMenu = (props) => {
     const value = currentFieldFilters[0]?.value ?? '';
 
     return (
-        <FormControl variant="standard" className="w-100">
-            <InputLabel></InputLabel>
+        <FormControl variant="outlined">
+            <InputLabel>{"Values"}</InputLabel>
             <Select
-                label={column.field}
-                variant="standard"
+                label="Values"
+                variant="outlined"
                 value={value}
                 onChange={(e) => handleFilterChange(e)}
                 multiple={Array.isArray(value)}
@@ -80,6 +80,7 @@ const CustomDropdownMenu = (props) => {
                         }
                     }
                 }}
+                sx={{ width: "201px", height: "42px" }}
             >
                 {options?.map((option, index) => (
                     <MenuItem key={index} value={option.value}>

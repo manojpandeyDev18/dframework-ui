@@ -1,21 +1,21 @@
 import Button from '@mui/material/Button';
 import {
     DataGridPremium,
-    GridToolbarContainer,
-    GridToolbarColumnsButton,
-    GridToolbarFilterButton,
     getGridDateOperators,
     GRID_CHECKBOX_SELECTION_COL_DEF,
     getGridStringOperators,
     getGridBooleanOperators,
     GridActionsCellItem,
-    useGridApiRef
+    useGridApiRef,
+    Toolbar
 } from '@mui/x-data-grid-premium';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CopyIcon from '@mui/icons-material/FileCopy';
 import ArticleIcon from '@mui/icons-material/Article';
 import EditIcon from '@mui/icons-material/Edit';
 import FilterListOffIcon from '@mui/icons-material/FilterListOff';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import React, { useMemo, useEffect, memo, useRef, useState, useCallback } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -41,6 +41,11 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
+import Box from '@mui/material/Box';
+import { CircularProgress} from "@mui/material";
+import { GridOverlay } from "@mui/x-data-grid-premium";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import AdapterDayjs from '@mui/x-date-pickers/AdapterDayjs';
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -806,50 +811,57 @@ const GridBase = memo(({
 
     const CustomToolbar = function (props) {
         const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
-        return (
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '10px'
-                }}
-            >
-                <div>
-                    {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
-                    {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
-                    {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
-                    {!forAssignment && canAdd && !isReadOnly && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" className={classes.buttons} >{addText}</Button>}
-                    {(selectionApi.length && data.records.length) ? (
-                        <Button
-                            onClick={selectAll}
-                            size="medium"
-                            variant="contained"
-                            className={classes.buttons}
-                        >
-                            {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
-                        </Button>) :
-                        <></>
-                    }
-                    {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
-                    {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
-                </div>
-                <GridToolbarContainer {...props}>
-                    {effectivePermissions.showColumnsOrder && (
-                        <GridToolbarColumnsButton />
-                    )}
-                    {effectivePermissions.filter && (<>
-                        <GridToolbarFilterButton />
-                        <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
-                    </>)}
+        return ( 
+            <Toolbar sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                px: 1,
+                // allow wrapping on very small screens if needed
+                flexWrap: "wrap",
+            }}>
+                <Box style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,          // adjust spacing between left items
+                    flex: 1,         // <-- key: grow to push remaining siblings to the end
+                    minWidth: 0,     // allow children to shrink properly
+                    flexWrap: "wrap" // optional: allows left items to wrap on narrow screens
+                }}>
+                     {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
+                     {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
+                     {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
+                     {!forAssignment && canAdd && !isReadOnly && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" className={classes.buttons} >{addText}</Button>}
+                     {(selectionApi.length && data.records.length) ? (
+                         <Button
+                             onClick={selectAll}
+                             size="medium"
+                             variant="contained"
+                             className={classes.buttons}
+                         >
+                             {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
+                         </Button>) :
+                         <></>
+                     }
+                     {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
+                     {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
+                </Box>
+                {effectivePermissions.showColumnsOrder && (
+                    <Button startIcon={<ViewColumnIcon />} onClick={() => apiRef.current.showPreferences('columns')}>{"COLUMNS"}</Button>
+                )}
+            
+                {effectivePermissions.filter && (<>
+                    <Button startIcon={<FilterListIcon />} onClick={() => apiRef.current.showFilterPanel()}>{"FILTER"}</Button>
+                    <Button sx={{ minWidth: "159px" }} startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
+                </>)}
 
-                    {effectivePermissions.export && (
-                        <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
-                    )}
-                    {preferenceName &&
-                        <GridPreferences preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
-                    }
-                </GridToolbarContainer>
-            </div >
+                {effectivePermissions.export && (
+                    <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
+                )}
+                {preferenceName &&
+                    <GridPreferences sx={{ minWidth: "227px" }} preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                }
+            </Toolbar>
         );
     };
 
@@ -986,12 +998,24 @@ const GridBase = memo(({
     const breadCrumbs = searchParamKey
         ? [{ text: searchParams.get(searchParamKey) || pageTitle }]
         : [{ text: pageTitle }];
+
+    function CustomLoadingOverlay() {
+  return (
+    <GridOverlay>
+      <Box>
+        <CircularProgress style={{ display: "flex", margin: "auto" }} />
+      </Box>
+    </GridOverlay>
+  );
+}
+    
     return (
         <>
             <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
                 breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />
             <Card style={gridStyle || customStyle} elevation={0} sx={{ '& .MuiCardContent-root': { p: 0 } }}>
                 <CardContent>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DataGridPremium
                         sx={{
                             "& .MuiTablePagination-selectLabel": {
@@ -1004,7 +1028,6 @@ const GridBase = memo(({
                                 display: "none"
                             }
                         }}
-                        unstable_headerFilters={showHeaderFilters}
                         checkboxSelection={forAssignment}
                         loading={isLoading}
                         className="pagination-fix"
@@ -1022,7 +1045,7 @@ const GridBase = memo(({
                         sortingMode={paginationMode}
                         filterMode={paginationMode}
                         processRowUpdate={processRowUpdate}
-                        keepNonExistentRowsSelected
+                        // keepNonExistentRowsSelected
                         onSortModelChange={updateSort}
                         onFilterModelChange={updateFilters}
                         rowSelection={selection}
@@ -1031,9 +1054,9 @@ const GridBase = memo(({
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
                         slots={{
-                            headerFilterMenu: false,
                             toolbar: CustomToolbar,
-                            footer: Footer
+                            footer: Footer,
+                            loadingOverlay: CustomLoadingOverlay
                         }}
                         slotProps={{
                             footer: {
@@ -1041,9 +1064,20 @@ const GridBase = memo(({
                                 apiRef
                             },
                             panel: {
-                                placement: "bottom-end"
+                                placement: "bottom-end",
+                                sx: {
+                                    minWidth: 660,
+                                    "& .MuiDataGrid-filterForm": {
+                                        width: "615px"
+                                    }
+                                }
+                            },
+                            filterPanel: {
+                                // This will be passed to all filter value inputs
+                                InputProps: { variant: 'outlined' }
                             }
                         }}
+                        showToolbar
                         hideFooterSelectedRowCount={rowsSelected}
                         density="compact"
                         disableDensitySelector={true}
@@ -1064,6 +1098,7 @@ const GridBase = memo(({
                         }}
 
                     />
+                    </LocalizationProvider>
                     {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
                     }
                     {isDeleting && !errorMessage && (

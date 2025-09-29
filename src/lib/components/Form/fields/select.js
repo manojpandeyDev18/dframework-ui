@@ -7,7 +7,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import useCascadingLookup from '../../../hooks/useCascadingLookup';
 
-const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = [], api, ...otherProps }) => {
+const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = [], api, ...otherprops }) => {
     const userSelected = React.useRef(false);
     const { placeHolder } = column;
     const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, userSelected });
@@ -52,7 +52,7 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
             <InputLabel>{placeHolder ? placeHolder : ""}</InputLabel> 
             <Select
                 IconComponent={KeyboardArrowDownIcon}
-                {...otherProps}
+                {...otherprops}
                 name={field}
                 multiple={column.multiSelect === true}
                 readOnly={column.readOnly === true}

@@ -392,7 +392,11 @@ const GridPreferences = _ref => {
     "aria-expanded": menuAnchorEl ? 'true' : undefined,
     onClick: handleOpen,
     title: tTranslate('Preference', tOpts),
-    startIcon: /*#__PURE__*/_react.default.createElement(_Settings.default, null)
+    startIcon: /*#__PURE__*/_react.default.createElement(_Settings.default, null),
+    sx: {
+      minWidth: "67px",
+      maxWidth: "227px"
+    }
   }, tTranslate('Preferences', tOpts), " ", currentPreference && "(".concat(currentPreference, ")")), /*#__PURE__*/_react.default.createElement(_material.Menu, {
     id: "grid-preference-menu",
     anchorEl: menuAnchorEl,

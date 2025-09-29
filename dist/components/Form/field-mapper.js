@@ -163,7 +163,7 @@ const RenderSteps = _ref => {
     onChange,
     combos,
     lookups,
-    fieldConfigs,
+    fieldconfigs,
     mode,
     handleSubmit
   } = _ref;
@@ -239,7 +239,7 @@ const RenderSteps = _ref => {
     onChange: onChange,
     combos: combos,
     lookups: lookups,
-    fieldConfigs: fieldConfigs,
+    fieldconfigs: fieldconfigs,
     mode: mode
   }), /*#__PURE__*/React.createElement(_Box.default, {
     sx: {
@@ -270,9 +270,9 @@ const RenderColumns = _ref3 => {
     onChange,
     combos,
     lookups,
-    fieldConfigs,
+    fieldconfigs,
     mode,
-    isAdd,
+    isadd,
     api
   } = _ref3;
   const classes = useStyles();
@@ -287,7 +287,7 @@ const RenderColumns = _ref3 => {
       column,
       field,
       label,
-      otherProps
+      otherprops
     } = _ref4;
     const isGridComponent = typeof column.relation === 'function';
     return /*#__PURE__*/React.createElement(_Grid.default, {
@@ -309,9 +309,9 @@ const RenderColumns = _ref3 => {
       },
       className: classes.childStyles
     }, /*#__PURE__*/React.createElement(Component, _extends({
-      isAdd: isAdd,
+      isadd: isadd,
       model: model,
-      fieldConfigs: fieldConfigs[field],
+      fieldconfigs: fieldconfigs[field],
       mode: mode,
       column: column,
       field: field,
@@ -322,7 +322,7 @@ const RenderColumns = _ref3 => {
       combos: combos,
       lookups: lookups,
       api: api
-    }, otherProps))));
+    }, otherprops))));
   }));
 };
 const getFormConfig = function getFormConfig(_ref5) {
@@ -348,12 +348,12 @@ const getFormConfig = function getFormConfig(_ref5) {
       label,
       tab
     } = column;
-    const otherProps = {};
+    const otherprops = {};
     if (column.options) {
-      otherProps.options = column.options;
+      otherprops.options = column.options;
     }
     if (column.dependsOn) {
-      otherProps.dependsOn = column.dependsOn;
+      otherprops.dependsOn = column.dependsOn;
     }
     const Component = fieldMappers[fieldType];
     if (!Component || column.hideInAddGrid && id === '0') {
@@ -367,7 +367,7 @@ const getFormConfig = function getFormConfig(_ref5) {
       column: _objectSpread(_objectSpread({}, column), {}, {
         readOnly: searchParams.has('showRelation') || column.readOnly
       }),
-      otherProps
+      otherprops
     });
   }
   const tabsData = [];
@@ -392,13 +392,13 @@ const FormLayout = _ref6 => {
     onChange,
     lookups,
     id: displayId,
-    fieldConfigs,
+    fieldconfigs,
     mode,
     handleSubmit,
     api
   } = _ref6;
   const classes = useStyles();
-  const isAdd = [0, undefined, null, ''].includes(displayId);
+  const isadd = [0, undefined, null, ''].includes(displayId) ? "True" : "False";
   const {
     formElements,
     tabColumns
@@ -422,7 +422,7 @@ const FormLayout = _ref6 => {
     };
   }, [model]);
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(RenderColumns, {
-    isAdd: isAdd,
+    isadd: isadd,
     formElements: formElements,
     model: model,
     formik: formik,
@@ -430,7 +430,7 @@ const FormLayout = _ref6 => {
     onChange: onChange,
     combos: combos,
     lookups: lookups,
-    fieldConfigs: fieldConfigs,
+    fieldconfigs: fieldconfigs,
     mode: mode,
     api: api
   }), /*#__PURE__*/React.createElement("div", {
@@ -443,7 +443,7 @@ const FormLayout = _ref6 => {
     onChange: onChange,
     combos: combos,
     lookups: lookups,
-    fieldConfigs: fieldConfigs,
+    fieldconfigs: fieldconfigs,
     mode: mode,
     handleSubmit: handleSubmit
   })));

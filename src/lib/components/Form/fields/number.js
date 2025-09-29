@@ -17,7 +17,7 @@ const resolveValue = ({ value, state }) => {
     }
     return value;
 };
-const Field = ({ column, otherProps, formik, field, ...props }) => {
+const Field = ({ column, otherprops, formik, field, ...props }) => {
     const { min, max } = column;
 
     const resolvedMin = useMemo(
@@ -43,7 +43,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
     );
 
     const { onBlur } = props;
-    otherProps = {
+    otherprops = {
         InputProps: {
             inputProps: {
                 min: resolvedMin,
@@ -66,7 +66,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
             }
         },
         type: 'number',
-        ...otherProps,
+        ...otherprops,
         onChange: (event) => {
             debouncedSetFieldValue(field, Number(event.target.value)); // Pass the updated value to the debounced function
             if (typeof onBlur === "function") {
@@ -75,7 +75,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
         },
     };
 
-    return <StringField column={column} otherProps={otherProps} formik={formik} field={field} {...props} />;
+    return <StringField column={column} otherprops={otherprops} formik={formik} field={field} {...props} />;
 };
 
 export default Field;

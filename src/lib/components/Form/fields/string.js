@@ -1,8 +1,9 @@
 import TextField from '@mui/material/TextField';
-import React from 'react';
+import React, { useMemo } from 'react';
 
-const field = ({ column, field, formik, otherProps }) => {
+const field = ({ column, field, formik, label, ...otherprops }) => {
     const rows = column.rows || (column.multiline ? 5 : 1);
+    const value = useMemo(()=> formik.values[field] ?? column.defaultValue, [formik, column]);
     return <TextField
         type="text"
         variant={column.variant || "standard"}
@@ -16,16 +17,17 @@ const field = ({ column, field, formik, otherProps }) => {
         required={column.required}
         multiline={column.multiline}
         rows={rows}
+        label=""
         fullWidth
         name={field}
-        value={formik.values[field]}
+        value={value}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={formik.touched[field] && Boolean(formik.errors[field])}
         helperText={formik.touched[field] && formik.errors[field]}
         autoComplete={column.autoComplete}
-        {...otherProps}
-        defaultValue={column.defaultValue}
+        {...otherprops}
+        // defaultValue={column.defaultValue}
     />;
 };
 
