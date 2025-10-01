@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import StringField from './string';
-import debounce from 'lodash.debounce';
+import { debounce } from 'lodash';
 
 // Key code constants
 const DIGIT_START = 47;
