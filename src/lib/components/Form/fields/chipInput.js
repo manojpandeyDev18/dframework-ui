@@ -7,7 +7,7 @@ import Chip from '@mui/material/Chip';
 import { useCallback } from 'react';
 
 const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mode }) => {
-    const inputValue = formik.values[field]?.length ? formik.values[field].split(",") : [];
+    const inputValue = formik.values[field]?.length ? column.dataFormat === "string" ? formik.values[field].split(",") : formik.values[field] : [];
     const isDisabled = mode === 'copy' || (fieldConfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
     const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
 

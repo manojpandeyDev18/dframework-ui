@@ -45,7 +45,7 @@ const Field = _ref => {
     fieldConfigs = {},
     mode
   } = _ref;
-  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(",") : [];
+  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? column.dataFormat === "string" ? formik.values[field].split(",") : formik.values[field] : [];
   const isDisabled = mode === 'copy' || (((_fieldConfigs$disable = fieldConfigs.disabled) !== null && _fieldConfigs$disable !== void 0 ? _fieldConfigs$disable : typeof column.disabled === "function") ? column.disabled(window.location.pathname) : column.disabled || false);
   const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
