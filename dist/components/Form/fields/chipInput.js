@@ -58,7 +58,7 @@ const Field = _ref => {
     if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
       newValue = [item.option];
     }
-    formik.setFieldValue(field, ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(',')) || '');
+    formik.setFieldValue(field, column.dataFormat === "string" ? ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(',')) || '' : newValue);
   }, [formik, field]);
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
