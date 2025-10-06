@@ -23,6 +23,7 @@ var _FormControl = _interopRequireDefault(require("@mui/material/FormControl"));
 var _Autocomplete = _interopRequireDefault(require("@mui/material/Autocomplete"));
 var _TextField = _interopRequireDefault(require("@mui/material/TextField"));
 var _Chip = _interopRequireDefault(require("@mui/material/Chip"));
+var _utils = _interopRequireDefault(require("../../utils"));
 const _excluded = ["key"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
@@ -45,7 +46,7 @@ const Field = _ref => {
     fieldConfigs = {},
     mode
   } = _ref;
-  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? column.dataFormat === "string" ? formik.values[field].split(",") : formik.values[field] : [];
+  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? column.dataFormat === _utils.default.filterFieldDataTypes.String ? formik.values[field].split(",") : formik.values[field] : [];
   const isDisabled = mode === 'copy' || (((_fieldConfigs$disable = fieldConfigs.disabled) !== null && _fieldConfigs$disable !== void 0 ? _fieldConfigs$disable : typeof column.disabled === "function") ? column.disabled(window.location.pathname) : column.disabled || false);
   const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
@@ -58,7 +59,7 @@ const Field = _ref => {
     if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
       newValue = [item.option];
     }
-    formik.setFieldValue(field, column.dataFormat === "string" ? ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(',')) || '' : newValue);
+    formik.setFieldValue(field, column.dataFormat === _utils.default.filterFieldDataTypes.String ? ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(',')) || '' : newValue);
   }, [formik, field]);
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
