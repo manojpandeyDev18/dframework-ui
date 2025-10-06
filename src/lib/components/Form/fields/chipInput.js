@@ -19,7 +19,7 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
         if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
             newValue = [item.option];
         }
-        formik.setFieldValue(field, column.dataFormat === "string" ? newValue?.join(',') || '' : newValue);
+        formik.setFieldValue(field, newValue?.join(',') || '');
     },[formik, field]);
 
     return (
