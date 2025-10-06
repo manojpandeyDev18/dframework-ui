@@ -45,7 +45,7 @@ const Field = _ref => {
     fieldConfigs = {},
     mode
   } = _ref;
-  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(",") : [];
+  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? column.dataFormat === "string" ? formik.values[field].split(",") : formik.values[field] : [];
   const isDisabled = mode === 'copy' || (((_fieldConfigs$disable = fieldConfigs.disabled) !== null && _fieldConfigs$disable !== void 0 ? _fieldConfigs$disable : typeof column.disabled === "function") ? column.disabled(window.location.pathname) : column.disabled || false);
   const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
@@ -58,7 +58,7 @@ const Field = _ref => {
     if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
       newValue = [item.option];
     }
-    formik.setFieldValue(field, ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(',')) || '');
+    formik.setFieldValue(field, column.dataFormat === "string" ? ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(',')) || '' : newValue);
   }, [formik, field]);
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
