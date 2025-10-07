@@ -3,7 +3,6 @@ import { FormHelperText } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { useStateContext } from "../../useRouter/StateProvider";
 import useCascadingLookup from '../../../hooks/useCascadingLookup';
 
 const consts = {
@@ -12,12 +11,18 @@ const consts = {
 
 const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldConfigs = {}, mode, api, ...otherProps }) => {
     const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, isAutoComplete: true });
-    const inputValue = formik.values[field]?.split(", ")?.map(Number) || [];
-
+    let inputValue = formik.values[field] || [];
+    if (!Array.isArray(inputValue)) {
+        inputValue = inputValue.split(", ").map(Number);
+    }
     const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
     const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
     const handleAutoCompleteChange = (_, newValue) => {
-        formik?.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
+        let toSave = newValue?.map(val => val.value) || [];
+        if(!column.useAsArray) {
+            toSave = toSave.length ? toSave.join(', ') : '';
+        }
+        formik?.setFieldValue(field, toSave);
     };
 
     return (
