@@ -19,7 +19,7 @@ const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fiel
     const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
     const handleAutoCompleteChange = (_, newValue) => {
         let toSave = newValue?.map(val => val.value) || [];
-        if(!column.useAsArray) {
+        if(column.dataFormat !== 'array') {
             toSave = toSave.length ? toSave.join(', ') : '';
         }
         formik?.setFieldValue(field, toSave);

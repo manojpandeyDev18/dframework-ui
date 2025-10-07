@@ -49,14 +49,13 @@ const Field = /*#__PURE__*/React.memo(_ref => {
   });
   let inputValue = formik.values[field] || [];
   if (!Array.isArray(inputValue)) {
-    var _inputValue$split;
-    inputValue = (_inputValue$split = inputValue.split(", ")) === null || _inputValue$split === void 0 ? void 0 : _inputValue$split.map(Number);
+    inputValue = inputValue.split(", ").map(Number);
   }
   const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
   const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
   const handleAutoCompleteChange = (_, newValue) => {
-    let toSave = newValue.map(val => val.value) || [];
-    if (!column.useAsArray) {
+    let toSave = (newValue === null || newValue === void 0 ? void 0 : newValue.map(val => val.value)) || [];
+    if (column.dataFormat !== 'array') {
       toSave = toSave.length ? toSave.join(', ') : '';
     }
     formik === null || formik === void 0 || formik.setFieldValue(field, toSave);

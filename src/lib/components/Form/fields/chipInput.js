@@ -5,11 +5,12 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import Chip from '@mui/material/Chip';
 import { useCallback } from 'react';
-import utils from '../../utils';
 
 const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mode }) => {
-    const isStringFormat = column.dataFormat === utils.filterFieldDataTypes.String;
-    const inputValue = formik.values[field]?.length ? isStringFormat ? formik.values[field].split(",") : formik.values[field] : [];
+    let inputValue = formik.values[field] || [];
+    if(!Array.isArray(inputValue)) {
+        inputValue = inputValue.split(',').map(item => item.trim());
+    }
     const isDisabled = mode === 'copy' || (fieldConfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
     const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
 
@@ -21,7 +22,10 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
         if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
             newValue = [item.option];
         }
-        formik.setFieldValue(field, isStringFormat ? newValue?.join(',') || '' : newValue);
+        if(column.dataFormat !== 'array') {
+            newValue = newValue.length ? newValue.join(',') : '';
+        }
+        formik.setFieldValue(field, newValue);
     },[formik, field]);
 
     return (

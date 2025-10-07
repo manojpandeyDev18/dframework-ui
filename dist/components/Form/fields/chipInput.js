@@ -23,7 +23,6 @@ var _FormControl = _interopRequireDefault(require("@mui/material/FormControl"));
 var _Autocomplete = _interopRequireDefault(require("@mui/material/Autocomplete"));
 var _TextField = _interopRequireDefault(require("@mui/material/TextField"));
 var _Chip = _interopRequireDefault(require("@mui/material/Chip"));
-var _utils = _interopRequireDefault(require("../../utils"));
 const _excluded = ["key"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
@@ -36,7 +35,7 @@ function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 const Field = _ref => {
-  var _formik$values$field, _fieldConfigs$disable;
+  var _fieldConfigs$disable;
   let {
     isAdd,
     column,
@@ -46,12 +45,14 @@ const Field = _ref => {
     fieldConfigs = {},
     mode
   } = _ref;
-  const isStringFormat = column.dataFormat === _utils.default.filterFieldDataTypes.String;
-  const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? isStringFormat ? formik.values[field].split(",") : formik.values[field] : [];
+  let inputValue = formik.values[field] || [];
+  if (!Array.isArray(inputValue)) {
+    inputValue = inputValue.split(',').map(item => item.trim());
+  }
   const isDisabled = mode === 'copy' || (((_fieldConfigs$disable = fieldConfigs.disabled) !== null && _fieldConfigs$disable !== void 0 ? _fieldConfigs$disable : typeof column.disabled === "function") ? column.disabled(window.location.pathname) : column.disabled || false);
   const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
-    var _newValue$pop, _newValue;
+    var _newValue$pop;
     let item = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
     const lastElement = (_newValue$pop = newValue.pop()) === null || _newValue$pop === void 0 ? void 0 : _newValue$pop.trim();
     if (!newValue.includes(lastElement)) {
@@ -60,7 +61,10 @@ const Field = _ref => {
     if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
       newValue = [item.option];
     }
-    formik.setFieldValue(field, isStringFormat ? ((_newValue = newValue) === null || _newValue === void 0 ? void 0 : _newValue.join(',')) || '' : newValue);
+    if (column.dataFormat !== 'array') {
+      newValue = newValue.length ? newValue.join(',') : '';
+    }
+    formik.setFieldValue(field, newValue);
   }, [formik, field]);
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,

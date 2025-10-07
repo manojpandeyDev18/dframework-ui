@@ -107,7 +107,7 @@ const getList = async _ref => {
     }
   }
   const lookups = [];
-  const lookupWithDeps = [];
+  const lookupWithDeps = []; // for backward compatibility having two lookups arrays
   const dateColumns = [];
   gridColumns.forEach(_ref2 => {
     let {
@@ -184,7 +184,7 @@ const getList = async _ref => {
     model: model.module,
     fileName: model.overrideFileName
   });
-  if (lookups) {
+  if (lookups.length) {
     requestData.lookups = lookups.join(',');
   }
   if (lookupWithDeps.length) {
