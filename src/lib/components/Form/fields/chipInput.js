@@ -7,7 +7,10 @@ import Chip from '@mui/material/Chip';
 import { useCallback } from 'react';
 
 const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mode }) => {
-    const inputValue = formik.values[field]?.length ? formik.values[field].split(",") : [];
+    let inputValue = formik.values[field] || [];
+    if(!Array.isArray(inputValue)) {
+        inputValue = inputValue.split(',').map(item => item.trim());
+    }
     const isDisabled = mode === 'copy' || (fieldConfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
     const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
 
@@ -19,7 +22,10 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
         if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
             newValue = [item.option];
         }
-        formik.setFieldValue(field, newValue?.join(',') || '');
+        if(column.dataFormat !== 'array') {
+            newValue = newValue.length ? newValue.join(',') : '';
+        }
+        formik.setFieldValue(field, newValue);
     },[formik, field]);
 
     return (

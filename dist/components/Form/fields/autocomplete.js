@@ -17,7 +17,6 @@ var _material = require("@mui/material");
 var _FormControl = _interopRequireDefault(require("@mui/material/FormControl"));
 var _Autocomplete = _interopRequireDefault(require("@mui/material/Autocomplete"));
 var _TextField = _interopRequireDefault(require("@mui/material/TextField"));
-var _StateProvider = require("../../useRouter/StateProvider");
 var _useCascadingLookup = _interopRequireDefault(require("../../../hooks/useCascadingLookup"));
 const _excluded = ["column", "field", "formik", "lookups", "dependsOn", "fieldConfigs", "mode", "api"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
@@ -29,7 +28,6 @@ const consts = {
   limitTags: 5
 };
 const Field = /*#__PURE__*/React.memo(_ref => {
-  var _formik$values$field;
   let {
       column,
       field,
@@ -49,11 +47,18 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     api,
     isAutoComplete: true
   });
-  const inputValue = ((_formik$values$field = formik.values[field]) === null || _formik$values$field === void 0 || (_formik$values$field = _formik$values$field.split(", ")) === null || _formik$values$field === void 0 ? void 0 : _formik$values$field.map(Number)) || [];
+  let inputValue = formik.values[field] || [];
+  if (!Array.isArray(inputValue)) {
+    inputValue = inputValue.split(", ").map(Number);
+  }
   const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
   const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
   const handleAutoCompleteChange = (_, newValue) => {
-    formik === null || formik === void 0 || formik.setFieldValue(field, newValue ? newValue.map(val => val.value).join(', ') : '');
+    let toSave = (newValue === null || newValue === void 0 ? void 0 : newValue.map(val => val.value)) || [];
+    if (column.dataFormat !== 'array') {
+      toSave = toSave.length ? toSave.join(', ') : '';
+    }
+    formik === null || formik === void 0 || formik.setFieldValue(field, toSave);
   };
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
