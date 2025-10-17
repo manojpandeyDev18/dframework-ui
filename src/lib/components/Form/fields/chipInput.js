@@ -11,7 +11,12 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
     if(!Array.isArray(inputValue)) {
         inputValue = inputValue.split(',').map(item => item.trim());
     }
-    const isDisabled = mode === 'copy' || (fieldConfigs.disabled ?? typeof column.disabled === "function" ? column.disabled(window.location.pathname) : (column.disabled || false));
+    const isDisabled = React.useMemo(() => {
+        if (mode === 'copy') return true;
+        if (typeof fieldConfigs.disabled !== 'undefined') return fieldConfigs.disabled;
+        if (typeof column.disabled === 'function') return column.disabled(window.location.pathname);
+        return Boolean(column.disabled);
+    }, [mode, fieldConfigs.disabled, column.disabled]);
     const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
 
     const handleAutoCompleteChange = useCallback((e, newValue, action, item = {}) => {

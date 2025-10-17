@@ -14,7 +14,7 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
             toReturn[dependency] = formik.values[dependency];
         }
         return toReturn;
-    }, [...dependsOn.map(dep => formik.values[dep])]);
+    }, dependsOn.map(dep => formik.values[dep]));
 
     // Initial options for non-cascading
     const initialOptions = useMemo(() => {
