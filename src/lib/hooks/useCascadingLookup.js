@@ -22,34 +22,33 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
         return typeof column.lookup === 'string' ? lookups[column.lookup] : column.lookup;
     }, [column.lookup, lookups, dependsOn]);
 
-            const fetchOptions = async () => {
-            if (!dependsOn.length || !column.lookup) return;
-            // Only fetch if all dependencies have values
-            const allDependenciesHaveValues = Object.values(dependencyValues).every(
-                value => !emptyValues.includes(value)
-            );
-            if (!allDependenciesHaveValues) {
-                setOptions([]);
-                return;
-            }
-            let newOptions = [];
-            const requestBody = {
-                lookups: [{ lookup: column.lookup, where: dependencyValues }]
-            };
-            try {
-                const response = await request({ url: `${api}/combo`, params: requestBody, disableLoader: true, jsonPayload: true});
-                if (response && response.success && response.lookups) {
-                    const fetchedOptions = response.lookups[column.lookup] || [];
-                    newOptions = fetchedOptions;
-                } else {
-                    newOptions = [];
-                }
-            } catch {
-                newOptions = [];
-            } finally {
-                setOptions(newOptions);
-            }
+    const fetchOptions = async () => {
+        if (!column.lookup) return;
+        // Only fetch if all dependencies have values
+        const allDependenciesHaveValues = Object.values(dependencyValues).every(
+            value => !emptyValues.includes(value)
+        );
+        if (!allDependenciesHaveValues) {
+            setOptions([]);
+            return;
+        }
+        let newOptions = [];
+        const requestBody = {
+            lookups: [{ lookup: column.lookup, where: dependencyValues }]
         };
+        try {
+            const response = await request({ url: `${api}/combo`, params: requestBody, disableLoader: true, jsonPayload: true });
+            if (response && response.success && response.lookups) {
+                newOptions = response.lookups[column.lookup] || [];
+            } else {
+                newOptions = [];
+            }
+        } catch {
+            newOptions = [];
+        } finally {
+            setOptions(newOptions);
+        }
+    };
 
     // Fetch cascading options
     useEffect(() => {

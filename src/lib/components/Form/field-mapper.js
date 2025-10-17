@@ -196,7 +196,7 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
             otherProps.options = column.options;
         }
         if(column.dependsOn) {
-            otherProps.dependsOn = column.dependsOn
+            otherProps.dependsOn = column.dependsOn;
         }
         const Component = fieldMappers[fieldType];
         if (!Component || (column.hideInAddGrid && id === '0')) {
