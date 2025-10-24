@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { useStateContext } from '../../useRouter/StateProvider';
 
 const Field = ({ column, field, formik, otherProps, fieldConfigs = {}, mode }) => {
-    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
     const { systemDateTimeFormat, stateData } = useStateContext(); //provider
     return <DatePicker
         {...otherProps}
@@ -24,7 +23,7 @@ const Field = ({ column, field, formik, otherProps, fieldConfigs = {}, mode }) =
         helperText={formik.touched[field] && formik.errors[field]}
         minDate={(column.min ? dayjs(column.min) : null)}
         maxDate={(column.max ? dayjs(column.max) : null)}
-        disabled={isDisabled}
+        disabled={column.disabled}
         slotProps={{ textField: { fullWidth: true, helperText: formik.errors[field], variant: "standard" } }}
     />
 

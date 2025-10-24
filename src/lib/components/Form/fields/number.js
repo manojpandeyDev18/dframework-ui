@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import StringField from './string';
 import { debounce } from 'lodash';
+import { useTheme } from '@mui/material';
 
 // Key code constants
 const DIGIT_START = 47;
@@ -19,6 +20,7 @@ const resolveValue = ({ value, state }) => {
 };
 const Field = ({ column, otherProps, formik, field, ...props }) => {
     const { min, max } = column;
+    const theme = useTheme();
 
     const resolvedMin = useMemo(
         () => Math.max(0, resolveValue({ value: min, state: formik.values })),
@@ -61,7 +63,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
                     }
                 },
                 sx: column.readOnly
-                    ? { backgroundColor: '#dfdede' } // Light grey background for read-only inputs
+                    ? { backgroundColor: theme.palette?.action?.disabled } // Light grey background for read-only inputs
                     : undefined,
             }
         },

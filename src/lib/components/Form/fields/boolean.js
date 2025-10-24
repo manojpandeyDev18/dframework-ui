@@ -8,14 +8,13 @@ const Field = ({ column, field, formik, otherProps }) => {
         formik.setFieldValue(field, event.target.checked);
     }
     const checked = useMemo(()=> formik.values[field] ?? !!column.defaultValue, [formik, column]);
-    const isDisabled = typeof column.readOnly === 'function' ? column.readOnly(formik) : column.readOnly; 
     return <div key={field}>
         <FormControlLabel
             control={
                 <Checkbox
                     {...otherProps}
                     name={field}
-                    disabled={isDisabled || column.disabled === true}
+                    disabled={column.disabled}
                     checked={checked}
                     onChange={handleChange}
                     onBlur={formik.handleBlur}

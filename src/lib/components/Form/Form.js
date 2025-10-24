@@ -93,10 +93,6 @@ const Form = ({
 
   const handleNavigation = () => {
     let navigatePath;
-    // Disabling navigation if navigateBack is false
-    if ([false, "false"].includes(navigateBack)) {
-      return;
-    }
     switch (typeof navigateBack) {
       case consts.function:
         navigatePath = navigateBack({ params, searchParams, data });
@@ -162,7 +158,12 @@ const Form = ({
           }
           const message = success.info ? success.info : `Record ${id === 0 ? "Added" : "Updated"} Successfully.`;
           snackbar.showMessage(message);
-          handleNavigation();
+          /**
+          * Handle navigation after form operations
+          * By default, the form navigates back to the grid after save/cancel operations.
+          * This behavior can be controlled by setting navigateBack "false" / false in model config which disables navigation completely.
+          */
+          navigateBack !== false && handleNavigation();
         })
         .catch((err) => {
           snackbar.showError(
@@ -281,30 +282,9 @@ const Form = ({
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
   
-  const recordEditable = useMemo(() => {
-    if (!data) return false;
-    // If canEdit property doesn't exist, default to true
-    // Otherwise, use the canEdit value from data
-    return !("canEdit" in data) || data.canEdit;
-  }, [data]);
+  const recordEditable = !("canEdit" in data) || data.canEdit;
+  const readOnlyRelations = !recordEditable || data.readOnlyRelations;
   
-  const readOnlyRelations = useMemo(() => {
-    if (!data) return false;
-    // Relations are read-only if:
-    // 1. The record itself is not editable, OR
-    // 2. The data explicitly sets readOnlyRelations to true
-    return !recordEditable || data.readOnlyRelations;
-  }, [recordEditable, data]);
-  
-  const relationProps = useMemo(() => ({
-    readOnly: readOnlyRelations,
-    models,
-    relationFilters,
-    relations,
-    parentFilters: [],
-    parent: model.name || model.title || "",
-    where: []
-  }), [readOnlyRelations, models, relationFilters, relations, model.name, model.title]);
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
   if (isLoading) {
     return (
@@ -363,7 +343,6 @@ const Form = ({
               id={id}
               handleSubmit={handleSubmit}
               mode={mode}
-              api={api || gridApi}
             />
           </form>
           {errorMessage && (
@@ -399,7 +378,11 @@ const Form = ({
           >{deletePromptText}</DialogComponent>
           {showRelations ? (
             <Relations
-              {...relationProps}
+              readOnly={readOnlyRelations}
+              models={models}
+              relationFilters={relationFilters}
+              relations={relations}
+              parent={model.name || model.title || ""}
             />
           ) : null}
         </Paper>

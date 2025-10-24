@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
-import { FormHelperText } from '@mui/material';
+import { FormHelperText, useTheme } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -7,11 +7,11 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import useCascadingLookup from '../../../hooks/useCascadingLookup';
 
-const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = [], api, ...otherProps }) => {
+const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = [], model, ...otherProps }) => {
     const userSelected = React.useRef(false);
     const { placeHolder } = column;
-    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, userSelected });
-    
+    const options = useCascadingLookup({ column, formik, lookups, dependsOn, userSelected, model });
+
     // Memoize input value processing to avoid recalculation on each render
     const inputValue = useMemo(() => {
         let value = formik.values[field];
@@ -35,7 +35,7 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
         }
         
         return value;
-    }, [formik.values[field], options, column.multiSelect, field, formik.setFieldValue]);
+    }, [formik.values[field], options, column.multiSelect, field]);
 
     // Memoize event handlers to prevent unnecessary re-renders of child components
     const handleChange = useCallback((event) => {
@@ -60,7 +60,7 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
                 onChange={handleChange}
                 onBlur={formik.handleBlur}
                 sx={{
-                    backgroundColor: column.readOnly ? '#dfdede' : ''
+                    backgroundColor: column.readOnly ? theme.palette?.action?.disabled : ''
                 }}
             >
                 {Array.isArray(options) && options.map(option => (

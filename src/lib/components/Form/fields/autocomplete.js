@@ -9,17 +9,16 @@ const consts = {
     limitTags: 5
 }
 
-const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldConfigs = {}, mode, api, ...otherProps }) => {
-    const options = useCascadingLookup({ column, formik, lookups, dependsOn, api, isAutoComplete: true });
+const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fieldConfigs = {}, mode, model, ...otherProps }) => {
+    const options = useCascadingLookup({ column, formik, lookups, dependsOn, model, isAutoComplete: true });
     let inputValue = formik.values[field] || [];
     if (!Array.isArray(inputValue)) {
         inputValue = inputValue.split(", ").map(Number);
     }
     const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
-    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
     const handleAutoCompleteChange = (_, newValue) => {
         let toSave = newValue?.map(val => val.value) || [];
-        if(column.dataFormat !== 'array') {
+        if (column.dataFormat !== 'array') {
             toSave = toSave.length ? toSave.join(', ') : '';
         }
         formik?.setFieldValue(field, toSave);
@@ -44,7 +43,7 @@ const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fiel
                 onChange={handleAutoCompleteChange}
                 value={filteredCombos}
                 size="small"
-                disabled={isDisabled}
+                disabled={column.disabled}
             />
             {formik.touched[field] && formik.errors[field] && <FormHelperText>{formik.errors[field]}</FormHelperText>}
         </FormControl>
