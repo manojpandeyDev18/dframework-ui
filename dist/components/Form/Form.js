@@ -337,8 +337,8 @@ const Form = _ref => {
   }];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  const recordEditable = !("canEdit" in data) || data.canEdit;
-  const readOnlyRelations = !recordEditable || data.readOnlyRelations;
+  const recordEditable = data && (!("canEdit" in data) || data.canEdit);
+  const readOnlyRelations = data && (!recordEditable || data.readOnlyRelations);
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
   if (isLoading) {
     return /*#__PURE__*/_react.default.createElement(_Box.default, {
