@@ -229,7 +229,7 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     const lookupsToFetch = [];
     const fields = model.formDef || model.columns;
     fields?.forEach(field => {
-        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !(emptyValues.includes(id)) && !field.dependsOn) {
+        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !emptyValues.includes(id) && !field.dependsOn) {
             lookupsToFetch.push(field.lookup);
         }
     });
