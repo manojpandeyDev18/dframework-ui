@@ -12,7 +12,7 @@ require("core-js/modules/esnext.iterator.map.js");
 require("core-js/modules/web.dom-collections.iterator.js");
 var _react = require("react");
 var _httpRequest = _interopRequireDefault(require("../components/Grid/httpRequest"));
-var _StateProvider = require("../useRouter/StateProvider");
+var _StateProvider = require("../components/useRouter/StateProvider");
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 const emptyValues = [null, undefined, ''];
 function useCascadingLookup(_ref) {
