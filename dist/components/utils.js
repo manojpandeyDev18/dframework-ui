@@ -25,7 +25,8 @@ const utils = {
     add: "Permission2",
     edit: "Permission3",
     delete: "Permission4"
-  }
+  },
+  emptyIdValues: [null, undefined, '', '0', 0]
 };
 const getPermissions = _ref => {
   let {

@@ -52,12 +52,14 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     inputValue = inputValue.split(", ").map(Number);
   }
   const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
+  const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
   const handleAutoCompleteChange = (_, newValue) => {
     let toSave = (newValue === null || newValue === void 0 ? void 0 : newValue.map(val => val.value)) || [];
+    // multi-select values are stored as array or as comma-separated-string based on dataFormat
     if (column.dataFormat !== 'array') {
       toSave = toSave.length ? toSave.join(', ') : '';
     }
-    formik === null || formik === void 0 || formik.setFieldValue(field, toSave);
+    formik.setFieldValue(field, toSave);
   };
   return /*#__PURE__*/React.createElement(_FormControl.default, {
     fullWidth: true,
@@ -77,7 +79,7 @@ const Field = /*#__PURE__*/React.memo(_ref => {
     onChange: handleAutoCompleteChange,
     value: filteredCombos,
     size: "small",
-    disabled: column.disabled
+    disabled: isDisabled
   })), formik.touched[field] && formik.errors[field] && /*#__PURE__*/React.createElement(_material.FormHelperText, null, formik.errors[field]));
 });
 var _default = exports.default = Field;

@@ -78,6 +78,10 @@ function treeCheckBox(_ref) {
   const options = lookups ? lookups[column.lookup] : [];
   const tree = buildTree(options);
   const inputValue = (_formik$values$field = formik.values[field]) !== null && _formik$values$field !== void 0 && _formik$values$field.length ? formik.values[field].split(", ") : [];
+  let isDisabled;
+  if (mode !== 'copy') {
+    isDisabled = fieldConfigs === null || fieldConfigs === void 0 ? void 0 : fieldConfigs.disabled;
+  }
   const handleChange = (_, newValue) => {
     formik.setFieldValue(field, (newValue === null || newValue === void 0 ? void 0 : newValue.join(', ')) || '');
   };
@@ -88,7 +92,7 @@ function treeCheckBox(_ref) {
   }, /*#__PURE__*/_react.default.createElement(_SimpleTreeView.SimpleTreeView, {
     selectedItems: inputValue,
     onSelectedItemsChange: handleChange,
-    disabled: column.disabled,
+    disabled: isDisabled,
     multiSelect: true,
     checkboxSelection: true
   }, tree.map(node => /*#__PURE__*/_react.default.createElement(_TreeItem.TreeItem, {

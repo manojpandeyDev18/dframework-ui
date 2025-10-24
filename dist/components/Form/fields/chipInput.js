@@ -49,6 +49,15 @@ const Field = _ref => {
   if (!Array.isArray(inputValue)) {
     inputValue = inputValue.split(',').map(item => item.trim());
   }
+  const isDisabled = React.useMemo(() => {
+    if (mode === 'copy') return true;
+    if (typeof fieldConfigs.disabled !== 'undefined') return fieldConfigs.disabled;
+    if (typeof column.disabled === 'function') return column.disabled({
+      isAdd,
+      formik
+    });
+    return Boolean(column.disabled);
+  }, [mode, fieldConfigs.disabled, column.disabled]);
   const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
   const handleAutoCompleteChange = (0, _react.useCallback)(function (e, newValue, action) {
     var _newValue$pop;
@@ -60,6 +69,7 @@ const Field = _ref => {
     if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
       newValue = [item.option];
     }
+    // multi-select values are stored as array or as comma-separated-string based on dataFormat
     if (column.dataFormat !== 'array') {
       newValue = newValue.length ? newValue.join(',') : '';
     }
@@ -81,7 +91,7 @@ const Field = _ref => {
       return /*#__PURE__*/React.createElement(_TextField.default, _extends({}, params, {
         variant: "standard",
         InputProps: _objectSpread(_objectSpread({}, params.InputProps), {}, {
-          sx: _objectSpread(_objectSpread({}, (_params$InputProps = params.InputProps) === null || _params$InputProps === void 0 ? void 0 : _params$InputProps.sx), column.disabled && {
+          sx: _objectSpread(_objectSpread({}, (_params$InputProps = params.InputProps) === null || _params$InputProps === void 0 ? void 0 : _params$InputProps.sx), isDisabled && {
             backgroundColor: (_theme$palette = theme.palette) === null || _theme$palette === void 0 || (_theme$palette = _theme$palette.action) === null || _theme$palette === void 0 ? void 0 : _theme$palette.disabled
           })
         })
@@ -104,7 +114,7 @@ const Field = _ref => {
         disabled: fixedOptions.includes(option)
       }));
     }),
-    disabled: column.disabled
+    disabled: isDisabled
   })), formik.touched[field] && formik.errors[field] && /*#__PURE__*/React.createElement(_material.FormHelperText, null, formik.errors[field]));
 };
 var _default = exports.default = Field;
