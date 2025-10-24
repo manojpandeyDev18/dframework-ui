@@ -17,7 +17,7 @@ import { DialogComponent } from "../Dialog";
 import { useStateContext, useRouter } from "../useRouter/StateProvider";
 import actionsStateProvider from "../useRouter/actions";
 import PageTitle from "../PageTitle";
-import { getPermissions } from "../utils";
+import utils, { getPermissions } from "../utils";
 import Relations from "./relations";
 export const ActiveStepContext = createContext(1);
 const defaultFieldConfigs = {};
@@ -61,7 +61,7 @@ const Form = ({
     }
   }
   const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({});
   const [lookups, setLookups] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const snackbar = useSnackbar();
@@ -108,7 +108,7 @@ const Form = ({
     navigate(navigatePath);
   };
 
-  const isNew = useMemo(() => [null, undefined, '', '0', 0].includes(id), [id]);
+  const isNew = useMemo(() => utils.emptyIdValues.includes(id), [id]);
 
   const initialValues = useMemo(() => isNew
     ? { ...model.initialValues, ...data, ...baseSaveData }
@@ -250,6 +250,13 @@ const Form = ({
     setErrorMessage(null)
     setIsDeleting(false);
   };
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", pt: "20%", justifyContent: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
   const handleChange = function (e) {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
@@ -281,18 +288,9 @@ const Form = ({
   ];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  
-  const recordEditable = data && (!("canEdit" in data) || data.canEdit);
-  const readOnlyRelations = data && (!recordEditable || data.readOnlyRelations);
-  
+  const recordEditable = (!("canEdit" in data) || data.canEdit);
+  const readOnlyRelations = (!recordEditable || data.readOnlyRelations);
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", pt: "20%", justifyContent: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
   return (
     <>
       <PageTitle

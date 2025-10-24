@@ -54,6 +54,10 @@ export default function treeCheckBox({ column, field, formik, lookups, fieldConf
   const options = lookups ? lookups[column.lookup] : [];
   const tree = buildTree(options);
   const inputValue = formik.values[field]?.length ? formik.values[field].split(", ") : [];
+  let isDisabled;
+  if (mode !== 'copy') {
+    isDisabled = fieldConfigs?.disabled;
+  }
   const handleChange = (_, newValue) => {
     formik.setFieldValue(field, newValue?.join(', ') || '');
   };
@@ -62,7 +66,7 @@ export default function treeCheckBox({ column, field, formik, lookups, fieldConf
       <SimpleTreeView
         selectedItems={inputValue}
         onSelectedItemsChange={handleChange}
-        disabled={column.disabled}
+        disabled={isDisabled}
         multiSelect
         checkboxSelection
       >

@@ -16,12 +16,14 @@ const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fiel
         inputValue = inputValue.split(", ").map(Number);
     }
     const filteredCombos = options.filter(option => inputValue.includes(option.value)) || [];
+    const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
     const handleAutoCompleteChange = (_, newValue) => {
         let toSave = newValue?.map(val => val.value) || [];
+        // multi-select values are stored as array or as comma-separated-string based on dataFormat
         if (column.dataFormat !== 'array') {
             toSave = toSave.length ? toSave.join(', ') : '';
         }
-        formik?.setFieldValue(field, toSave);
+        formik.setFieldValue(field, toSave);
     };
 
     return (
@@ -43,7 +45,7 @@ const Field = React.memo(({ column, field, formik, lookups, dependsOn = [], fiel
                 onChange={handleAutoCompleteChange}
                 value={filteredCombos}
                 size="small"
-                disabled={column.disabled}
+                disabled={isDisabled}
             />
             {formik.touched[field] && formik.errors[field] && <FormHelperText>{formik.errors[field]}</FormHelperText>}
         </FormControl>

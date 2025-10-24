@@ -25,6 +25,7 @@ import ChipInput from './fields/chipInput';
 import TreeCheckbox from './fields/treeCheckBox';
 import FileUpload from './fields/fileUpload';
 import JSONInput from './fields/jsonInput';
+import utils from '../utils';
 
 const fieldMappers = {
     "boolean": BooleanField,
@@ -161,7 +162,6 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
             {
                 formElements.map(({ Component, column, field, label, otherProps }, key) => {
                     const isGridComponent = typeof column.relation === 'function';
-                    column = {...column, ...getColumnProperties({ formik, data, fieldConfigs, mode, isAdd, column })};
                     return (
                         <Grid container spacing={2} key={key} className={classes.root} alignItems={isGridComponent ? "flex-start" : "center"}>
                             {column?.showLabel !== false ?
@@ -205,7 +205,6 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
         }
 
         const target = tab && tabs[tab] ? tabColumns[tab] : formElements;
-
         target.push({ Component, field, label, column: { ...column, readOnly: searchParams.has('showRelation') || column.readOnly }, otherProps });
     }
     const tabsData = [];
@@ -217,7 +216,7 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
 
 const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldConfigs, mode, handleSubmit }) => {
     const classes = useStyles();
-    const isAdd = [0, undefined, null, '', '0'].includes(displayId);
+    const isAdd = utils.emptyIdValues.includes(displayId);
     const { formElements, tabColumns } = React.useMemo(() => {
         const showTabs = model.formConfig?.showTabbed;
         const searchParams = new URLSearchParams(window.location.search);
@@ -232,32 +231,6 @@ const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displa
             </div>
         </div>
     );
-};
-
-/**
- * Determines the column properties for form fields, specifically handling disabled state
- * @param {Object} params - The parameters object
- * @param {Object} params.formik - Formik instance containing form state and methods
- * @param {Object} params.data - The data object associated with the form
- * @param {Object} params.fieldConfigs - Configuration object for the specific field
- * @param {string} params.mode - The current form mode (e.g., 'edit', 'copy', 'view')
- * @param {boolean} params.isAdd - Whether this is an add operation
- * @param {Object} params.column - Column configuration object containing field metadata
- * @param {boolean|Function} [params.column.readOnly] - Read-only configuration, can be boolean or function
- * @param {boolean|Function} [params.column.disabled] - Disabled configuration, can be boolean or function
- * @returns {Object} Object containing the computed column properties
- * @returns {boolean} returns.disabled - Whether the field should be disabled
- */
-const getColumnProperties = ({ formik, data, fieldConfigs, mode, isAdd, column }) => {
-    const isReadOnly = typeof column.readOnly === 'function' ? column.readOnly(formik) : column.readOnly;
-    const isColumnDisabled = typeof column.disabled === 'function' ? column.disabled({ formik, data, isAdd }) : column.disabled;
-    const isFieldConfigDisabled = mode !== 'copy' && fieldConfigs?.disabled;
-    const disabled = Boolean((isFieldConfigDisabled) || isReadOnly || isColumnDisabled);
-
-    return {
-        disabled,
-        readOnly: isReadOnly
-    };
 };
 
 export {

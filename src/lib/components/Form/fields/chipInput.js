@@ -12,6 +12,12 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
     if (!Array.isArray(inputValue)) {
         inputValue = inputValue.split(',').map(item => item.trim());
     }
+    const isDisabled = React.useMemo(() => {
+        if (mode === 'copy') return true;
+        if (typeof fieldConfigs.disabled !== 'undefined') return fieldConfigs.disabled;
+        if (typeof column.disabled === 'function') return column.disabled({ isAdd, formik });
+        return Boolean(column.disabled);
+    }, [mode, fieldConfigs.disabled, column.disabled]);
     const fixedOptions = column.hasDefault && !isAdd ? [inputValue[0]] : [];
 
     const handleAutoCompleteChange = useCallback((e, newValue, action, item = {}) => {
@@ -22,6 +28,7 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
         if (fixedOptions && fixedOptions.includes(item.option) && action === "removeOption") {
             newValue = [item.option];
         }
+        // multi-select values are stored as array or as comma-separated-string based on dataFormat
         if (column.dataFormat !== 'array') {
             newValue = newValue.length ? newValue.join(',') : '';
         }
@@ -50,7 +57,7 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
                             ...params.InputProps,
                             sx: {
                                 ...params.InputProps?.sx,
-                                ...(column.disabled && { backgroundColor: theme.palette?.action?.disabled })
+                                ...(isDisabled && { backgroundColor: theme.palette?.action?.disabled })
                             }
                         }}
                     />
@@ -70,7 +77,7 @@ const Field = ({ isAdd, column, field, formik, otherProps, fieldConfigs = {}, mo
                         );
                     })
                 }
-                disabled={column.disabled}
+                disabled={isDisabled}
             />
             {formik.touched[field] && formik.errors[field] && <FormHelperText>{formik.errors[field]}</FormHelperText>}
         </FormControl>
