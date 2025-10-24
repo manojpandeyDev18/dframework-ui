@@ -288,8 +288,8 @@ const Form = ({
   ];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  const recordEditable = (!("canEdit" in data) || data.canEdit);
-  const readOnlyRelations = (!recordEditable || data.readOnlyRelations);
+  const recordEditable = !("canEdit" in data) || data.canEdit;
+  const readOnlyRelations = !recordEditable || data.readOnlyRelations;
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
   return (
     <>
