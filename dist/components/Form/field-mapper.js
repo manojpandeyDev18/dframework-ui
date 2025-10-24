@@ -404,7 +404,7 @@ const FormLayout = _ref6 => {
     handleSubmit
   } = _ref6;
   const classes = useStyles();
-  const isAdd = [0, undefined, null, ''].includes(displayId);
+  const isAdd = [0, undefined, null, '', '0'].includes(displayId);
   const {
     formElements,
     tabColumns

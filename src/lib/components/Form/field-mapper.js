@@ -217,7 +217,7 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
 
 const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldConfigs, mode, handleSubmit }) => {
     const classes = useStyles();
-    const isAdd = [0, undefined, null, ''].includes(displayId);
+    const isAdd = [0, undefined, null, '', '0'].includes(displayId);
     const { formElements, tabColumns } = React.useMemo(() => {
         const showTabs = model.formConfig?.showTabbed;
         const searchParams = new URLSearchParams(window.location.search);
