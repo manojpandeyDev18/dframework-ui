@@ -12,19 +12,26 @@ require("core-js/modules/esnext.iterator.map.js");
 require("core-js/modules/web.dom-collections.iterator.js");
 var _react = require("react");
 var _httpRequest = _interopRequireDefault(require("../components/Grid/httpRequest"));
+var _StateProvider = require("../useRouter/StateProvider");
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 const emptyValues = [null, undefined, ''];
 function useCascadingLookup(_ref) {
+  var _stateData$gridSettin;
   let {
     column,
     formik,
     lookups,
     dependsOn = [],
-    api,
     isAutoComplete = false,
-    userSelected
+    userSelected,
+    model
   } = _ref;
   const [options, setOptions] = (0, _react.useState)([]);
+  const {
+    stateData
+  } = (0, _StateProvider.useStateContext)();
+  const url = (stateData === null || stateData === void 0 || (_stateData$gridSettin = stateData.gridSettings) === null || _stateData$gridSettin === void 0 || (_stateData$gridSettin = _stateData$gridSettin.permissions) === null || _stateData$gridSettin === void 0 ? void 0 : _stateData$gridSettin.Url) || '';
+  const api = (0, _react.useMemo)(() => "".concat(url).concat((model === null || model === void 0 ? void 0 : model.api) || ''), [url, model === null || model === void 0 ? void 0 : model.api]);
 
   // Memoize dependency values
   const dependencyValues = (0, _react.useMemo)(() => {
@@ -34,7 +41,7 @@ function useCascadingLookup(_ref) {
       toReturn[dependency] = formik.values[dependency];
     }
     return toReturn;
-  }, [...dependsOn.map(dep => formik.values[dep])]);
+  }, dependsOn.map(dep => formik.values[dep]));
 
   // Initial options for non-cascading
   const initialOptions = (0, _react.useMemo)(() => {
@@ -42,7 +49,7 @@ function useCascadingLookup(_ref) {
     return typeof column.lookup === 'string' ? lookups[column.lookup] : column.lookup;
   }, [column.lookup, lookups, dependsOn]);
   const fetchOptions = async () => {
-    if (!dependsOn.length || !column.lookup) return;
+    if (!column.lookup) return;
     // Only fetch if all dependencies have values
     const allDependenciesHaveValues = Object.values(dependencyValues).every(value => !emptyValues.includes(value));
     if (!allDependenciesHaveValues) {
@@ -64,8 +71,7 @@ function useCascadingLookup(_ref) {
         jsonPayload: true
       });
       if (response && response.success && response.lookups) {
-        const fetchedOptions = response.lookups[column.lookup] || [];
-        newOptions = fetchedOptions;
+        newOptions = response.lookups[column.lookup] || [];
       } else {
         newOptions = [];
       }

@@ -11,6 +11,7 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
     const userSelected = React.useRef(false);
     const { placeHolder } = column;
     const options = useCascadingLookup({ column, formik, lookups, dependsOn, userSelected, model });
+    const theme = useTheme();
 
     // Memoize input value processing to avoid recalculation on each render
     const inputValue = useMemo(() => {

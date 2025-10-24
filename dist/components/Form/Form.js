@@ -137,10 +137,6 @@ const Form = _ref => {
   } = model;
   const handleNavigation = () => {
     let navigatePath;
-    // Disabling navigation if navigateBack is false
-    if ([false, "false"].includes(navigateBack)) {
-      return;
-    }
     switch (typeof navigateBack) {
       case consts.function:
         navigatePath = navigateBack({
@@ -207,7 +203,12 @@ const Form = _ref => {
         }
         const message = success.info ? success.info : "Record ".concat(id === 0 ? "Added" : "Updated", " Successfully.");
         snackbar.showMessage(message);
-        handleNavigation();
+        /**
+        * Handle navigation after form operations
+        * By default, the form navigates back to the grid after save/cancel operations.
+        * This behavior can be controlled by setting navigateBack "false" / false in model config which disables navigation completely.
+        */
+        navigateBack !== false && handleNavigation();
       }).catch(err => {
         snackbar.showError("An error occured.", err);
         if (model.reloadOnSave) {
@@ -336,28 +337,8 @@ const Form = _ref => {
   }];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  const recordEditable = (0, _react.useMemo)(() => {
-    if (!data) return false;
-    // If canEdit property doesn't exist, default to true
-    // Otherwise, use the canEdit value from data
-    return !("canEdit" in data) || data.canEdit;
-  }, [data]);
-  const readOnlyRelations = (0, _react.useMemo)(() => {
-    if (!data) return false;
-    // Relations are read-only if:
-    // 1. The record itself is not editable, OR
-    // 2. The data explicitly sets readOnlyRelations to true
-    return !recordEditable || data.readOnlyRelations;
-  }, [recordEditable, data]);
-  const relationProps = (0, _react.useMemo)(() => ({
-    readOnly: readOnlyRelations,
-    models,
-    relationFilters,
-    relations,
-    parentFilters: [],
-    parent: model.name || model.title || "",
-    where: []
-  }), [readOnlyRelations, models, relationFilters, relations, model.name, model.title]);
+  const recordEditable = !("canEdit" in data) || data.canEdit;
+  const readOnlyRelations = !recordEditable || data.readOnlyRelations;
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
   if (isLoading) {
     return /*#__PURE__*/_react.default.createElement(_Box.default, {
@@ -411,8 +392,7 @@ const Form = _ref => {
     lookups: lookups,
     id: id,
     handleSubmit: handleSubmit,
-    mode: mode,
-    api: api || gridApi
+    mode: mode
   })), errorMessage && /*#__PURE__*/_react.default.createElement(_Dialog.DialogComponent, {
     open: !!errorMessage,
     onConfirm: clearError,
@@ -434,6 +414,12 @@ const Form = _ref => {
       setDeleteError(null);
     },
     title: deleteError ? "Error Deleting Record" : "Confirm Delete"
-  }, deletePromptText), showRelations ? /*#__PURE__*/_react.default.createElement(_relations.default, relationProps) : null)));
+  }, deletePromptText), showRelations ? /*#__PURE__*/_react.default.createElement(_relations.default, {
+    readOnly: readOnlyRelations,
+    models: models,
+    relationFilters: relationFilters,
+    relations: relations,
+    parent: model.name || model.title || ""
+  }) : null)));
 };
 var _default = exports.default = Form;

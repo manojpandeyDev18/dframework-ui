@@ -251,7 +251,8 @@ const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displa
 const getColumnProperties = ({ formik, data, fieldConfigs, mode, isAdd, column }) => {
     const isReadOnly = typeof column.readOnly === 'function' ? column.readOnly(formik) : column.readOnly;
     const isColumnDisabled = typeof column.disabled === 'function' ? column.disabled({ formik, data, isAdd }) : column.disabled;
-    const disabled = Boolean((mode !== 'copy' && fieldConfigs?.disabled) || isReadOnly || isColumnDisabled);
+    const isFieldConfigDisabled = mode !== 'copy' && fieldConfigs?.disabled;
+    const disabled = Boolean((isFieldConfigDisabled) || isReadOnly || isColumnDisabled);
 
     return {
         disabled,

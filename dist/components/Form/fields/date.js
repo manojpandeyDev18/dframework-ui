@@ -21,7 +21,6 @@ const Field = _ref => {
     fieldConfigs = {},
     mode
   } = _ref;
-  const isDisabled = mode !== 'copy' && fieldConfigs.disabled;
   const {
     systemDateTimeFormat,
     stateData
@@ -43,7 +42,7 @@ const Field = _ref => {
     helperText: formik.touched[field] && formik.errors[field],
     minDate: column.min ? (0, _dayjs.default)(column.min) : null,
     maxDate: column.max ? (0, _dayjs.default)(column.max) : null,
-    disabled: isDisabled,
+    disabled: column.disabled,
     slotProps: {
       textField: {
         fullWidth: true,
