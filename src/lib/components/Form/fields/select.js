@@ -57,7 +57,7 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
                 name={field}
                 multiple={column.multiSelect === true}
                 readOnly={column.readOnly === true}
-                value={inputValue}
+                value={`${inputValue}`}
                 onChange={handleChange}
                 onBlur={formik.handleBlur}
                 sx={{

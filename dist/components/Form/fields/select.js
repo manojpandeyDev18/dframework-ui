@@ -90,7 +90,7 @@ const SelectField = /*#__PURE__*/_react.default.memo(_ref => {
     name: field,
     multiple: column.multiSelect === true,
     readOnly: column.readOnly === true,
-    value: inputValue,
+    value: "".concat(inputValue),
     onChange: handleChange,
     onBlur: formik.handleBlur,
     sx: {
