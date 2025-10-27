@@ -25,6 +25,7 @@ import ChipInput from './fields/chipInput';
 import TreeCheckbox from './fields/treeCheckBox';
 import FileUpload from './fields/fileUpload';
 import JSONInput from './fields/jsonInput';
+import utils from '../utils';
 
 const fieldMappers = {
     "boolean": BooleanField,
@@ -195,6 +196,9 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
         if (column.options) {
             otherProps.options = column.options;
         }
+        if (column.dependsOn) {
+            otherProps.dependsOn = column.dependsOn;
+        }
         const Component = fieldMappers[fieldType];
         if (!Component || (column.hideInAddGrid && id === '0')) {
             continue;
@@ -212,7 +216,7 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
 
 const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldConfigs, mode, handleSubmit }) => {
     const classes = useStyles();
-    const isAdd = [0, undefined, null, ''].includes(displayId);
+    const isAdd = utils.emptyIdValues.includes(displayId);
     const { formElements, tabColumns } = React.useMemo(() => {
         const showTabs = model.formConfig?.showTabbed;
         const searchParams = new URLSearchParams(window.location.search);

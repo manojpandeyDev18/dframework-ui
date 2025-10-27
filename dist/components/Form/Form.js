@@ -12,6 +12,7 @@ require("core-js/modules/es.array.push.js");
 require("core-js/modules/es.promise.js");
 require("core-js/modules/es.promise.finally.js");
 require("core-js/modules/es.regexp.exec.js");
+require("core-js/modules/es.string.includes.js");
 require("core-js/modules/es.string.search.js");
 require("core-js/modules/es.string.trim.js");
 require("core-js/modules/esnext.iterator.constructor.js");
@@ -36,7 +37,7 @@ var _Dialog = require("../Dialog");
 var _StateProvider = require("../useRouter/StateProvider");
 var _actions = _interopRequireDefault(require("../useRouter/actions"));
 var _PageTitle = _interopRequireDefault(require("../PageTitle"));
-var _utils = require("../utils");
+var _utils = _interopRequireWildcard(require("../utils"));
 var _relations = _interopRequireDefault(require("./relations"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
@@ -100,7 +101,7 @@ const Form = _ref => {
     }
   }
   const [isLoading, setIsLoading] = (0, _react.useState)(true);
-  const [data, setData] = (0, _react.useState)(null);
+  const [data, setData] = (0, _react.useState)({});
   const [lookups, setLookups] = (0, _react.useState)(null);
   const [isDeleting, setIsDeleting] = (0, _react.useState)(false);
   const snackbar = (0, _SnackBar.useSnackbar)();
@@ -155,7 +156,7 @@ const Form = _ref => {
     }
     navigate(navigatePath);
   };
-  const isNew = (0, _react.useMemo)(() => [null, undefined, '', '0', 0].includes(id), [id]);
+  const isNew = (0, _react.useMemo)(() => _utils.default.emptyIdValues.includes(id), [id]);
   const initialValues = (0, _react.useMemo)(() => isNew ? _objectSpread(_objectSpread(_objectSpread({}, model.initialValues), data), baseSaveData) : _objectSpread(_objectSpread(_objectSpread({}, baseSaveData), model.initialValues), data), [model.initialValues, data, id]);
   (0, _react.useEffect)(() => {
     if (!url) return;
@@ -201,8 +202,14 @@ const Form = _ref => {
         if (model.reloadOnSave) {
           return window.location.reload();
         }
-        snackbar.showMessage("Record ".concat(id === 0 ? "Added" : "Updated", " Successfully."));
-        handleNavigation();
+        const message = success.info ? success.info : "Record ".concat(id === 0 ? "Added" : "Updated", " Successfully.");
+        snackbar.showMessage(message);
+        /**
+        * Handle navigation after form operations
+        * By default, the form navigates back to the grid after save/cancel operations.
+        * This behavior can be controlled by setting navigateBack "false" / false in model config which disables navigation completely.
+        */
+        navigateBack !== false && handleNavigation();
       }).catch(err => {
         snackbar.showError("An error occured.", err);
         if (model.reloadOnSave) {
@@ -413,9 +420,7 @@ const Form = _ref => {
     models: models,
     relationFilters: relationFilters,
     relations: relations,
-    parentFilters: [],
-    parent: model.name || model.title || "",
-    where: []
+    parent: model.name || model.title || ""
   }) : null)));
 };
 var _default = exports.default = Form;

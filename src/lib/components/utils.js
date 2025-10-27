@@ -17,7 +17,8 @@ const utils = {
         add: "Permission2",
         edit: "Permission3",
         delete: "Permission4"
-    }
+    },
+    emptyIdValues: [null, undefined, '', '0', 0]
 }
 export const getPermissions = ({ userData = {}, model, userDefinedPermissions }) => {
     const { permissions = [] } = userData;

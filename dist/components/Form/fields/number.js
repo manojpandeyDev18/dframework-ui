@@ -17,7 +17,8 @@ require("core-js/modules/es.string.starts-with.js");
 require("core-js/modules/web.dom-collections.iterator.js");
 var _react = _interopRequireWildcard(require("react"));
 var _string = _interopRequireDefault(require("./string"));
-var _lodash = _interopRequireDefault(require("lodash.debounce"));
+var _lodash = require("lodash");
+var _material = require("@mui/material");
 const _excluded = ["column", "otherProps", "formik", "field"];
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
@@ -49,6 +50,7 @@ const resolveValue = _ref => {
   return value;
 };
 const Field = _ref2 => {
+  var _theme$palette;
   let {
       column,
       otherProps,
@@ -60,6 +62,7 @@ const Field = _ref2 => {
     min,
     max
   } = column;
+  const theme = (0, _material.useTheme)();
   const resolvedMin = (0, _react.useMemo)(() => Math.max(0, resolveValue({
     value: min,
     state: formik.values
@@ -68,7 +71,7 @@ const Field = _ref2 => {
     value: max,
     state: formik.values
   }), [max, formik.values]);
-  const debouncedSetFieldValue = (0, _react.useCallback)((0, _lodash.default)((field, value) => {
+  const debouncedSetFieldValue = (0, _react.useCallback)((0, _lodash.debounce)((field, value) => {
     if (value < resolvedMin) {
       formik.setFieldValue(field, resolvedMin);
     } else if (resolvedMax && value > resolvedMax) {
@@ -98,7 +101,7 @@ const Field = _ref2 => {
           }
         },
         sx: column.readOnly ? {
-          backgroundColor: '#dfdede'
+          backgroundColor: (_theme$palette = theme.palette) === null || _theme$palette === void 0 || (_theme$palette = _theme$palette.action) === null || _theme$palette === void 0 ? void 0 : _theme$palette.disabled
         } // Light grey background for read-only inputs
         : undefined
       }

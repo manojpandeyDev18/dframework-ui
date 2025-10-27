@@ -109,7 +109,7 @@ const Relations = _ref3 => {
   let {
     relations,
     parent,
-    where,
+    where = [],
     models,
     relationFilters,
     readOnly

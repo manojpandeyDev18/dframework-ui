@@ -11,6 +11,7 @@ require("core-js/modules/es.array.sort.js");
 require("core-js/modules/es.json.stringify.js");
 require("core-js/modules/es.promise.js");
 require("core-js/modules/es.regexp.to-string.js");
+require("core-js/modules/es.string.includes.js");
 require("core-js/modules/esnext.iterator.constructor.js");
 require("core-js/modules/esnext.iterator.filter.js");
 require("core-js/modules/esnext.iterator.find.js");
@@ -23,6 +24,7 @@ require("core-js/modules/web.url-search-params.has.js");
 require("core-js/modules/web.url-search-params.size.js");
 var _actions = _interopRequireDefault(require("../useRouter/actions"));
 var _httpRequest = require("./httpRequest");
+var _utils = _interopRequireDefault(require("../utils"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
@@ -106,6 +108,7 @@ const getList = async _ref => {
     }
   }
   const lookups = [];
+  const lookupWithDeps = []; // for backward compatibility having two lookups arrays
   const dateColumns = [];
   gridColumns.forEach(_ref2 => {
     let {
@@ -114,7 +117,8 @@ const getList = async _ref => {
       field,
       keepLocal = false,
       keepLocalDate,
-      filterable = true
+      filterable = true,
+      dependsOn
     } = _ref2;
     if (dateDataTypes.includes(type)) {
       dateColumns.push({
@@ -128,6 +132,10 @@ const getList = async _ref => {
     }
     if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
       lookups.push(lookup);
+      lookupWithDeps.push({
+        lookup,
+        dependsOn
+      });
     }
   });
   const where = [];
@@ -177,8 +185,11 @@ const getList = async _ref => {
     model: model.module,
     fileName: model.overrideFileName
   });
-  if (lookups) {
+  if (lookups.length) {
     requestData.lookups = lookups.join(',');
+  }
+  if (lookupWithDeps.length) {
+    requestData.lookupWithDeps = JSON.stringify(lookupWithDeps);
   }
   if (model !== null && model !== void 0 && model.limitToSurveyed) {
     requestData.limitToSurveyed = model === null || model === void 0 ? void 0 : model.limitToSurveyed;
@@ -195,6 +206,7 @@ const getList = async _ref => {
     const form = document.createElement("form");
     requestData.responseType = contentType;
     requestData.columns = columns;
+    requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
     form.setAttribute("method", "POST");
     form.setAttribute("id", "exportForm");
     form.setAttribute("target", "_blank");
@@ -308,7 +320,7 @@ const getRecord = async _ref4 => {
   const lookupsToFetch = [];
   const fields = model.formDef || model.columns;
   fields === null || fields === void 0 || fields.forEach(field => {
-    if (field.lookup && !lookupsToFetch.includes(field.lookup) && !([null, 0].includes(id) && field.parentComboField)) {
+    if (field.lookup && !lookupsToFetch.includes(field.lookup) && !_utils.default.emptyIdValues.includes(id) && !field.dependsOn) {
       lookupsToFetch.push(field.lookup);
     }
   });

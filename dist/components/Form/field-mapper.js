@@ -60,6 +60,7 @@ exports.fieldMappers = exports.default = void 0;
 require("core-js/modules/es.array.includes.js");
 require("core-js/modules/es.array.push.js");
 require("core-js/modules/es.regexp.exec.js");
+require("core-js/modules/es.string.includes.js");
 require("core-js/modules/es.string.search.js");
 require("core-js/modules/esnext.iterator.constructor.js");
 require("core-js/modules/esnext.iterator.map.js");
@@ -102,6 +103,7 @@ var _chipInput = _interopRequireDefault(require("./fields/chipInput"));
 var _treeCheckBox = _interopRequireDefault(require("./fields/treeCheckBox"));
 var _fileUpload = _interopRequireDefault(require("./fields/fileUpload"));
 var _jsonInput = _interopRequireDefault(require("./fields/jsonInput"));
+var _utils = _interopRequireDefault(require("../utils"));
 var _templateObject;
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
@@ -350,6 +352,9 @@ const getFormConfig = function getFormConfig(_ref5) {
     if (column.options) {
       otherProps.options = column.options;
     }
+    if (column.dependsOn) {
+      otherProps.dependsOn = column.dependsOn;
+    }
     const Component = fieldMappers[fieldType];
     if (!Component || column.hideInAddGrid && id === '0') {
       continue;
@@ -392,7 +397,7 @@ const FormLayout = _ref6 => {
     handleSubmit
   } = _ref6;
   const classes = useStyles();
-  const isAdd = [0, undefined, null, ''].includes(displayId);
+  const isAdd = _utils.default.emptyIdValues.includes(displayId);
   const {
     formElements,
     tabColumns

@@ -296,7 +296,9 @@ const GridPreferences = _ref => {
         dispatchData
       })) || {};
       userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-      defaultPreference = response.prefValue || '';
+      if (response.prefName) {
+        defaultPreference = response.prefName;
+      }
     }
 
     // If userPreferenceCharts is available, apply preferences to the grid
@@ -531,7 +533,8 @@ const GridPreferences = _ref => {
     onClick: handleDialogClose,
     disableElevation: true
   }, tTranslate('Close', tOpts))))), openDialog && formType === formTypes.Manage && /*#__PURE__*/_react.default.createElement(_material.Grid, {
-    container: true
+    container: true,
+    rowGap: 2
   }, /*#__PURE__*/_react.default.createElement(_material.Grid, {
     size: 12
   }, /*#__PURE__*/_react.default.createElement(_xDataGridPremium.DataGridPremium, {
@@ -564,7 +567,23 @@ const GridPreferences = _ref => {
     disableRowGrouping: true,
     disableRowSelectionOnClick: true,
     autoHeight: true
-  })))), /*#__PURE__*/_react.default.createElement(_Dialog.DialogComponent, {
+  })), /*#__PURE__*/_react.default.createElement(_material.Grid, {
+    size: 12
+  }, /*#__PURE__*/_react.default.createElement(_material.Stack, {
+    direction: "row",
+    columnGap: 1,
+    style: {
+      justifyContent: 'end'
+    }
+  }, /*#__PURE__*/_react.default.createElement(_material.Button, {
+    type: "button",
+    startIcon: /*#__PURE__*/_react.default.createElement(_Close.default, null),
+    color: "error",
+    variant: "contained",
+    size: "small",
+    onClick: handleDialogClose,
+    disableElevation: true
+  }, tTranslate('Close', tOpts)))))), /*#__PURE__*/_react.default.createElement(_Dialog.DialogComponent, {
     open: openPreferenceExistsModal,
     onConfirm: () => setOpenPreferenceExistsModal(false),
     title: "",

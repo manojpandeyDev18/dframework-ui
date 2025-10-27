@@ -17,7 +17,7 @@ import { DialogComponent } from "../Dialog";
 import { useStateContext, useRouter } from "../useRouter/StateProvider";
 import actionsStateProvider from "../useRouter/actions";
 import PageTitle from "../PageTitle";
-import { getPermissions } from "../utils";
+import utils, { getPermissions } from "../utils";
 import Relations from "./relations";
 export const ActiveStepContext = createContext(1);
 const defaultFieldConfigs = {};
@@ -61,7 +61,7 @@ const Form = ({
     }
   }
   const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({});
   const [lookups, setLookups] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const snackbar = useSnackbar();
@@ -108,7 +108,7 @@ const Form = ({
     navigate(navigatePath);
   };
 
-  const isNew = useMemo(() => [null, undefined, '', '0', 0].includes(id), [id]);
+  const isNew = useMemo(() => utils.emptyIdValues.includes(id), [id]);
 
   const initialValues = useMemo(() => isNew
     ? { ...model.initialValues, ...data, ...baseSaveData }
@@ -156,8 +156,14 @@ const Form = ({
           if (model.reloadOnSave) {
             return window.location.reload();
           }
-          snackbar.showMessage(`Record ${id === 0 ? "Added" : "Updated"} Successfully.`);
-          handleNavigation();
+          const message = success.info ? success.info : `Record ${id === 0 ? "Added" : "Updated"} Successfully.`;
+          snackbar.showMessage(message);
+          /**
+          * Handle navigation after form operations
+          * By default, the form navigates back to the grid after save/cancel operations.
+          * This behavior can be controlled by setting navigateBack "false" / false in model config which disables navigation completely.
+          */
+          navigateBack !== false && handleNavigation();
         })
         .catch((err) => {
           snackbar.showError(
@@ -374,9 +380,7 @@ const Form = ({
               models={models}
               relationFilters={relationFilters}
               relations={relations}
-              parentFilters={[]}
               parent={model.name || model.title || ""}
-              where={[]}
             />
           ) : null}
         </Paper>

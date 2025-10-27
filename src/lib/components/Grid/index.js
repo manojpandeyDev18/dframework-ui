@@ -499,7 +499,7 @@ const GridBase = memo(({
         if (additionalFilters) {
             filters.items = [...(filters.items || []), ...additionalFilters];
         }
-
+        extraParams = { ...extraParams, ...props.extraParams }; // Merge any custom params passed via component props into extraParams
         const isValidFilters = !filters.items.length || filters.items.every(item => "value" in item && item.value !== undefined);
         if (!isValidFilters) return;
 
@@ -724,7 +724,8 @@ const GridBase = memo(({
 
             if (result) {
                 fetchData();
-                snackbar.showMessage("Record Added Successfully.");
+                const message = result.info ? result.info : "Record Added Successfully.";
+                snackbar.showMessage(message);
             }
         } catch (err) {
             snackbar.showError(err.message || "An error occurred, please try again later.");

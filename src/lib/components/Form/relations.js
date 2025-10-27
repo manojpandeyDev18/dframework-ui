@@ -68,7 +68,7 @@ const ChildGrid = memo(({ relation, parentFilters, parent, where, models, readOn
  * Relations component using MUI Tabs
  * Renders a tab for each relation, and a ChildGrid in each panel
  */
-const Relations = ({ relations, parent, where, models, relationFilters, readOnly }) => {
+const Relations = ({ relations, parent, where = [], models, relationFilters, readOnly }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
   const handleChange = (_, newValue) => {

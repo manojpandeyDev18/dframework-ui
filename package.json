@@ -23,7 +23,8 @@
     "react-helmet-async": "^2.0.5",
     "react-i18next": "^15.0.0",
     "react-router-dom": "^7.6.2",
-    "yup": "^1.6.1"
+    "yup": "^1.6.1",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.8",

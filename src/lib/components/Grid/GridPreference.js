@@ -179,7 +179,9 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
             };
             const response = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
             userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-            defaultPreference = response.prefValue || '';
+            if (response.prefName) {
+                defaultPreference = response.prefName;
+            }
         }
 
         // If userPreferenceCharts is available, apply preferences to the grid
@@ -409,7 +411,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 )}
 
                 {(openDialog && formType === formTypes.Manage) && (
-                    <Grid container>
+                    <Grid container rowGap={2}>
                         <Grid size={12}>
                             <DataGridPremium
                                 sx={{
@@ -442,6 +444,21 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                                 disableRowSelectionOnClick={true}
                                 autoHeight
                             />
+                        </Grid>
+                        <Grid size={12}>
+                            <Stack direction="row" columnGap={1} style={{ justifyContent: 'end' }}>
+                                <Button
+                                    type="button"
+                                    startIcon={<CloseIcon />}
+                                    color="error"
+                                    variant="contained"
+                                    size="small"
+                                    onClick={handleDialogClose}
+                                    disableElevation
+                                >
+                                    {tTranslate('Close', tOpts)}
+                                </Button>
+                            </Stack>
                         </Grid>
                     </Grid>
                 )}

@@ -1,7 +1,9 @@
 import TextField from '@mui/material/TextField';
 import React from 'react';
+import { useTheme } from '@mui/material';
 
 const field = ({ column, field, formik, otherProps }) => {
+    const theme = useTheme();
     const rows = column.rows || (column.multiline ? 5 : 1);
     return <TextField
         type="text"
@@ -9,7 +11,7 @@ const field = ({ column, field, formik, otherProps }) => {
         InputProps={{
             readOnly: column.readOnly === true,
             sx: column.readOnly
-                ? { backgroundColor: '#dfdede' } // Light grey background for read-only inputs
+                ? { backgroundColor: theme.palette?.action?.disabled } // Light grey background for read-only inputs
                 : undefined
         }}
         key={field}

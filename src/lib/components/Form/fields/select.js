@@ -1,53 +1,49 @@
-import React, { useEffect, useMemo } from 'react';
-import { FormHelperText } from '@mui/material';
+import React, { useEffect, useMemo, useCallback } from 'react';
+import { FormHelperText, useTheme } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import useCascadingLookup from '../../../hooks/useCascadingLookup';
 
-const SelectField = ({ column, field, formik, lookups, otherProps }) => {
+const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = [], model, ...otherProps }) => {
     const userSelected = React.useRef(false);
-    const { filter, placeHolder } = column;
+    const { placeHolder } = column;
+    const options = useCascadingLookup({ column, formik, lookups, dependsOn, userSelected, model });
+    const theme = useTheme();
 
-    const initialOptions = useMemo(() => {
-        const options = typeof column.lookup === 'string' ? lookups[column.lookup] : column.lookup;
-        if (filter) {
-            return filter({ options, currentValue: formik.values[field], state: formik.values });
-        }
-        return options;
-    }, [column.lookup, filter, lookups, field, formik.values]);
-    const [options, setOptions] = React.useState(initialOptions);
-
-    useEffect(() => {
-        if (!userSelected.current) {
-            setOptions(initialOptions);
-        }
-    }, [initialOptions, userSelected.current]);
-
-    let inputValue = formik.values[field];
-    if (options?.length && !inputValue && !column.multiSelect && "IsDefault" in options[0]) {
-        const isDefaultOption = options.find(e => e.IsDefault);
-        if (isDefaultOption) {
-            inputValue = isDefaultOption.value;
-            formik.setFieldValue(field, isDefaultOption.value);
-        }
-    }
-    if (column.multiSelect) {
-        if (!inputValue || inputValue.length === 0) {
-            inputValue = [];
-        }
-        else {
-            if (!Array.isArray(inputValue)) {
-                inputValue = inputValue.split(',').map((e) => parseInt(e));
+    // Memoize input value processing to avoid recalculation on each render
+    const inputValue = useMemo(() => {
+        let value = formik.values[field];
+        
+        // Handle default value selection
+        if (options?.length && !value && !column.multiSelect && "IsDefault" in options[0]) {
+            const isDefaultOption = options.find(e => e.IsDefault);
+            if (isDefaultOption) {
+                value = isDefaultOption.value;
+                formik.setFieldValue(field, isDefaultOption.value);
             }
         }
-    }
+        
+        // Handle multi-select values
+        if (column.multiSelect) {
+            if (!value || value.length === 0) {
+                value = [];
+            } else if (!Array.isArray(value)) {
+                value = value.split(',').map((e) => parseInt(e));
+            }
+        }
+        
+        return value;
+    }, [formik.values[field], options, column.multiSelect, field]);
 
-    const handleChange = (event) => {
-        formik.handleChange(event); // Update formik's state
+    // Memoize event handlers to prevent unnecessary re-renders of child components
+    const handleChange = useCallback((event) => {
+        formik.handleChange(event);
         userSelected.current = true;
-    };
+    }, [formik]);
+
     return (
         <FormControl
             fullWidth
@@ -65,7 +61,7 @@ const SelectField = ({ column, field, formik, lookups, otherProps }) => {
                 onChange={handleChange}
                 onBlur={formik.handleBlur}
                 sx={{
-                    backgroundColor: column.readOnly ? '#dfdede' : ''
+                    backgroundColor: column.readOnly ? theme.palette?.action?.disabled : ''
                 }}
             >
                 {Array.isArray(options) && options.map(option => (
@@ -77,6 +73,6 @@ const SelectField = ({ column, field, formik, lookups, otherProps }) => {
             <FormHelperText>{formik.touched[field] && formik.errors[field]}</FormHelperText>
         </FormControl>
     );
-};
+});
 
 export default SelectField;
