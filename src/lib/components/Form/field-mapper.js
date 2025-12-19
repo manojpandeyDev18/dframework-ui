@@ -17,7 +17,6 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
 import DaySelection from './fields/dayRadio';
-import makeStyles from '@mui/styles/makeStyles';
 import { Typography } from '@mui/material';
 import { ActiveStepContext } from './Form';
 import styled from '@emotion/styled';
@@ -46,30 +45,6 @@ const fieldMappers = {
     "fileUpload": FileUpload,
     "json": JSONInput
 };
-
-const useStyles = makeStyles({
-    root: {
-        marginTop: "1rem !important",
-        marginBottom: "1rem !important"
-    },
-    childStyles: {
-        paddingTop: "2.5px",
-        paddingBottom: "2.5px"
-    },
-    stepLabel: {
-        fontSize: "20px !important"
-    },
-    stepperMain: {
-        marginBottom: "20px"
-    },
-    renderSteps: {
-        marginTop: "20px"
-    },
-    labelText: {
-        fontSize: "16px !important",
-        fontWeight: "bold !important"
-    }
-});
 
 const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, handleSubmit }) => {
     const [skipped, setSkipped] = React.useState(new Set());
@@ -128,12 +103,12 @@ const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookup
     const currentStep = tabColumns[activeStep];
     return (
         <>
-            <Stepper activeStep={activeStep} className={classes.stepperMain}>
+            <Stepper activeStep={activeStep} sx={{ marginBottom: '20px' }}>
                 {tabColumns.map(({ title, key }, index) => {
                     return (
                         <Step key={key} completed={isStepSkipped(index)}>
                             <StepLabel>
-                                <Typography className={classes.stepLabel}>{title}</Typography>
+                                <Typography sx={{ fontSize: '20px' }}>{title}</Typography>
                             </StepLabel>
                         </Step>
                     );
@@ -163,10 +138,10 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
                 formElements.map(({ Component, column, field, label, otherProps }, key) => {
                     const isGridComponent = typeof column.relation === 'function';
                     return (
-                        <Grid container spacing={2} key={key} className={classes.root} alignItems={isGridComponent ? "flex-start" : "center"}>
+                        <Grid container spacing={2} key={key} sx={{ marginTop: "1rem !important", marginBottom: "1rem !important" }} alignItems={isGridComponent ? "flex-start" : "center"}>
                             {column?.showLabel !== false ?
-                                <Grid size={{ xs: 3 }} className={classes.childStyles}>
-                                    <Typography className={classes.labelText}>{column.label || field}: {column.required && <ImportantSpan>*</ImportantSpan>}</Typography>
+                                <Grid size={{ xs: 3 }} sx={{ paddingTop: "2.5px", paddingBottom: "2.5px" }}>
+                                    <Typography sx={{ fontSize: "16px", fontWeight: "bold" }}>{column.label || field}: {column.required && <ImportantSpan>*</ImportantSpan>}</Typography>
                                 </Grid>
                                 : null
                             }
@@ -226,7 +201,7 @@ const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displa
     return (
         <div>
             <RenderColumns isAdd={isAdd} formElements={formElements} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} />
-            <div className={classes.renderSteps}>
+            <div style={{ marginTop: '20px' }}>
                 <RenderSteps tabColumns={tabColumns} model={model} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} fieldConfigs={fieldConfigs} mode={mode} handleSubmit={handleSubmit} />
             </div>
         </div>

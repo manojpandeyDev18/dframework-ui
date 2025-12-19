@@ -25,6 +25,6 @@ const replaceTags = function (source, tags, { template = defaultTemplate, keepMi
     });
 };
 
-module.exports = {
+export default {
     replaceTags
 };

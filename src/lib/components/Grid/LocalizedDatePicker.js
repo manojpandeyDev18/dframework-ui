@@ -5,7 +5,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { getGridDateOperators } from '@mui/x-data-grid-premium';
 import utcPlugin from 'dayjs/plugin/utc.js';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import AdapterDayjs from '@mui/x-date-pickers/AdapterDayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useStateContext } from '../useRouter/StateProvider';
 import utils from '../utils';
 

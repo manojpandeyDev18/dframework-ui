@@ -28,7 +28,6 @@ import template from './template';
 import { Tooltip, CardContent, Card } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import makeStyles from '@mui/styles/makeStyles';
 import PageTitle from '../PageTitle';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
 import LocalizedDatePicker from './LocalizedDatePicker';
@@ -41,6 +40,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
+import { styled } from '@mui/material/styles';
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -89,16 +89,15 @@ const booleanIconRenderer = (params) => {
     }
 };
 
-const useStyles = makeStyles({
-    buttons: {
-        margin: '6px !important'
-    },
-    deleteContent: {
-        width: '100%',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-    }
+const DeleteContentText = styled('span')({
+    width: '100%',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+});
+
+const ButtonWithMargin = styled(Button)({
+    margin: '6px'
 });
 
 const GridBase = memo(({
@@ -818,20 +817,19 @@ const GridBase = memo(({
                     {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
                     {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
                     {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
-                    {!forAssignment && canAdd && !isReadOnly && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" className={classes.buttons} >{addText}</Button>}
+                    {!forAssignment && canAdd && !isReadOnly && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" >{addText}</ButtonWithMargin>}
                     {(selectionApi.length && data.records.length) ? (
-                        <Button
+                        <ButtonWithMargin
                             onClick={selectAll}
                             size="medium"
                             variant="contained"
-                            className={classes.buttons}
                         >
                             {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
-                        </Button>) :
+                        </ButtonWithMargin>) :
                         <></>
                     }
-                    {available && <Button startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained" className={classes.buttons}  >{"Assign"}</Button>}
-                    {assigned && <Button startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained" className={classes.buttons}  >{"Remove"}</Button>}
+                    {available && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained"  >{"Assign"}</ButtonWithMargin>}
+                    {assigned && <ButtonWithMargin startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained"  >{"Remove"}</ButtonWithMargin>}
                 </div>
                 <GridToolbarContainer {...props}>
                     {effectivePermissions.showColumnsOrder && (
@@ -1062,17 +1060,16 @@ const GridBase = memo(({
                             filterValueTrue: 'Yes',
                             filterValueFalse: 'No'
                         }}
-
-                    />
+                        showToolbar />
                     {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
                     }
                     {isDeleting && !errorMessage && (
                         <DialogComponent open={isDeleting} onConfirm={handleDelete} onCancel={() => setIsDeleting(false)} title="Confirm Delete">
-                            <span className={classes.deleteContent}>
+                            <DeleteContentText>
                                 Are you sure you want to delete {record.name && <Tooltip style={{ display: "inline" }} title={record.name} arrow>
                                     {record.name.length > 30 ? `${record.name.slice(0, 30)}...` : record.name}
                                 </Tooltip>} ?
-                            </span>
+                            </DeleteContentText>
                         </DialogComponent>)}
                     {showAddConfirmation && (
                         <DialogComponent
@@ -1081,9 +1078,9 @@ const GridBase = memo(({
                             onCancel={() => setShowAddConfirmation(false)}
                             title="Confirm Add"
                         >
-                            <span className={classes.deleteContent}>
+                            <DeleteContentText>
                                 Are you sure you want to add {selectedSet.current.size} records?
-                            </span>
+                            </DeleteContentText>
                         </DialogComponent>
                     )}
                 </CardContent>

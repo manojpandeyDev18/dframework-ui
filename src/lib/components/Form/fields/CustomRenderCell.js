@@ -1,11 +1,5 @@
-import makeStyles from '@mui/styles/makeStyles';
 import { Avatar, useTheme } from "@mui/material";
 
-const useStyles = makeStyles({
-    root: {
-        display: 'flex'
-    }
-})
 export const brandBackgroundColor = '#182eb5';
 export const brandColor = '#ffffff';
 function RenderDayCell({ value }) {
@@ -14,7 +8,7 @@ function RenderDayCell({ value }) {
     const classes = useStyles();
     const theme = useTheme();
     return (
-        <div className={classes.root}>
+        <div sx={{ display: 'flex' }}>
             {dayValues.map((val, index) => (
                 <Avatar
                     key={index}

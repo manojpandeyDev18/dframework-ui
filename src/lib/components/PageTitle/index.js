@@ -1,5 +1,5 @@
 import React from "react";
-import { Helmet } from "react-helmet-async";
+import { Metadata } from 'react-dom/client'
 import { Box } from "@mui/material";
 import { withTranslation } from "react-i18next";
 import MuiTypography from "../Typography";
@@ -32,9 +32,7 @@ function PageTitle({
 
   return (
     <>
-      <Helmet>
-        <title>{title}</title>
-      </Helmet>
+      <title>{title}</title>
       <MuiTypography className="print-only" text={titleHeading} />
       {needToShowBreadcrumbs && (<>
         <Card sx={{ mb: 3 }}>

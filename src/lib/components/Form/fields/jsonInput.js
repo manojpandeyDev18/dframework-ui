@@ -2,10 +2,12 @@ import * as React from 'react';
 import FormControl from '@mui/material/FormControl';
 import Input from '@mui/material/Input';
 import Typography from '@mui/material/Typography';
-import debounce from 'lodash/debounce';
+import useDebounce from '../../../hooks/useDebounce';
 
 const Field = ({ field, formik }) => {
     const [state, setState] = React.useState({});
+    const debouncedState = useDebounce(state, 300);
+
     React.useEffect(() => {
         if (!formik.values[field]) return;
         try {
@@ -16,25 +18,17 @@ const Field = ({ field, formik }) => {
         }
     }, [formik.values[field]]);
 
-    const handleDebouncedChange = React.useMemo(
-        () =>
-            debounce((newState) => {
-                formik.setFieldValue(field, JSON.stringify(newState));
-            }, 300),
-        [formik, field]
-    );
+    // Update formik when debounced state changes
+    React.useEffect(() => {
+        if (Object.keys(debouncedState).length > 0) {
+            formik.setFieldValue(field, JSON.stringify(debouncedState));
+        }
+    }, [debouncedState, field, formik]);
 
     const handleChange = (key, value) => {
         const updatedState = { ...state, [key]: value };
         setState(updatedState);
-        handleDebouncedChange(updatedState);
     };
-
-    React.useEffect(() => {
-        return () => {
-            handleDebouncedChange.cancel();
-        };
-    }, [handleDebouncedChange]);
 
     return (
         <FormControl

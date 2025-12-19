@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import StringField from './string';
-import { debounce } from 'lodash';
+import useDebounce from '../../../hooks/useDebounce';
 import { useTheme } from '@mui/material';
 
 // Key code constants
@@ -21,6 +21,8 @@ const resolveValue = ({ value, state }) => {
 const Field = ({ column, otherProps, formik, field, ...props }) => {
     const { min, max } = column;
     const theme = useTheme();
+    const [inputValue, setInputValue] = useState(formik.values[field] || '');
+    const debouncedValue = useDebounce(inputValue, 400);
 
     const resolvedMin = useMemo(
         () => Math.max(0, resolveValue({ value: min, state: formik.values })),
@@ -31,18 +33,24 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
         [max, formik.values]
     );
 
-    const debouncedSetFieldValue = useCallback(
-        debounce((field, value) => {
-            if (value < resolvedMin) {
+    // Update formik when debounced value changes
+    useEffect(() => {
+        if (debouncedValue !== formik.values[field]) {
+            const numValue = Number(debouncedValue);
+            if (numValue < resolvedMin) {
                 formik.setFieldValue(field, resolvedMin);
-            } else if (resolvedMax && value > resolvedMax) {
+            } else if (resolvedMax && numValue > resolvedMax) {
                 formik.setFieldValue(field, resolvedMax);
             } else {
-                formik.setFieldValue(field, value);
+                formik.setFieldValue(field, numValue);
             }
-        }, 400),
-        [resolvedMin, resolvedMax, formik.setFieldValue]
-    );
+        }
+    }, [debouncedValue, field, formik, resolvedMin, resolvedMax]);
+
+    // Update local state when formik value changes externally
+    useEffect(() => {
+        setInputValue(formik.values[field] || '');
+    }, [formik.values[field]]);
 
     const { onBlur } = props;
     otherProps = {
@@ -70,7 +78,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
         type: 'number',
         ...otherProps,
         onChange: (event) => {
-            debouncedSetFieldValue(field, Number(event.target.value)); // Pass the updated value to the debounced function
+            setInputValue(event.target.value);
             if (typeof onBlur === "function") {
                 onBlur(event);
             }
