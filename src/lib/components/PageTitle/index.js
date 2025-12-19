@@ -1,5 +1,5 @@
 import React from "react";
-import { Metadata } from 'react-dom/client'
+
 import { Box } from "@mui/material";
 import { withTranslation } from "react-i18next";
 import MuiTypography from "../Typography";

@@ -5,10 +5,10 @@ export const brandColor = '#ffffff';
 function RenderDayCell({ value }) {
     const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     const dayValues = value.split('');
-    const classes = useStyles();
+
     const theme = useTheme();
     return (
-        <div sx={{ display: 'flex' }}>
+        <div style={{ display: 'flex' }}>
             {dayValues.map((val, index) => (
                 <Avatar
                     key={index}

@@ -49,8 +49,12 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
 
     // Update local state when formik value changes externally
     useEffect(() => {
-        setInputValue(formik.values[field] || '');
-    }, [formik.values[field]]);
+        const formikValue = formik.values[field] ?? '';
+        // Only update local state if it differs from the current input value
+        if (String(formikValue) !== String(inputValue)) {
+            setInputValue(formikValue);
+        }
+    }, [formik.values[field], inputValue, field, formik]);
 
     const { onBlur } = props;
     otherProps = {

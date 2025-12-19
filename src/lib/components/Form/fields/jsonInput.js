@@ -20,10 +20,11 @@ const Field = ({ field, formik }) => {
 
     // Update formik when debounced state changes
     React.useEffect(() => {
-        if (Object.keys(debouncedState).length > 0) {
-            formik.setFieldValue(field, JSON.stringify(debouncedState));
+        const nextValue = JSON.stringify(debouncedState);
+        if (formik.values[field] !== nextValue) {
+            formik.setFieldValue(field, nextValue);
         }
-    }, [debouncedState, field, formik]);
+    }, [debouncedState, field, formik, formik.values[field]]);
 
     const handleChange = (key, value) => {
         const updatedState = { ...state, [key]: value };

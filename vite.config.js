@@ -18,7 +18,7 @@ export default defineConfig({
             },
         },
         visualizer({
-            open: true, // Automatically opens the report in your browser
+            open: process.env.VISUALIZER_OPEN === 'true', // Control auto-open via env var
             filename: "stats.html", // Name of the output file
             gzipSize: true, // Show gzip sizes
             brotliSize: true, // Show brotli sizes

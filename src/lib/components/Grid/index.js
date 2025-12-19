@@ -1060,7 +1060,8 @@ const GridBase = memo(({
                             filterValueTrue: 'Yes',
                             filterValueFalse: 'No'
                         }}
-                        showToolbar />
+                        showToolbar={true}
+                    />
                     {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
                     }
                     {isDeleting && !errorMessage && (
