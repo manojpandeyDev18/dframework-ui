@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import { Box } from "@mui/material";
 import { withTranslation } from "react-i18next";
@@ -30,9 +30,15 @@ function PageTitle({
     navigate(-1);
   };
 
+  // Update document title when title prop changes
+  useEffect(() => {
+    if (title) {
+      document.title = title;
+    }
+  }, [title]);
+
   return (
     <>
-      <title>{title}</title>
       <MuiTypography className="print-only" text={titleHeading} />
       {needToShowBreadcrumbs && (<>
         <Card sx={{ mb: 3 }}>

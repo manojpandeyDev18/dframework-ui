@@ -50,7 +50,6 @@ const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookup
     const [skipped, setSkipped] = React.useState(new Set());
 
     const { activeStep, setActiveStep } = React.useContext(ActiveStepContext);
-    const classes = useStyles();
 
     const skipSteps = {};
     for (let index = 0, len = model.columns.length; index < len; index++) {
@@ -126,7 +125,6 @@ const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookup
 };
 
 const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, isAdd }) => {
-    const classes = useStyles();
     if (!formElements?.length) {
         return null;
     }
@@ -145,7 +143,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
                                 </Grid>
                                 : null
                             }
-                            <Grid size={{ xs: isGridComponent ? 12 : 9 }} className={classes.childStyles}>
+                            <Grid size={{ xs: isGridComponent ? 12 : 9 }} sx={{ paddingTop: "2.5px", paddingBottom: "2.5px" }}>
                                 <Component isAdd={isAdd} model={model} fieldConfigs={fieldConfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} {...otherProps} />
                             </Grid>
                         </Grid >
@@ -190,7 +188,6 @@ const getFormConfig = function ({ columns, tabs = {}, id, searchParams }) {
 };
 
 const FormLayout = ({ model, formik, data, combos, onChange, lookups, id: displayId, fieldConfigs, mode, handleSubmit }) => {
-    const classes = useStyles();
     const isAdd = utils.emptyIdValues.includes(displayId);
     const { formElements, tabColumns } = React.useMemo(() => {
         const showTabs = model.formConfig?.showTabbed;

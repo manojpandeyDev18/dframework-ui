@@ -1,9 +1,9 @@
 import Button from '@mui/material/Button';
 import {
     DataGridPremium,
-    GridToolbarContainer,
-    GridToolbarColumnsButton,
-    GridToolbarFilterButton,
+    Toolbar,
+    ColumnsPanelTrigger,
+    FilterPanelTrigger,
     getGridDateOperators,
     GRID_CHECKBOX_SELECTION_COL_DEF,
     getGridStringOperators,
@@ -41,6 +41,8 @@ import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
 import { styled } from '@mui/material/styles';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import FilterListIcon from '@mui/icons-material/FilterList'
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -99,6 +101,16 @@ const DeleteContentText = styled('span')({
 const ButtonWithMargin = styled(Button)({
     margin: '6px'
 });
+
+const GridToolBar = styled(Toolbar)({
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1.5,
+    flexWrap: 'nowrap',
+    whiteSpace: 'nowrap',
+    minHeight: 'auto',
+    borderBottom: 'none'
+})
 
 const GridBase = memo(({
     model,
@@ -170,7 +182,6 @@ const GridBase = memo(({
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
     const [isGridPreferenceFetched, setIsGridPreferenceFetched] = useState(false);
-    const classes = useStyles();
     const { stateData, dispatchData, formatDate, removeCurrentPreferenceName, getAllSavedPreferences, applyDefaultPreferenceIfExists } = useStateContext();
     const { timeZone } = stateData;
     const effectivePermissions = { ...constants.permissions, ...stateData.gridSettings.permissions, ...model.permissions, ...permissions };
@@ -831,12 +842,32 @@ const GridBase = memo(({
                     {available && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained"  >{"Assign"}</ButtonWithMargin>}
                     {assigned && <ButtonWithMargin startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained"  >{"Remove"}</ButtonWithMargin>}
                 </div>
-                <GridToolbarContainer {...props}>
+                <GridToolBar {...props}>
                     {effectivePermissions.showColumnsOrder && (
-                        <GridToolbarColumnsButton />
+                        <ColumnsPanelTrigger
+                            render={
+                                <Button
+                                    startIcon={<ViewColumnIcon />}
+                                    size="small"
+                                    variant="text"
+                                >
+                                    {tTranslate("COLUMNS", tOpts)}
+                                </Button>
+                            }
+                        />
                     )}
                     {effectivePermissions.filter && (<>
-                        <GridToolbarFilterButton />
+                        <FilterPanelTrigger
+                            render={
+                                <Button
+                                    startIcon={<FilterListIcon />}
+                                    size="small"
+                                    variant="text"
+                                >
+                                    {tTranslate("FILTERS", tOpts)}
+                                </Button>
+                            }
+                        />
                         <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
                     </>)}
 
@@ -846,7 +877,7 @@ const GridBase = memo(({
                     {preferenceName &&
                         <GridPreferences preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
                     }
-                </GridToolbarContainer>
+                </GridToolBar>
             </div >
         );
     };

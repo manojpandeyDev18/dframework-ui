@@ -2,7 +2,6 @@ import React, {
   memo,
   useState
 } from "react";
-import PropTypes from 'prop-types';
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import Tabs from '@mui/material/Tabs';
@@ -22,12 +21,6 @@ function CustomTabPanel(props) {
     </div>
   );
 }
-
-CustomTabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.number.isRequired,
-  value: PropTypes.number.isRequired
-};
 
 function a11yProps(index) {
   return {
@@ -68,7 +61,7 @@ const ChildGrid = memo(({ relation, parentFilters, parent, where, models, readOn
  * Relations component using MUI Tabs
  * Renders a tab for each relation, and a ChildGrid in each panel
  */
-const Relations = ({ relations, parent, where = [], models, relationFilters, readOnly }) => {
+const Relations = React.memo(({ relations, parent, where = [], models, relationFilters, readOnly }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
   const handleChange = (_, newValue) => {
@@ -107,6 +100,6 @@ const Relations = ({ relations, parent, where = [], models, relationFilters, rea
       ))}
     </Box>
   );
-};
+});
 
 export default Relations;
