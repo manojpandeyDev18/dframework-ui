@@ -46,6 +46,12 @@ const fieldMappers = {
     "json": JSONInput
 };
 
+const gridContainerStyle = { paddingTop: "2.5px", paddingBottom: "2.5px" };
+
+const ImportantSpan = styled('span')({
+  color: 'red !important',
+});
+
 const RenderSteps = ({ tabColumns, model, formik, data, onChange, combos, lookups, fieldConfigs, mode, handleSubmit }) => {
     const [skipped, setSkipped] = React.useState(new Set());
 
@@ -128,8 +134,6 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
     if (!formElements?.length) {
         return null;
     }
-    const ImportantSpan = styled.span` color: red !important; `; // * Style Css
-
     return (
         <>
             {
@@ -138,12 +142,12 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
                     return (
                         <Grid container spacing={2} key={key} sx={{ marginTop: "1rem", marginBottom: "1rem" }} alignItems={isGridComponent ? "flex-start" : "center"}>
                             {column?.showLabel !== false ?
-                                <Grid size={{ xs: 3 }} sx={{ paddingTop: "2.5px", paddingBottom: "2.5px" }}>
+                                <Grid size={{ xs: 3 }} sx={gridContainerStyle}>
                                     <Typography sx={{ fontSize: "16px", fontWeight: "bold" }}>{column.label || field}: {column.required && <ImportantSpan>*</ImportantSpan>}</Typography>
                                 </Grid>
                                 : null
                             }
-                            <Grid size={{ xs: isGridComponent ? 12 : 9 }} sx={{ paddingTop: "2.5px", paddingBottom: "2.5px" }}>
+                            <Grid size={{ xs: isGridComponent ? 12 : 9 }} sx={gridContainerStyle}>
                                 <Component isAdd={isAdd} model={model} fieldConfigs={fieldConfigs[field]} mode={mode} column={column} field={field} label={label} formik={formik} data={data} onChange={onChange} combos={combos} lookups={lookups} {...otherProps} />
                             </Grid>
                         </Grid >
