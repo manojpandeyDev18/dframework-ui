@@ -112,6 +112,103 @@ const GridToolBar = styled(Toolbar)({
     borderBottom: 'none'
 })
 
+const CustomToolbar = function (props) {
+    const {
+        model,
+        data,
+        currentPreference,
+        isReadOnly,
+        canAdd,
+        forAssignment,
+        showAddIcon,
+        onAdd,
+        selectionApi,
+        selectedSet,
+        selectAll,
+        available,
+        onAssign,
+        assigned,
+        onUnassign,
+        effectivePermissions,
+        clearFilters,
+        handleExport,
+        preferenceName,
+        apiRef,
+        gridColumns,
+        setIsGridPreferenceFetched,
+        tTranslate,
+        tOpts,
+        idProperty
+    } = props;
+
+    const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
+
+    return (
+        <div
+            style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '10px'
+            }}
+        >
+            <div>
+                {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
+                {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
+                {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
+                {!forAssignment && canAdd && !isReadOnly && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" >{addText}</ButtonWithMargin>}
+                {(selectionApi.length && data.records.length) ? (
+                    <ButtonWithMargin
+                        onClick={selectAll}
+                        size="medium"
+                        variant="contained"
+                    >
+                        {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
+                    </ButtonWithMargin>) :
+                    <></>
+                }
+                {available && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained"  >{"Assign"}</ButtonWithMargin>}
+                {assigned && <ButtonWithMargin startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained"  >{"Remove"}</ButtonWithMargin>}
+            </div>
+            <GridToolBar {...props}>
+                {effectivePermissions.showColumnsOrder && (
+                    <ColumnsPanelTrigger
+                        render={
+                            <Button
+                                startIcon={<ViewColumnIcon />}
+                                size="small"
+                                variant="text"
+                            >
+                                {tTranslate("COLUMNS", tOpts)}
+                            </Button>
+                        }
+                    />
+                )}
+                {effectivePermissions.filter && (<>
+                    <FilterPanelTrigger
+                        render={
+                            <Button
+                                startIcon={<FilterListIcon />}
+                                size="small"
+                                variant="text"
+                            >
+                                {tTranslate("FILTERS", tOpts)}
+                            </Button>
+                        }
+                    />
+                    <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
+                </>)}
+
+                {effectivePermissions.export && (
+                    <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
+                )}
+                {preferenceName &&
+                    <GridPreferences preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
+                }
+            </GridToolBar>
+        </div >
+    );
+};
+
 const GridBase = memo(({
     model,
     columns,
@@ -814,74 +911,6 @@ const GridBase = memo(({
         setupGridPreference({ preferenceName, Username, preferenceApi, defaultPreferenceEnums });
     }, [preferenceApi]);
 
-    const CustomToolbar = function (props) {
-        const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
-        return (
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '10px'
-                }}
-            >
-                <div>
-                    {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
-                    {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference}</Typography>}
-                    {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
-                    {!forAssignment && canAdd && !isReadOnly && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" >{addText}</ButtonWithMargin>}
-                    {(selectionApi.length && data.records.length) ? (
-                        <ButtonWithMargin
-                            onClick={selectAll}
-                            size="medium"
-                            variant="contained"
-                        >
-                            {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
-                        </ButtonWithMargin>) :
-                        <></>
-                    }
-                    {available && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained"  >{"Assign"}</ButtonWithMargin>}
-                    {assigned && <ButtonWithMargin startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained"  >{"Remove"}</ButtonWithMargin>}
-                </div>
-                <GridToolBar {...props}>
-                    {effectivePermissions.showColumnsOrder && (
-                        <ColumnsPanelTrigger
-                            render={
-                                <Button
-                                    startIcon={<ViewColumnIcon />}
-                                    size="small"
-                                    variant="text"
-                                >
-                                    {tTranslate("COLUMNS", tOpts)}
-                                </Button>
-                            }
-                        />
-                    )}
-                    {effectivePermissions.filter && (<>
-                        <FilterPanelTrigger
-                            render={
-                                <Button
-                                    startIcon={<FilterListIcon />}
-                                    size="small"
-                                    variant="text"
-                                >
-                                    {tTranslate("FILTERS", tOpts)}
-                                </Button>
-                            }
-                        />
-                        <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
-                    </>)}
-
-                    {effectivePermissions.export && (
-                        <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
-                    )}
-                    {preferenceName &&
-                        <GridPreferences preferenceName={preferenceName} gridRef={apiRef} columns={gridColumns} setIsGridPreferenceFetched={setIsGridPreferenceFetched} />
-                    }
-                </GridToolBar>
-            </div >
-        );
-    };
-
     const getGridRowId = (row) => {
         return row[idProperty];
     };
@@ -1065,6 +1094,33 @@ const GridBase = memo(({
                             footer: Footer
                         }}
                         slotProps={{
+                            toolbar: {
+                                model,
+                                data,
+                                currentPreference,
+                                isReadOnly,
+                                canAdd,
+                                forAssignment,
+                                showAddIcon,
+                                onAdd,
+                                selectionApi,
+                                selectedSet,
+                                selectAll,
+                                available,
+                                onAssign,
+                                assigned,
+                                onUnassign,
+                                effectivePermissions,
+                                clearFilters,
+                                handleExport,
+                                preferenceName,
+                                apiRef,
+                                gridColumns,
+                                setIsGridPreferenceFetched,
+                                tTranslate,
+                                tOpts,
+                                idProperty
+                            },
                             footer: {
                                 pagination: true,
                                 apiRef
