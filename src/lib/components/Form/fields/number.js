@@ -35,7 +35,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
 
     // Update formik when debounced value changes
     useEffect(() => {
-            if (debouncedValue !== formik.values[field]) {
+        if (debouncedValue !== formik.values[field]) {
             const numValue = Number(debouncedValue);
             if (numValue < resolvedMin) {
                 formik.setFieldValue(field, resolvedMin);

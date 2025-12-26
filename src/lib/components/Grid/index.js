@@ -42,7 +42,7 @@ import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
 import { styled } from '@mui/material/styles';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
-import FilterListIcon from '@mui/icons-material/FilterList'
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 const defaultPageSize = 10;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -105,12 +105,12 @@ const ButtonWithMargin = styled(Button)({
 const GridToolBar = styled(Toolbar)({
     display: 'flex',
     alignItems: 'center',
-    gap: 1.5,
+    gap: '1.5rem',
     flexWrap: 'nowrap',
     whiteSpace: 'nowrap',
     minHeight: 'auto',
     borderBottom: 'none'
-})
+});
 
 const CustomToolbar = function (props) {
     const {
@@ -137,8 +137,7 @@ const CustomToolbar = function (props) {
         gridColumns,
         setIsGridPreferenceFetched,
         tTranslate,
-        tOpts,
-        idProperty
+        tOpts
     } = props;
 
     const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
@@ -172,28 +171,30 @@ const CustomToolbar = function (props) {
             <GridToolBar {...props}>
                 {effectivePermissions.showColumnsOrder && (
                     <ColumnsPanelTrigger
-                        render={
+                        render={(triggerProps) => (
                             <Button
+                                {...triggerProps}
                                 startIcon={<ViewColumnIcon />}
                                 size="small"
                                 variant="text"
                             >
                                 {tTranslate("COLUMNS", tOpts)}
                             </Button>
-                        }
+                        )}
                     />
                 )}
                 {effectivePermissions.filter && (<>
                     <FilterPanelTrigger
-                        render={
+                        render={(triggerProps) => (
                             <Button
+                                {...triggerProps}
                                 startIcon={<FilterListIcon />}
                                 size="small"
                                 variant="text"
                             >
                                 {tTranslate("FILTERS", tOpts)}
                             </Button>
-                        }
+                        )}
                     />
                     <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
                 </>)}
