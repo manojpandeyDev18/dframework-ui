@@ -4,6 +4,8 @@ on:
     tags:
       - 'v*' # Triggers whenever you push a tag like v1.0.1
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
