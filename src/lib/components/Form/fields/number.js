@@ -21,7 +21,7 @@ const resolveValue = ({ value, state }) => {
 const Field = ({ column, otherProps, formik, field, ...props }) => {
     const { min, max } = column;
     const theme = useTheme();
-    const [inputValue, setInputValue] = useState(formik.values[field] || '');
+    const [inputValue, setInputValue] = useState(formik.values[field]);
     const debouncedValue = useDebounce(inputValue, 400);
 
     const resolvedMin = useMemo(
@@ -35,7 +35,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
 
     // Update formik when debounced value changes
     useEffect(() => {
-        if (debouncedValue !== formik.values[field]) {
+            if (debouncedValue !== formik.values[field]) {
             const numValue = Number(debouncedValue);
             if (numValue < resolvedMin) {
                 formik.setFieldValue(field, resolvedMin);

@@ -160,6 +160,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
         const action = formType === formTypes.Add ? "Added" : "Saved";
         if (response === true || response?.success === true) {
             snackbar.showMessage(`Preference ${action} Successfully.`);
+            handleDialogClose();
         }
         getAllSavedPreferences({ preferenceName, Username, history: navigate, dispatchData, preferenceApi, defaultPreferenceEnums });
     };
