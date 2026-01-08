@@ -65,7 +65,6 @@ const CustomDropdownMenu = (props) => {
 
     return (
         <FormControl variant="standard" className="w-100">
-            <InputLabel></InputLabel>
             <Select
                 label={column.field}
                 variant="standard"
