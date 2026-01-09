@@ -3,9 +3,9 @@
   "version": "1.0.5",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "exports": "./dist/index.js",
+  "main": "./index.js",
+  "module": "./index.js",
+  "exports": "./index.js",
   "files": [
     "dist"
   ],
