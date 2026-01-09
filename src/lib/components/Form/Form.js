@@ -183,7 +183,7 @@ const Form = ({
   const handleDiscardChanges = () => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
-    handleNavigation();
+    navigateBack !== false && handleNavigation();
   };
 
   const errorOnLoad = function (title, error) {
@@ -219,10 +219,10 @@ const Form = ({
     });
   };
   const handleFormCancel = function (event) {
-    if (dirty) {
+    if (dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
-      handleNavigation();
+      navigateBack !== false && handleNavigation();
     }
     event.preventDefault();
   };
@@ -238,7 +238,7 @@ const Form = ({
       });
       if (response === true) {
         snackbar.showMessage("Record Deleted Successfully.");
-        handleNavigation();
+        navigateBack !== false && handleNavigation();
       }
     } catch (error) {
       snackbar.showError("An error occured, please try after some time.");

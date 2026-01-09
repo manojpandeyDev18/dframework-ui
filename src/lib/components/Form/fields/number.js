@@ -37,6 +37,9 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
     useEffect(() => {
         if (debouncedValue !== formik.values[field]) {
             const numValue = Number(debouncedValue);
+            if (isNaN(numValue)) {
+                return;
+            }
             if (numValue < resolvedMin) {
                 formik.setFieldValue(field, resolvedMin);
             } else if (resolvedMax && numValue > resolvedMax) {
