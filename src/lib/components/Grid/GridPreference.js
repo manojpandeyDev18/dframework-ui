@@ -108,7 +108,8 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
             Username,
             prefIdArray: id
         };
-        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
         if (response === true || response?.success) {
             if (prefName === currentPreference) {
                 removeCurrentPreferenceName({ dispatchData });
@@ -156,7 +157,8 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
         if (values.prefId) {
             params["prefId"] = values.prefId;
         }
-        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
         const action = formType === formTypes.Add ? "Added" : "Saved";
         if (response === true || response?.success === true) {
             snackbar.showMessage(`Preference ${action} Successfully.`);
@@ -178,7 +180,8 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 Username,
                 prefId
             };
-            const response = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
+            const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
+            const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
             userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
             if (response.prefName) {
                 defaultPreference = response.prefName;

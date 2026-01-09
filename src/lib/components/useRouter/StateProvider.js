@@ -65,7 +65,8 @@ const StateProvider = ({ children }) => {
    */
   async function getAllSavedPreferences({ preferenceName, Username, history, dispatchData, preferenceApi, defaultPreferenceEnums = {}, addDefaultPreference = false }) {
     const response = await request({ url: preferenceApi, params: { action: 'list', id: preferenceName, Username }, history, dispatchData }) || {};
-    const preferences = response.preferences || [];
+    const responseData = typeof response === 'string' ? JSON.parse(response) : response;
+    const preferences = responseData.preferences || [];
     if (addDefaultPreference) {
       preferences.unshift({
         prefName: "Default",

@@ -1072,7 +1072,6 @@ const GridBase = memo(({
                         }}
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
-                        autoHeight
                         checkboxSelection={forAssignment}
                         loading={isLoading}
                         className="pagination-fix"
@@ -1247,13 +1246,19 @@ const GridBase = memo(({
                             paginationRowsPerPage: tTranslate('Rows per page', tOpts),
                             paginationDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
                             toolbarQuickFilterLabel: tTranslate('Search', tOpts),
-                            toolbarFiltersTooltipActive: (count) => `${count} ${tTranslate('active filter', { count, ...tOpts })}`,
+                            toolbarFiltersTooltipActive: (count) => {
+                                const key = count === 1 ? 'active filter' : 'active filters';
+                                return `${count} ${tTranslate(key, tOpts)}`;
+                            },
                             columnHeaderSortIconLabel: tTranslate('Sort', tOpts),
                             filterPanelOperatorAnd: tTranslate('And', tOpts),
                             filterPanelOperatorOr: tTranslate('Or', tOpts),
                             noResultsOverlayLabel: tTranslate('No results found', tOpts),
-                            columnHeaderFiltersTooltipActive: (count) => `${count} ${tTranslate('active filter', { count, ...tOpts })}`,
-                            detailPanelToggle: tTranslate("Detail panel toggle", tOpts),
+                            columnHeaderFiltersTooltipActive: (count) => {
+                                const key = count === 1 ? 'active filter' : 'active filters';
+                                return `${count} ${tTranslate(key, tOpts)}`;
+                            },
+                            detailPanelToggle: tTranslate('Detail panel toggle', tOpts),
                             checkboxSelectionHeaderName: tTranslate('Checkbox selection', tOpts),
                             columnsManagementShowHideAllText: tTranslate('Show/Hide all', tOpts),
                             noColumnsOverlayLabel: tTranslate('No columns', tOpts),
@@ -1272,7 +1277,7 @@ const GridBase = memo(({
                 {isDeleting && !errorMessage && (
                     <DialogComponent open={isDeleting} onConfirm={handleDelete} onCancel={() => setIsDeleting(false)} title="Confirm Delete">
                         <DeleteContentText>
-                            Are you sure you want to delete {record.name && <Tooltip style={{ display: "inline" }} title={record.name} arrow>
+                            {tTranslate("Are you sure you want to delete", tOpts)} {record.name && <Tooltip style={{ display: "inline" }} title={record.name} arrow>
                                 {record.name.length > 30 ? `${record.name.slice(0, 30)}...` : record.name}
                             </Tooltip>} ?
                         </DeleteContentText>
@@ -1285,7 +1290,7 @@ const GridBase = memo(({
                         title="Confirm Add"
                     >
                         <DeleteContentText>
-                            Are you sure you want to add {selectedSet.current.size} records?
+                            {tTranslate("Are you sure you want to add", tOpts)} {selectedSet.current.size} {tTranslate("records", { count: selectedSet.current.size, ...tOpts })}?
                         </DeleteContentText>
                     </DialogComponent>
                 )}
