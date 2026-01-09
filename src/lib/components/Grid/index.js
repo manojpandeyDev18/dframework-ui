@@ -1056,8 +1056,8 @@ const GridBase = memo(({
         <>
             {showPageTitle && <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
                 breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />}
-            <Box style={gridStyle || customStyle} elevation={0} sx={{ '& .MuiCardContent-root': { p: 0 } }}>
-                <Box sx={{ display: 'flex', maxHeight: '75vh', flexDirection: 'column' }}>
+            <Box style={gridStyle || customStyle}>
+                <Box sx={{ display: 'flex', maxHeight: '80vh', flexDirection: 'column' }}>
                     <DataGridPremium
                         sx={{
                             "& .MuiTablePagination-selectLabel": {
@@ -1067,10 +1067,12 @@ const GridBase = memo(({
                                 marginTop: 2
                             },
                             "& .MuiDataGrid-virtualScroller ": {
-                                zIndex: '2',
+                                zIndex: 2,
                             }
                         }}
                         headerFilters={showHeaderFilters}
+                        unstable_headerFilters={showHeaderFilters} //for older versions of mui
+                        autoHeight
                         checkboxSelection={forAssignment}
                         loading={isLoading}
                         className="pagination-fix"
@@ -1245,12 +1247,12 @@ const GridBase = memo(({
                             paginationRowsPerPage: tTranslate('Rows per page', tOpts),
                             paginationDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
                             toolbarQuickFilterLabel: tTranslate('Search', tOpts),
-                            toolbarFiltersTooltipActive: (count) => `${count} ${tTranslate(`active filter${count > 1 ? 's' : ''}`, tOpts)}`,
+                            toolbarFiltersTooltipActive: (count) => `${count} ${tTranslate('active filter', { count, ...tOpts })}`,
                             columnHeaderSortIconLabel: tTranslate('Sort', tOpts),
                             filterPanelOperatorAnd: tTranslate('And', tOpts),
                             filterPanelOperatorOr: tTranslate('Or', tOpts),
                             noResultsOverlayLabel: tTranslate('No results found', tOpts),
-                            columnHeaderFiltersTooltipActive: (count) => `${count} ${tTranslate(count === 1 ? 'active filter' : 'active filters', tOpts)}`,
+                            columnHeaderFiltersTooltipActive: (count) => `${count} ${tTranslate('active filter', { count, ...tOpts })}`,
                             detailPanelToggle: tTranslate("Detail panel toggle", tOpts),
                             checkboxSelectionHeaderName: tTranslate('Checkbox selection', tOpts),
                             columnsManagementShowHideAllText: tTranslate('Show/Hide all', tOpts),
@@ -1259,10 +1261,7 @@ const GridBase = memo(({
                             columnsManagementReset: tTranslate('Reset', tOpts),
                             groupColumn: (name) => `${tTranslate('Group by', tOpts)} ${name}`,
                             unGroupColumn: (name) => `${tTranslate('Ungroup', tOpts)} ${name}`,
-                            footerRowSelected: (count) =>
-                                count !== 1
-                                    ? `${count.toLocaleString()} ${tTranslate('items selected', tOpts)}`
-                                    : `1 ${tTranslate('item selected', tOpts)}`,
+                            footerRowSelected: (count) => `${count.toLocaleString()} ${tTranslate('item selected', { count, ...tOpts })}`,
                         }}
                         showToolbar={true}
                         columnHeaderHeight={columnHeaderHeight}
