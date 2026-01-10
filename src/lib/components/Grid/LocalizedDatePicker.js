@@ -68,8 +68,8 @@ const LocalizedDatePicker = (props) => {
                     textField: {
                         variant: "standard", label: props.label,
                         sx: {
-                            marginTop: '-10px',
-                            marginBottom: '-16px',
+                            marginTop: 0,
+                            marginBottom: 0,
                         }
                     }
                 }}

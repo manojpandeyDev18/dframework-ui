@@ -65,7 +65,17 @@ const StateProvider = ({ children }) => {
    */
   async function getAllSavedPreferences({ preferenceName, Username, history, dispatchData, preferenceApi, defaultPreferenceEnums = {}, addDefaultPreference = false }) {
     const response = await request({ url: preferenceApi, params: { action: 'list', id: preferenceName, Username }, history, dispatchData }) || {};
-    const responseData = typeof response === 'string' ? JSON.parse(response) : response;
+    let responseData = {};
+    if (typeof response === 'string') {
+      try {
+        responseData = JSON.parse(response);
+      } catch (error) {
+        console.error('Failed to parse preferences response as JSON:', error);
+        responseData = {};
+      }
+    } else if (response && typeof response === 'object') {
+      responseData = response;
+    }
     const preferences = responseData.preferences || [];
     if (addDefaultPreference) {
       preferences.unshift({

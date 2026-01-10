@@ -109,7 +109,18 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
             prefIdArray: id
         };
         const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData });
-        const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
+        let response = rawResponse;
+        if (typeof rawResponse === 'string') {
+            try {
+                response = JSON.parse(rawResponse);
+            } catch (error) {
+                if (typeof console !== 'undefined' && typeof console.error === 'function') {
+                    console.error('Failed to parse deletePreference response:', error, rawResponse);
+                }
+                snackbar.showMessage('An error occurred while processing the server response.');
+                return;
+            }
+        }
         if (response === true || response?.success) {
             if (prefName === currentPreference) {
                 removeCurrentPreferenceName({ dispatchData });
@@ -181,9 +192,26 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 prefId
             };
             const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
-            const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
-            userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-            if (response.prefName) {
+            let response = rawResponse;
+            if (typeof rawResponse === 'string') {
+                try {
+                    response = JSON.parse(rawResponse);
+                } catch (error) {
+                    console.error('Failed to parse preference response JSON', { error, rawResponse });
+                    return;
+                }
+            }
+            if (response && response.prefValue) {
+                try {
+                    userPreferenceCharts = JSON.parse(response.prefValue);
+                } catch (error) {
+                    console.error('Failed to parse preference value JSON', { error, prefValue: response.prefValue });
+                    return;
+                }
+            } else {
+                userPreferenceCharts = null;
+            }
+            if (response && response.prefName) {
                 defaultPreference = response.prefName;
             }
         }
