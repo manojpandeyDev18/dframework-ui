@@ -15,6 +15,9 @@ const componentMap = {
     datetime: DateTimePicker,
     dateTimeLocal: DateTimePicker
 };
+const DATEPICKER_MARGIN_TOP = '-10px';
+const DATEPICKER_MARGIN_BOTTOM = '-16px';
+
 const LocalizedDatePicker = (props) => {
     const { fixedFilterFormat } = utils;
     const { item, applyValue, convert } = props;
@@ -68,8 +71,8 @@ const LocalizedDatePicker = (props) => {
                     textField: {
                         variant: "standard", label: props.label,
                         sx: {
-                            marginTop: 0,
-                            marginBottom: 0,
+                            marginTop: DATEPICKER_MARGIN_TOP,
+                            marginBottom: DATEPICKER_MARGIN_BOTTOM
                         }
                     }
                 }}
