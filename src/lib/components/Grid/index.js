@@ -1266,7 +1266,10 @@ const GridBase = memo(({
                             columnsManagementReset: tTranslate('Reset', tOpts),
                             groupColumn: (name) => `${tTranslate('Group by', tOpts)} ${name}`,
                             unGroupColumn: (name) => `${tTranslate('Ungroup', tOpts)} ${name}`,
-                            footerRowSelected: (count) => `${count.toLocaleString()} ${tTranslate('item selected', { count, ...tOpts })}`,
+                            footerRowSelected: (count) => {
+                                const key = count === 1 ? 'item selected' : 'items selected';
+                                return `${count.toLocaleString()} ${tTranslate(key, tOpts)}`;
+                            }
                         }}
                         showToolbar={true}
                         columnHeaderHeight={columnHeaderHeight}
