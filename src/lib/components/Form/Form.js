@@ -178,8 +178,6 @@ const Form = ({
     }
   });
 
-  const { dirty } = formik;
-
   const handleDiscardChanges = () => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
@@ -219,7 +217,7 @@ const Form = ({
     });
   };
   const handleFormCancel = function (event) {
-    if (dirty && recordEditable) {
+    if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
       navigateBack !== false && handleNavigation();
