@@ -1,38 +1,38 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Box, Button, Checkbox, FormControlLabel, Grid, List, ListItem, ListItemButton, ListItemText, Menu, MenuItem, Stack, TextField, Typography, Tooltip, ListItemIcon } from '@mui/material';
-import { DataGridPremium, GridActionsCellItem, gridFilterModelSelector, gridSortModelSelector, useGridSelector, useGridApiRef } from '@mui/x-data-grid-premium';
+import { DataGridPremium, GridActionsCellItem, useGridApiRef } from '@mui/x-data-grid-premium';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useSnackbar } from '../SnackBar';
 import { useTranslation } from 'react-i18next';
-import request from './httpRequest';
+import request, { DATA_PARSERS } from './httpRequest';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
 import actionsStateProvider from '../useRouter/actions';
 import { DialogComponent } from '../Dialog';
 
 const actionTypes = {
-    Copy: "Copy",
     Edit: "Edit",
     Delete: "Delete"
 };
 
-const formTypes = {
-    Add: "Add",
-    Edit: "Edit",
-    Manage: 'Manage'
+const DIALOG_TYPES = {
+    ADD: "Add",
+    EDIT: "Modify",
+    MANAGE: "Manage",
+    NONE: null
 };
 
 const gridColumns = [
     { field: "prefName", type: 'string', width: 300, headerName: "Preference Name", sortable: false, filterable: false },
     { field: "prefDesc", type: 'string', width: 300, headerName: "Preference Description", sortable: false, filterable: false },
     { field: "isDefault", type: "boolean", width: 100, headerName: "Default", sortable: false, filterable: false },
-    { field: 'editAction', type: 'actions', headerName: '', width: 20, getActions: () => [<GridActionsCellItem key={1} icon={<Tooltip title={actionTypes.Edit}>   <EditIcon /></Tooltip>} tabIndex={1} data-action={actionTypes.Edit} label="Edit" color="primary" />] },
-    { field: 'deleteAction', type: 'actions', headerName: '', width: 20, getActions: () => [<GridActionsCellItem key={2} icon={<Tooltip title={actionTypes.Delete}><DeleteIcon /> </Tooltip>} tabIndex={2} data-action={actionTypes.Delete} label="Delete" color="error" />] }
+    { field: 'editAction', type: 'actions', headerName: '', width: 20, getActions: () => [<GridActionsCellItem key={1} icon={<Tooltip title={actionTypes.Edit}><EditIcon /></Tooltip>} tabIndex={1} data-action={actionTypes.Edit} label="Edit" color="primary" />] },
+    { field: 'deleteAction', type: 'actions', headerName: '', width: 20, getActions: () => [<GridActionsCellItem key={2} icon={<Tooltip title={actionTypes.Delete}><DeleteIcon /></Tooltip>} tabIndex={2} data-action={actionTypes.Delete} label="Delete" color="error" />] }
 ];
 
 const initialValues = {
@@ -40,28 +40,31 @@ const initialValues = {
     prefDesc: '',
     isDefault: false
 };
+
 const pageSizeOptions = [5, 10, 20, 50, 100];
-const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, columns = [], setIsGridPreferenceFetched }) => {
+
+const GridPreferences = ({ preferenceName, gridRef }) => {
     const { stateData, dispatchData, removeCurrentPreferenceName, getAllSavedPreferences } = useStateContext();
     const { navigate } = useRouter();
     const apiRef = useGridApiRef();
     const snackbar = useSnackbar();
-    const { t: translate, i18n } = useTranslation();
-    const tOpts = { t: translate, i18n };
-    const [openDialog, setOpenDialog] = useState(false);
-    const [openForm, setOpenForm] = useState(false);
-    const [filteredPrefs, setFilteredPrefs] = useState([]);
-    const [formType, setFormType] = useState();
-    const [menuAnchorEl, setMenuAnchorEl] = useState();
+    const { t } = useTranslation();
+    const [dialogState, setDialogState] = useState(DIALOG_TYPES.NONE);
+    const [menuAnchorEl, setMenuAnchorEl] = useState(null);
     const [openPreferenceExistsModal, setOpenPreferenceExistsModal] = useState(false);
     const [openConfirmDeleteDialog, setOpenConfirmDeleteDialog] = useState({});
     const { Username } = stateData?.getUserData ? stateData.getUserData : {};
-    const preferences = stateData?.preferences;
+    const preferences = stateData?.preferences || [];
     const currentPreference = stateData?.currentPreference;
-    const preferenceApi = stateData?.gridSettings?.permissions?.preferenceApi; // this is the api endpoint used to fetch, save, edit or delete the preferences, passed via redux form application.
+    const preferenceApi = stateData?.gridSettings?.permissions?.preferenceApi;
     const defaultPreferenceEnums = stateData?.gridSettings?.permissions?.defaultPreferenceEnums;
-    const filterModel = useGridSelector(gridRef, gridFilterModelSelector);
-    const sortModel = useGridSelector(gridRef, gridSortModelSelector);
+
+    // Filter out the default preference (prefId === 0) for the management grid
+    const nonDefaultPreferences = useMemo(() => 
+        preferences.filter(pref => pref.prefId !== 0), 
+        [preferences]
+    );
+
     const validationSchema = useMemo(() => {
         const schema = yup.object({
             prefName: yup
@@ -73,10 +76,6 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
         });
         return schema;
     }, []);
-
-    useEffect(() => {
-        setFilteredPrefs(preferences?.filter(pref => pref.prefId !== 0));
-    }, [preferences]);
 
     const formik = useFormik({
         initialValues,
@@ -96,94 +95,50 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
     };
 
     const handleDialogClose = () => {
-        setFormType();
+        setDialogState(DIALOG_TYPES.NONE);
         handleClose();
-        setOpenDialog(false);
     };
 
-    const deletePreference = async (id, prefName) => {
-        const params = {
-            action: 'delete',
-            id: preferenceName,
-            Username,
-            prefIdArray: id
-        };
-        const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData });
-        let response = rawResponse;
-        if (typeof rawResponse === 'string') {
-            try {
-                response = JSON.parse(rawResponse);
-            } catch (error) {
-                if (typeof console !== 'undefined' && typeof console.error === 'function') {
-                    console.error('Failed to parse deletePreference response:', error, rawResponse);
-                }
-                snackbar.showMessage('An error occurred while processing the server response.');
-                return;
-            }
-        }
-        if (response === true || response?.success) {
-            if (prefName === currentPreference) {
-                removeCurrentPreferenceName({ dispatchData });
-            }
-            snackbar.showMessage('Preference Deleted Successfully.');
-        }
-    };
-
-    const applySelectedPreference = async (prefId) => {
-        if (setIsGridPreferenceFetched) {
-            setIsGridPreferenceFetched(false);
-        }
-        await applyPreference(prefId);
-    };
     const savePreference = async (values) => {
         const presetName = values.prefName.trim();
         const preferenceAlreadyExists = preferences.findIndex(ele => ele.prefName === presetName);
-        // if any default preferences maintain them inside the preferences array.
-        if (preferenceAlreadyExists > -1 && (formType === formTypes.Add || preferences[preferenceAlreadyExists].prefId !== values.prefId)) {
+        
+        if (preferenceAlreadyExists > -1 && (dialogState === DIALOG_TYPES.ADD || preferences[preferenceAlreadyExists].prefId !== values.prefId)) {
             setOpenPreferenceExistsModal(true);
             return;
         }
-        const { pinnedColumns } = gridRef.current.state;
-        const { orderedFields, columnVisibilityModel, lookup } = gridRef.current.state.columns;
-        const gridColumn = [];
-        orderedFields?.forEach(ele => {
-            const { field } = lookup[ele];
-            const col = columns.find(ele => ele.field === field) || lookup[ele];
-            col.width = lookup[ele].width;
-            gridColumn.push(col);
-        });
-        const filter = filterModel?.items?.map(ele => {
-            const { field, operator, value } = ele;
-            return { field, operator, value };
-        });
-        filterModel.items = filter;
+
+        // Use MUI's exportState to capture current grid state
+        const gridState = gridRef.current.exportState();
+        
         const params = {
             action: 'save',
             id: preferenceName,
             prefName: presetName,
             prefDesc: values.prefDesc,
-            prefValue: { sortModel, filterModel, columnVisibilityModel, gridColumn, pinnedColumns },
+            prefValue: gridState,
             isDefault: values.isDefault
         };
-        if (values.prefId) {
-            params["prefId"] = values.prefId;
-        }
-        const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData });
-        const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
-        const action = formType === formTypes.Add ? "Added" : "Saved";
+        
+        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData, dataParser: DATA_PARSERS.json });
+        
         if (response === true || response?.success === true) {
-            snackbar.showMessage(`Preference ${action} Successfully.`);
+            const action = dialogState === DIALOG_TYPES.ADD ? "Added" : "Saved";
+            snackbar.showMessage(t(`Preference ${action} Successfully.`));
             handleDialogClose();
+            getAllSavedPreferences({ preferenceName, Username, history: navigate, dispatchData, preferenceApi, defaultPreferenceEnums });
+            return;
         }
-        getAllSavedPreferences({ preferenceName, Username, history: navigate, dispatchData, preferenceApi, defaultPreferenceEnums });
+
+        snackbar.showMessage(t(response.message || 'An error occurred while saving the preference.'));
     };
 
     const applyPreference = async (prefId) => {
-        let userPreferenceCharts;
-        let defaultPreference = 'Default';
-        // Check if prefId is 0, if so, use defaultPreferenceEnums, otherwise fetch from API
+        let gridState;
+        let newPreferenceName = 'Default';
+        
         if (prefId === 0) {
-            userPreferenceCharts = defaultPreferenceEnums[preferenceName] || null;
+            gridState = defaultPreferenceEnums[newPreferenceName] || null;
         } else {
             const params = {
                 action: 'load',
@@ -191,80 +146,66 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 Username,
                 prefId
             };
-            const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
-            let response = rawResponse;
-            if (typeof rawResponse === 'string') {
+            const response = await request({ url: preferenceApi, params, history: navigate, dispatchData, dataParser: DATA_PARSERS.json });
+            
+            if (response?.prefValue) {
                 try {
-                    response = JSON.parse(rawResponse);
+                    gridState = typeof response.prefValue === 'string' ? JSON.parse(response.prefValue) : response.prefValue;
                 } catch (error) {
-                    console.error('Failed to parse preference response JSON', { error, rawResponse });
+                    snackbar.showMessage(t('Failed to parse preference data.'));
                     return;
                 }
             }
-            if (response && response.prefValue) {
-                try {
-                    userPreferenceCharts = JSON.parse(response.prefValue);
-                } catch (error) {
-                    console.error('Failed to parse preference value JSON', { error, prefValue: response.prefValue });
-                    return;
-                }
-            } else {
-                userPreferenceCharts = null;
-            }
-            if (response && response.prefName) {
-                defaultPreference = response.prefName;
+
+            if (response?.prefName) {
+                newPreferenceName = response.prefName;
             }
         }
 
-        // If userPreferenceCharts is available, apply preferences to the grid
-        if (!userPreferenceCharts) return;
-        const { gridColumn, columnVisibilityModel, pinnedColumns, sortModel, filterModel } = userPreferenceCharts;
-        gridColumn.forEach(({ field, width }) => {
-            if (gridRef.current.getColumnIndex(field) !== -1) {
-                gridRef.current.setColumnWidth(field, width);
-            }
-        });
-        gridRef.current.setColumnVisibilityModel(columnVisibilityModel);
-        gridRef.current.state.columns.orderedFields = gridColumn.map(({ field }) => field);
-        gridRef.current.setPinnedColumns(pinnedColumns);
-        gridRef.current.setSortModel(sortModel || []);
-        gridRef.current.setFilterModel(filterModel);
-
-        dispatchData({ type: actionsStateProvider.SET_CURRENT_PREFERENCE_NAME, payload: defaultPreference });
-        setIsGridPreferenceFetched(true);
-    };
-
-    const getGridRowId = (row) => {
-        return row['GridPreferenceId'];
-    };
-
-    const openModal = (params, openFormModal = true) => {
-        setFormType(params);
-        handleClose();
-        setOpenDialog(true);
-        setOpenForm(openFormModal);
-        if (openFormModal) {
-            formik.resetForm();
+        if (!gridState) {
+            snackbar.showMessage(t('Failed to load preference.'));
+            return;
         }
-    };
 
-    const confirmDeletePreference = async () => {
+        // Use MUI's restoreState to apply the grid state
+        gridRef.current.restoreState(gridState);
+        
+        dispatchData({ type: actionsStateProvider.SET_CURRENT_PREFERENCE_NAME, payload: newPreferenceName });
+    };
+    const deletePreference = async () => {
         const { prefId, preferenceName: currentPrefname } = openConfirmDeleteDialog;
-        await deletePreference(prefId, currentPrefname);
-        getAllSavedPreferences({ preferenceName, history: navigate, dispatchData, Username, preferenceApi, defaultPreferenceEnums });
-        setOpenConfirmDeleteDialog({});
+
+        const params = {
+            action: 'delete',
+            id: currentPrefname,
+            Username,
+            prefIdArray: prefId
+        };
+        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData, dataParser: DATA_PARSERS.json });
+        
+        if (response === true || response?.success === true) {
+            if (currentPrefname === currentPreference) {
+                removeCurrentPreferenceName({ dispatchData });
+            }
+            snackbar.showMessage(t('Preference Deleted Successfully.'));
+            getAllSavedPreferences({ preferenceName: newPreferenceName, history: navigate, dispatchData, Username, preferenceApi, defaultPreferenceEnums });
+            setOpenConfirmDeleteDialog({});
+            return;
+        }
+            
+        snackbar.showMessage(t(response?.message || 'An error occurred while deleting the preference.'));
     };
 
     const onCellClick = async (cellParams) => {
         const action = cellParams.field === 'editAction' ? actionTypes.Edit : cellParams.field === 'deleteAction' ? actionTypes.Delete : null;
-        if (cellParams.id === 0 && (action === actionTypes.Edit || action === actionTypes.Delete)) {
-            snackbar.showMessage(`Default Preference Can Not Be ${action === actionTypes.Edit ? 'Edited' : 'Deleted'}`);
+        if (cellParams.id === 0 && action) {
+            const actionText = action === actionTypes.Edit ? 'Edited' : 'Deleted';
+            snackbar.showMessage(t(`Default preference cannot be ${actionText}`));
             return;
         }
         if (action === actionTypes.Edit) {
-            setFormType('Modify');
+            setDialogState(DIALOG_TYPES.EDIT);
             formik.setValues(cellParams?.row);
-            setOpenForm(true);
         }
         if (action === actionTypes.Delete) {
             setOpenConfirmDeleteDialog({
@@ -274,9 +215,17 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
         }
     };
 
-    const prefName = formik.values.prefName.trim();
-    // represent manage preferences form type.
-    const isManageForm = formType === formTypes.Manage;
+    const isManageDialog = dialogState === DIALOG_TYPES.MANAGE;
+    const isFormDialog = dialogState === DIALOG_TYPES.ADD || dialogState === DIALOG_TYPES.EDIT;
+
+    const openDialog = (type) => {
+        setDialogState(type);
+        handleClose();
+        if (type === DIALOG_TYPES.ADD) {
+            formik.resetForm();
+        }
+    };
+    
     return (
         <Box>
             <Button
@@ -285,10 +234,10 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 aria-haspopup="true"
                 aria-expanded={menuAnchorEl ? 'true' : undefined}
                 onClick={handleOpen}
-                title={tTranslate('Preference', tOpts)}
+                title={t('Preference')}
                 startIcon={<SettingsIcon />}
             >
-                {tTranslate('Preferences', tOpts)} {currentPreference && `(${currentPreference})`}
+                {t('Preferences')} {currentPreference && `(${currentPreference})`}
             </Button>
             <Menu
                 id={`grid-preference-menu`}
@@ -313,46 +262,44 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                     }
                 }}
             >
-                <MenuItem component={ListItemButton} dense onClick={() => openModal(formTypes.Add)}>
-                    {tTranslate('Add Preference', tOpts)}
+                <MenuItem component={ListItemButton} dense onClick={() => openDialog(DIALOG_TYPES.ADD)}>
+                    {t('Add Preference')}
                 </MenuItem>
-                <MenuItem component={ListItemButton} dense divider={preferences?.length > 0} onClick={() => openModal(formTypes.Manage, false)}>
+                <MenuItem component={ListItemButton} dense divider={preferences?.length > 0} onClick={() => openDialog(DIALOG_TYPES.MANAGE)}>
                     <ListItemIcon>
                         <SettingsIcon />
                     </ListItemIcon>
-                    {tTranslate('Manage Preferences', tOpts)}
+                    {t('Manage Preferences')}
                 </MenuItem>
 
                 {preferences?.length > 0 && preferences?.map((ele) => {
                     const { prefName, prefDesc, prefId } = ele;
                     return (
                         <MenuItem
-                            onClick={() => applySelectedPreference(prefId)}
+                            onClick={() => applyPreference(prefId)}
                             component={ListItem}
                             selected={currentPreference === prefName}
                             key={`pref-item-${prefId}`}
-                            title={tTranslate(prefDesc, tOpts)}
+                            title={t(prefDesc)}
                             dense
                         >
-                            <ListItemText primary={tTranslate(prefName, tOpts)} />
+                            <ListItemText primary={t(prefName)} />
                         </MenuItem>
                     );
                 })}
             </Menu>
             <DialogComponent
-                open={openDialog}
+                open={dialogState !== DIALOG_TYPES.NONE}
                 disableRestoreFocus
                 title={
-                    <Stack direction="row" columnGap={2}>
-                        <Typography variant="h5" >
-                            {formType} {tTranslate(`Preference${(formType === formTypes.Manage ? 's' : '')}`, tOpts)}
-                        </Typography>
-                    </Stack>
+                    <Typography variant="h5">
+                        {dialogState} {t(isManageDialog ? 'Preferences' : 'Preference')}
+                    </Typography>
                 }
-                maxWidth={isManageForm ? 'md' : 'sm'}
+                maxWidth={isManageDialog ? 'md' : 'sm'}
                 fullWidth
             >
-                {openForm && (
+                {isFormDialog && (
                     <Grid
                         component={'form'}
                         onSubmit={formik.handleSubmit}
@@ -369,17 +316,17 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                     >
                         <Grid size={12}>
                             <TextField
-                                defaultValue={tTranslate(formik.values.prefName, tOpts)}
+                                value={formik.values.prefName}
                                 variant="outlined"
                                 size="small"
                                 margin="dense"
                                 label={
                                     <span>
-                                        {tTranslate('Preference Name', tOpts)} <span style={{ color: 'red' }}>*</span>
+                                        {t('Preference Name')} <span style={{ color: 'red' }}>*</span>
                                     </span>
                                 }
                                 autoFocus
-                                name={'prefName'}
+                                name="prefName"
                                 onChange={formik.handleChange}
                                 error={!!formik.errors.prefName}
                                 helperText={formik.errors.prefName}
@@ -388,14 +335,14 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                         </Grid>
                         <Grid size={12}>
                             <TextField
-                                defaultValue={tTranslate(formik.values.prefDesc, tOpts)}
+                                value={formik.values.prefDesc}
                                 variant="outlined"
                                 multiline
                                 rows={2}
                                 size="small"
                                 margin="dense"
-                                label={tTranslate('Preference Description', tOpts)}
-                                name={'prefDesc'}
+                                label={t('Preference Description')}
+                                name="prefDesc"
                                 onChange={formik.handleChange}
                                 error={!!formik.errors.prefDesc}
                                 helperText={formik.errors.prefDesc}
@@ -407,11 +354,11 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                                 control={
                                     <Checkbox
                                         checked={formik.values.isDefault}
-                                        name={'isDefault'}
+                                        name="isDefault"
                                         onChange={formik.handleChange}
                                     />
                                 }
-                                label={tTranslate('Default', tOpts)}
+                                label={t('Default')}
                             />
                         </Grid>
                         <Grid size={12}>
@@ -424,7 +371,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                                     variant="contained"
                                     disableElevation
                                 >
-                                    {tTranslate('Save', tOpts)}
+                                    {t('Save')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -435,14 +382,14 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                                     onClick={handleDialogClose}
                                     disableElevation
                                 >
-                                    {tTranslate('Close', tOpts)}
+                                    {t('Close')}
                                 </Button>
                             </Stack>
                         </Grid>
                     </Grid>
                 )}
 
-                {(openDialog && formType === formTypes.Manage) && (
+                {isManageDialog && (
                     <Grid container rowGap={2}>
                         <Grid size={12}>
                             <DataGridPremium
@@ -462,9 +409,9 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                                 columns={gridColumns}
                                 pageSizeOptions={pageSizeOptions}
                                 pagination
-                                rowCount={filteredPrefs.length}
-                                rows={filteredPrefs}
-                                getRowId={getGridRowId}
+                                rowCount={nonDefaultPreferences.length}
+                                rows={nonDefaultPreferences}
+                                getRowId={(row) => row['GridPreferenceId']}
                                 slots={{
                                     headerFilterMenu: false
                                 }}
@@ -488,7 +435,7 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                                     onClick={handleDialogClose}
                                     disableElevation
                                 >
-                                    {tTranslate('Close', tOpts)}
+                                    {t('Close')}
                                 </Button>
                             </Stack>
                         </Grid>
@@ -499,19 +446,19 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 open={openPreferenceExistsModal}
                 onConfirm={() => setOpenPreferenceExistsModal(false)}
                 title=""
-                okText={tTranslate('Ok', tOpts)}
+                okText={t('Ok')}
                 cancelText=""
             >
-                "{prefName}" {tTranslate('name already in use, please use another name.', tOpts)}
+                "{formik.values.prefName.trim()}" {t('name already in use, please use another name.')}
             </DialogComponent>
             <DialogComponent
-                open={openConfirmDeleteDialog.preferenceName}
-                onConfirm={confirmDeletePreference}
+                open={!!openConfirmDeleteDialog.preferenceName}
+                onConfirm={deletePreference}
                 onCancel={() => setOpenConfirmDeleteDialog({})}
-                title="Confirm delete"
+                title={t('Confirm delete')}
                 yesNo={true}
             >
-                Are you sure you wish to delete "{openConfirmDeleteDialog.preferenceName}"
+                {t('Are you sure you wish to delete')} "{openConfirmDeleteDialog.preferenceName}"
             </DialogComponent>
         </Box>
     );

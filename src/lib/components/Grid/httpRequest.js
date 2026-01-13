@@ -70,7 +70,90 @@ const transport = async (config) => {
     return responseObj;
 };
 
-const request = async ({ url, params = {}, history, jsonPayload = false, additionalParams = {}, additionalHeaders = {}, disableLoader = false, dispatchData }) => {
+/**
+ * Default data parsers for different response types
+ * Use these to normalize API responses to a consistent type
+ */
+const DATA_PARSERS = {
+    /**
+     * Parse JSON string or return object as-is
+     * Automatically handles string JSON responses
+     */
+    json: (data) => {
+        if (typeof data === 'string') {
+            return JSON.parse(data);
+        }
+        return data;
+    },
+    /**
+     * Convert to string
+     */
+    text: (data) => String(data),
+    /**
+     * Return data as-is without parsing
+     */
+    raw: (data) => data
+};
+
+/**
+ * Enhanced HTTP request handler with automatic data parsing
+ * 
+ * @param {Object} config - Request configuration
+ * @param {string} config.url - API endpoint URL
+ * @param {Object} config.params - Request parameters
+ * @param {Function} config.history - Navigation function for redirects
+ * @param {boolean} config.jsonPayload - Whether to send JSON payload instead of FormData
+ * @param {Object} config.additionalParams - Additional fetch parameters
+ * @param {Object} config.additionalHeaders - Additional request headers
+ * @param {boolean} config.disableLoader - Whether to disable the loading indicator
+ * @param {Function} config.dispatchData - Redux dispatch function
+ * @param {Function} config.dataParser - Parser function to normalize response data (default: DATA_PARSERS.raw)
+ * @param {Function} config.onParseError - Custom error handler for parse failures
+ * 
+ * @returns {Promise<any>} Parsed response data or error object
+ * 
+ * @example
+ * // Basic usage with automatic JSON parsing
+ * const data = await request({ 
+ *   url: '/api/data', 
+ *   params: { id: 1 },
+ *   dispatchData 
+ * });
+ * 
+ * @example
+ * // With custom error handling
+ * const data = await request({ 
+ *   url: '/api/data',
+ *   params: { id: 1 },
+ *   dispatchData,
+ *   onParseError: (error, rawData) => {
+ *     console.error('Parse failed:', error);
+ *     return { error: true, message: 'Custom error message' };
+ *   }
+ * });
+ * 
+ * @example
+ * // Using text parser
+ * const text = await request({ 
+ *   url: '/api/text', 
+ *   params: {},
+ *   dispatchData,
+ *   dataParser: DATA_PARSERS.text
+ * });
+ */
+
+const request = async ({ 
+    url, 
+    params = {}, 
+    history, 
+    jsonPayload = false, 
+    additionalParams = {}, 
+    additionalHeaders = {}, 
+    disableLoader = false, 
+    dispatchData,
+    dataParser = DATA_PARSERS.raw,
+    onParseError
+}) => {
     if (params.exportData) {
         return exportRequest(url, params);
     }
@@ -94,7 +177,7 @@ const request = async ({ url, params = {}, history, jsonPayload = false, additio
     try {
         const response = await transport(reqParams);
         pendingRequests--;
-        const data = response.data;
+        let data = response.data;
 
         if (pendingRequests === 0 && !disableLoader) {
             dispatchData({ type: 'UPDATE_LOADER_STATE', loaderOpen: false });
@@ -109,6 +192,23 @@ const request = async ({ url, params = {}, history, jsonPayload = false, additio
             // You can return the error object or handle as needed
             return { data: { message: data.message || 'An error occurred' } };
         }
+
+        // Apply data parser to normalize response
+        try {
+            data = dataParser(data);
+        } catch (parseError) {
+            if (onParseError) {
+                return onParseError(parseError, data);
+            }
+            // Return error in standard format
+            return { 
+                error: true, 
+                message: 'Failed to parse response data', 
+                parseError: parseError.message,
+                rawData: data 
+            };
+        }
+
         return data;
     } catch (ex) {
         pendingRequests--;
@@ -122,7 +222,8 @@ const request = async ({ url, params = {}, history, jsonPayload = false, additio
 
 export {
     HTTP_STATUS_CODES,
-    transport
+    transport,
+    DATA_PARSERS
 };
 
 export default request;
