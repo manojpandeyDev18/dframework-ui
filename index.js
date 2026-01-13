@@ -317,7 +317,7 @@ const ka = async ({ gridColumns: e, setIsLoading: t, setData: r, page: o, pageSi
       }), r(Y.data);
     } else rt(Y, u) || u(Y.statusText);
   } catch (R) {
-    R.response && !rt(R.response, u) && u("Could not list record", R.message || R.toString());
+    R.response && !rt(R.response, u) ? u("Could not list record", R.message || R.toString()) : u("Network failure or server unreachable. Please try again.");
   } finally {
     t(!1), !l && D && x({ type: z.UPDATE_LOADER_STATE, payload: !1 });
   }
