@@ -27,7 +27,7 @@ import Yo from "@mui/icons-material/Check";
 import dr from "@mui/icons-material/Close";
 import Jo from "@mui/icons-material/Help";
 import { Replay as Zo, Close as Qo } from "@mui/icons-material";
-import ie from "dayjs";
+import se from "dayjs";
 import Xo from "dayjs/plugin/utc";
 import ea from "dayjs/plugin/timezone";
 import { DatePicker as Wr } from "@mui/x-date-pickers/DatePicker";
@@ -791,8 +791,8 @@ const za = (e, t) => {
   "pt-PT": oi,
   "it-IT": ti
 };
-ie.extend(Xo);
-ie.extend(ea);
+se.extend(Xo);
+se.extend(ea);
 const nn = Gt(), on = Gt(null), Ll = ({ children: e }) => {
   const [t, r] = ao(za, Ga);
   function o(u, p, l) {
@@ -833,7 +833,7 @@ const nn = Gt(), on = Gt(null), Ll = ({ children: e }) => {
   function h({ value: u, useSystemFormat: p, showOnlyDate: l = !1, state: y, timeZone: c }) {
     if (!u) return "-";
     const f = o(p, l, y);
-    return c ? ie(u).tz(c).format(f) : ie(u).format(f);
+    return c ? se(u).tz(c).format(f) : se(u).format(f);
   }
   function C() {
     const u = t.dataLocalization, p = si[u];
@@ -963,19 +963,19 @@ function ci({
   ] });
 }
 const an = Oo()(ci);
-ie.extend(ta);
+se.extend(ta);
 const di = {
   date: Wr,
   datetime: ur,
   dateTimeLocal: ur
 }, ui = "-10px", pi = "-16px", fi = (e) => {
   const { fixedFilterFormat: t } = lt, { item: r, applyValue: o, convert: a } = e, { systemDateTimeFormat: s, stateData: i } = We(), d = e?.type || "date", h = t[d], C = (f) => {
-    const E = ie(f);
+    const E = se(f);
     return E.isValid() && E.year() > 1900;
   }, u = s(i.dateTime), p = (f) => {
-    if (!(d !== "date" && d !== "datetime" && d !== "dateTimeLocal" || ((x) => typeof x != "string" ? !1 : !ie(x, u, !0).isValid())(f))) {
+    if (!(d !== "date" && d !== "datetime" && d !== "dateTimeLocal" || ((x) => typeof x != "string" ? !1 : !se(x, u, !0).isValid())(f))) {
       if (a) {
-        f = ie(f).utc(), o({ ...r, value: f });
+        f = se(f).utc(), o({ ...r, value: f });
         return;
       }
       if (!C(f)) {
@@ -989,7 +989,7 @@ const di = {
       const E = f.split("-");
       return E.length === 3 ? E[1] : null;
     }
-  }, y = di[d], c = d === "dateTimeLocal" ? r?.value ? ie(r?.value.$d) : null : r?.value ? ie(r.value) : null;
+  }, y = di[d], c = d === "dateTimeLocal" ? r?.value ? se(r?.value.$d) : null : r?.value ? se(r.value) : null;
   return /* @__PURE__ */ n(ra, { dateAdapter: na, children: /* @__PURE__ */ n(
     y,
     {
@@ -1065,15 +1065,15 @@ const di = {
       Username: N,
       prefIdArray: P
     }, history: C, dispatchData: i });
-    let se = m;
+    let ie = m;
     if (typeof m == "string")
       try {
-        se = JSON.parse(m);
+        ie = JSON.parse(m);
       } catch (Ne) {
         typeof console < "u" && typeof console.error == "function" && console.error("Failed to parse deletePreference response:", Ne, m), p.showMessage("An error occurred while processing the server response.");
         return;
       }
-    (se === !0 || se?.success) && ($ === H && d({ dispatchData: i }), p.showMessage("Preference Deleted Successfully."));
+    (ie === !0 || ie?.success) && ($ === H && d({ dispatchData: i }), p.showMessage("Preference Deleted Successfully."));
   }, ke = async (P) => {
     a && a(!1), await $e(P);
   }, _e = async (P) => {
@@ -1082,16 +1082,16 @@ const di = {
       L(!0);
       return;
     }
-    const { pinnedColumns: m } = r.current.state, { orderedFields: se, columnVisibilityModel: Ne, lookup: Oe } = r.current.state.columns, qe = [];
-    se?.forEach((Ae) => {
+    const { pinnedColumns: m } = r.current.state, { orderedFields: ie, columnVisibilityModel: Ne, lookup: Oe } = r.current.state.columns, qe = [];
+    ie?.forEach((Ae) => {
       const { field: Ke } = Oe[Ae], Ye = o.find((Be) => Be.field === Ke) || Oe[Ae];
       Ye.width = Oe[Ae].width, qe.push(Ye);
     });
-    const ge = Q?.items?.map((Ae) => {
+    const ye = Q?.items?.map((Ae) => {
       const { field: Ke, operator: Ye, value: Be } = Ae;
       return { field: Ke, operator: Ye, value: Be };
     });
-    Q.items = ge;
+    Q.items = ye;
     const ce = {
       action: "save",
       id: t,
@@ -1134,10 +1134,10 @@ const di = {
       ne && ne.prefName && (ve = ne.prefName);
     }
     if (!$) return;
-    const { gridColumn: m, columnVisibilityModel: se, pinnedColumns: Ne, sortModel: Oe, filterModel: qe } = $;
-    m.forEach(({ field: ge, width: ce }) => {
-      r.current.getColumnIndex(ge) !== -1 && r.current.setColumnWidth(ge, ce);
-    }), r.current.setColumnVisibilityModel(se), r.current.state.columns.orderedFields = m.map(({ field: ge }) => ge), r.current.setPinnedColumns(Ne), r.current.setSortModel(Oe || []), r.current.setFilterModel(qe), i({ type: z.SET_CURRENT_PREFERENCE_NAME, payload: ve }), a(!0);
+    const { gridColumn: m, columnVisibilityModel: ie, pinnedColumns: Ne, sortModel: Oe, filterModel: qe } = $;
+    m.forEach(({ field: ye, width: ce }) => {
+      r.current.getColumnIndex(ye) !== -1 && r.current.setColumnWidth(ye, ce);
+    }), r.current.setColumnVisibilityModel(ie), r.current.state.columns.orderedFields = m.map(({ field: ye }) => ye), r.current.setPinnedColumns(Ne), r.current.setSortModel(Oe || []), r.current.setFilterModel(qe), i({ type: z.SET_CURRENT_PREFERENCE_NAME, payload: ve }), a(!0);
   }, Se = (P) => P.GridPreferenceId, dt = (P, $ = !0) => {
     J(P), Te(), E(!0), D($), $ && re.resetForm();
   }, xt = async () => {
@@ -1685,11 +1685,11 @@ const di = {
   baseFilters: H = [],
   ...R
 }) => {
-  const [K, Q] = M({ pageSize: Di, page: 0 }), [X, Ce] = M({ recordCount: 0, records: [], lookups: {} }), [re, Ee] = M(!0), Te = !!c, tt = x, [Le, ke] = M([]), [_e, $e] = M(!1), [Se, dt] = M(null), xt = { CreatedOn: !1, CreatedByUser: !1, ...e.columnVisibilityModel }, [ut, rt] = M(!1), he = qt(), P = e.paginationMode === U.client ? U.client : U.server, { t: $, i18n: ve } = mr(), m = { t: $, i18n: ve }, [se, Ne] = M(""), [Oe, qe] = M(Ei(o || e.defaultSort, U, wi)), ge = { items: [], logicOperator: "and", quickFilterValues: Array(0), quickFilterLogicOperator: "and" };
-  e.defaultFilters && (ge.items = [], e.defaultFilters.forEach((g) => {
-    ge.items.push(g);
+  const [K, Q] = M({ pageSize: Di, page: 0 }), [X, Ce] = M({ recordCount: 0, records: [], lookups: {} }), [re, Ee] = M(!0), Te = !!c, tt = x, [Le, ke] = M([]), [_e, $e] = M(!1), [Se, dt] = M(null), xt = { CreatedOn: !1, CreatedByUser: !1, ...e.columnVisibilityModel }, [ut, rt] = M(!1), he = qt(), P = e.paginationMode === U.client ? U.client : U.server, { t: $, i18n: ve } = mr(), m = { t: $, i18n: ve }, [ie, Ne] = M(""), [Oe, qe] = M(Ei(o || e.defaultSort, U, wi)), ye = { items: [], logicOperator: "and", quickFilterValues: Array(0), quickFilterLogicOperator: "and" };
+  e.defaultFilters && (ye.items = [], e.defaultFilters.forEach((g) => {
+    ye.items.push(g);
   }));
-  const [ce, ne] = M({ ...ge }), { navigate: de, getParams: pt, useParams: Ae, pathname: Ke } = Kt(), { id: Ye } = Ae() || pt, Be = Ye?.split("-")[0], nt = Ur(), { idProperty: I = "id", showHeaderFilters: ye = !0, disableRowSelectionOnClick: oe = !0, hideBackButton: Je = !1, hideTopFilters: Ze = !0, updatePageTitle: ft = !0, isElasticScreen: Dt = !1, navigateBack: It = !1, selectionApi: mt = {} } = e, Ve = e.readOnly === !0 || Y, un = e.allowDoubleClick === !1, Yt = Tr(X), pn = e.showAddIcon === !0, fn = e.columns.filter(({ link: g }) => !!g).map((g) => g.link), [yr, br] = M(!1), { stateData: Ue, dispatchData: Pe, formatDate: Jt, removeCurrentPreferenceName: mn, getAllSavedPreferences: hn, applyDefaultPreferenceIfExists: gn } = We(), { timeZone: Zt } = Ue, wt = { ...U.permissions, ...Ue.gridSettings.permissions, ...e.permissions, ...C }, { Username: yn } = Ue?.getUserData ? Ue.getUserData : {}, {
+  const [ce, ne] = M({ ...ye }), { navigate: de, getParams: pt, useParams: Ae, pathname: Ke } = Kt(), { id: Ye } = Ae() || pt, Be = Ye?.split("-")[0], nt = Ur(), { idProperty: I = "id", showHeaderFilters: ge = !0, disableRowSelectionOnClick: oe = !0, hideBackButton: Je = !1, hideTopFilters: Ze = !0, updatePageTitle: ft = !0, isElasticScreen: Dt = !1, navigateBack: It = !1, selectionApi: mt = {} } = e, Ve = e.readOnly === !0 || Y, un = e.allowDoubleClick === !1, Yt = Tr(X), pn = e.showAddIcon === !0, fn = e.columns.filter(({ link: g }) => !!g).map((g) => g.link), [yr, br] = M(!1), { stateData: Ue, dispatchData: Pe, formatDate: Jt, removeCurrentPreferenceName: mn, getAllSavedPreferences: hn, applyDefaultPreferenceIfExists: gn } = We(), { timeZone: Zt } = Ue, wt = { ...U.permissions, ...Ue.gridSettings.permissions, ...e.permissions, ...C }, { Username: yn } = Ue?.getUserData ? Ue.getUserData : {}, {
     gridSettings: {
       permissions: {
         routesWithNoChildRoute: bn = [],
@@ -2134,8 +2134,8 @@ const di = {
               zIndex: 2
             }
           },
-          headerFilters: ye,
-          unstable_headerFilters: ye,
+          headerFilters: ge,
+          unstable_headerFilters: ge,
           checkboxSelection: Te,
           loading: re,
           className: "pagination-fix",
@@ -2332,11 +2332,11 @@ const di = {
           columnHeaderHeight: Nn
         }
       ) }),
-      se && /* @__PURE__ */ v(je, { open: !!se, onConfirm: xr, onCancel: xr, title: "Info", hideCancelButton: !0, children: [
+      ie && /* @__PURE__ */ v(je, { open: !!ie, onConfirm: xr, onCancel: xr, title: "Info", hideCancelButton: !0, children: [
         " ",
-        se
+        ie
       ] }),
-      _e && !se && /* @__PURE__ */ n(je, { open: _e, onConfirm: Gn, onCancel: () => $e(!1), title: "Confirm Delete", children: /* @__PURE__ */ v(Rr, { children: [
+      _e && !ie && /* @__PURE__ */ n(je, { open: _e, onConfirm: Gn, onCancel: () => $e(!1), title: "Confirm Delete", children: /* @__PURE__ */ v(Rr, { children: [
         b("Are you sure you want to delete", m),
         " ",
         Se.name && /* @__PURE__ */ n(Fe, { style: { display: "inline" }, title: Se.name, arrow: !0, children: Se.name.length > 30 ? `${Se.name.slice(0, 30)}...` : Se.name }),
@@ -2503,15 +2503,15 @@ const Mi = 47, Ri = 58, Ni = 37, Bi = 40, Li = [8, 46, 9, 27, 13], Br = ({ value
       fullWidth: !0,
       format: d(!0, !1, h.dateTime),
       name: t,
-      value: ie(r.values[t]),
+      value: se(r.values[t]),
       onChange: (C) => {
-        const p = ie(C).hour(12).toISOString();
+        const p = se(C).hour(12).toISOString();
         r.setFieldValue(t, p);
       },
       onBlur: r.handleBlur,
       helperText: r.touched[t] && r.errors[t],
-      minDate: e.min ? ie(e.min) : null,
-      maxDate: e.max ? ie(e.max) : null,
+      minDate: e.min ? se(e.min) : null,
+      maxDate: e.max ? se(e.max) : null,
       disabled: i,
       slotProps: { textField: { fullWidth: !0, helperText: r.errors[t], variant: "standard" } }
     }
@@ -2528,18 +2528,18 @@ const Mi = 47, Ri = 58, Ni = 37, Bi = 40, Li = [8, 46, 9, 27, 13], Br = ({ value
       fullWidth: !0,
       format: a(!1, !1, s.dateTime),
       name: t,
-      value: ie(r.values[t]),
+      value: se(r.values[t]),
       onChange: (i) => r.setFieldValue(t, i),
       onBlur: r.handleBlur,
       helperText: r.touched[t] && r.errors[t],
-      minDateTime: e.min ? ie(e.min) : null,
-      maxDateTime: e.max ? ie(e.max) : null,
+      minDateTime: e.min ? se(e.min) : null,
+      maxDateTime: e.max ? se(e.max) : null,
       slotProps: { textField: { fullWidth: !0, helperText: r.errors[t], variant: "standard" } }
     }
   );
 }, Ui = ({ column: e, field: t, formik: r, otherProps: o }) => {
   let a = r.values[t];
-  return e.isUtc && (a = ie.utc(a).utcOffset(ie().utcOffset(), !0).format()), /* @__PURE__ */ fr(
+  return e.isUtc && (a = se.utc(a).utcOffset(se().utcOffset(), !0).format()), /* @__PURE__ */ fr(
     ha,
     {
       ...o,
@@ -2548,7 +2548,7 @@ const Mi = 47, Ri = 58, Ni = 37, Bi = 40, Li = [8, 46, 9, 27, 13], Br = ({ value
       key: t,
       fullWidth: !0,
       name: t,
-      value: ie(a),
+      value: se(a),
       onChange: (s) => (e.isUtc && (s = s && s.isValid() ? s.format("YYYY-MM-DDTHH:mm:ss") + ".000Z" : null), r.setFieldValue(t, s)),
       onBlur: r.handleBlur,
       helperText: r.touched[t] && r.errors[t],
@@ -3299,12 +3299,12 @@ const ms = $r(({ relation: e, parentFilters: t, parent: r, where: o, models: a, 
       setActiveRecord: qe
     });
   }, [k, F, e, _e]);
-  const se = qr({
+  const ie = qr({
     enableReinitialize: !0,
     initialValues: m,
     validationSchema: K,
     validateOnBlur: !1,
-    onSubmit: async (I, { resetForm: ye }) => {
+    onSubmit: async (I, { resetForm: ge }) => {
       Object.keys(I).forEach((oe) => {
         typeof I[oe] === De.string && (I[oe] = I[oe].trim());
       }), ae(!0), rn({
@@ -3318,19 +3318,19 @@ const ms = $r(({ relation: e, parentFilters: t, parent: r, where: o, models: a, 
         if (e.reloadOnSave)
           return window.location.reload();
         const Je = oe.info ? oe.info : `Record ${k === 0 ? "Added" : "Updated"} Successfully.`;
-        R.showMessage(Je), P !== !1 && $();
+        R.showMessage(Je), P !== !1 && $(), ge({ values: ie.values });
       }).catch((oe) => {
         R.showError(
           "An error occured.",
           oe
-        ), e.reloadOnSave && ye();
+        ), e.reloadOnSave && ge();
       }).finally(() => ae(!1));
     }
   }), Ne = () => {
-    se.resetForm(), Ee(!1), P !== !1 && $();
-  }, Oe = function(I, ye) {
-    R.showError(I, ye), $();
-  }, qe = function({ id: I, title: ye, record: oe, lookups: Je }) {
+    ie.resetForm(), Ee(!1), P !== !1 && $();
+  }, Oe = function(I, ge) {
+    R.showError(I, ge), $();
+  }, qe = function({ id: I, title: ge, record: oe, lookups: Je }) {
     const Ze = F.indexOf("-") > -1, ft = !I || I === "0", Dt = ft ? De.create : Ze ? De.copy : De.edit, It = ft ? "" : oe[e.linkColumn], mt = [{ text: e.breadCrumbs }, { text: Dt }];
     Ze && (oe[e.linkColumn] = ""), e.columns.forEach((Ve) => {
       Ve.skipCopy && Ze && (oe[Ve.field] = "");
@@ -3341,8 +3341,8 @@ const ms = $r(({ relation: e, parentFilters: t, parent: r, where: o, models: a, 
         breadcrumbs: mt
       }
     });
-  }, ge = function(I) {
-    se.dirty && Be ? Ee(!0) : P !== !1 && $(), I.preventDefault();
+  }, ye = function(I) {
+    ie.dirty && Be ? Ee(!0) : P !== !1 && $(), I.preventDefault();
   }, ce = async function() {
     try {
       H(!0), await tn({
@@ -3363,13 +3363,13 @@ const ms = $r(({ relation: e, parentFilters: t, parent: r, where: o, models: a, 
   if (ee)
     return /* @__PURE__ */ n(ct, { sx: { display: "flex", pt: "20%", justifyContent: "center" }, children: /* @__PURE__ */ n(ua, {}) });
   const de = function(I) {
-    const { name: ye, value: oe } = I.target;
-    te({ ...L, [ye]: oe });
+    const { name: ge, value: oe } = I.target;
+    te({ ...L, [ge]: oe });
   }, pt = async function(I) {
-    I && I.preventDefault(), typeof C === De.function && await C({ formik: se });
-    const { errors: ye } = se;
-    se.handleSubmit();
-    const oe = Object.keys(ye)[0], Je = ye[oe];
+    I && I.preventDefault(), typeof C === De.function && await C({ formik: ie });
+    const { errors: ge } = ie;
+    ie.handleSubmit();
+    const oe = Object.keys(ge)[0], Je = ge[oe];
     Je && R.showError(Je, null, "error");
     const Ze = e.columns.find(
       (ft) => ft.field === oe
@@ -3416,7 +3416,7 @@ const ms = $r(({ relation: e, parentFilters: t, parent: r, where: o, models: a, 
                   variant: "contained",
                   type: "cancel",
                   color: "error",
-                  onClick: ge,
+                  onClick: ye,
                   children: "Cancel"
                 }
               ),
@@ -3436,7 +3436,7 @@ const ms = $r(({ relation: e, parentFilters: t, parent: r, where: o, models: a, 
           s,
           {
             model: e,
-            formik: se,
+            formik: ie,
             data: L,
             fieldConfigs: $e,
             onChange: de,
