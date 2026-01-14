@@ -1,10 +1,8 @@
-import React, { createContext, useReducer, useContext } from 'react';
+import React, { createContext, useReducer, useContext, useRef } from 'react';
 import stateReducer from './stateReducer';
 import initialState from './initialState';
-import request from '../Grid/httpRequest';
 import { locales } from '../mui/locale/localization';
 import dayjs from 'dayjs';
-import actionsStateProvider from './actions';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
@@ -15,9 +13,25 @@ dayjs.extend(timezone);
 const StateContext = createContext();
 const RouterContext = createContext(null);
 
-const StateProvider = ({ children }) => {
+const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => {
 
   const [stateData, dispatchData] = useReducer(stateReducer, initialState);
+
+  // Initialize with provided endpoints or empty object
+  const apiEndpoints = useRef(initialApiEndpoints).current;
+
+  function setApiEndpoint(key, endpoint) {
+    apiEndpoints[key] = endpoint;
+  }
+
+  function getApiEndpoint(key) {
+    return apiEndpoints[key];
+  }
+
+  function buildUrl(controllerType, url) {
+    const baseUrl = apiEndpoints[controllerType || "default"] || '';
+    return `${baseUrl}${url}`;
+  }
 
   /**
    * Returns the system date and/or time format string based on user preferences and options.
@@ -48,101 +62,6 @@ const StateProvider = ({ children }) => {
       return userDateFormat;
     }
     return isDateFormatOnly ? 'DD-MM-YYYY' : 'DD-MM-YYYY hh:mm:ss A';
-  }
-
-  /**
-   * Fetches all saved preferences for a given grid and user, and updates the state.
-   * Optionally adds a default preference to the list.
-   *
-   * @param {Object} params - The parameters object.
-   * @param {string} params.preferenceName - The name of the grid or preference.
-   * @param {string} params.Username - The username for which to fetch preferences.
-   * @param {object} params.history - The history object for navigation.
-   * @param {function} params.dispatchData - The dispatch function to update state.
-   * @param {string} params.preferenceApi - The API endpoint for preferences.
-   * @param {Object} [params.defaultPreferenceEnums={}] - Default preferences mapping.
-   * @param {boolean} [params.addDefaultPreference=false] - Whether to add a default preference.
-   */
-  async function getAllSavedPreferences({ preferenceName, Username, history, dispatchData, preferenceApi, defaultPreferenceEnums = {}, addDefaultPreference = false }) {
-    const response = await request({ url: preferenceApi, params: { action: 'list', id: preferenceName, Username }, history, dispatchData }) || {};
-    let responseData = {};
-    if (typeof response === 'string') {
-      try {
-        responseData = JSON.parse(response);
-      } catch (error) {
-        console.error('Failed to parse preferences response as JSON:', error);
-        responseData = {};
-      }
-    } else if (response && typeof response === 'object') {
-      responseData = response;
-    }
-    const preferences = responseData.preferences || [];
-    if (addDefaultPreference) {
-      preferences.unshift({
-        prefName: "Default",
-        prefId: 0,
-        GridId: preferenceName,
-        GridPreferenceId: 0,
-        prefValue: defaultPreferenceEnums[preferenceName]
-      });
-    }
-    dispatchData({ type: actionsStateProvider.UDPATE_PREFERENCES, payload: preferences });
-    dispatchData({ type: actionsStateProvider.TOTAL_PREFERENCES, payload: preferences.length });
-    return preferences;
-  }
-
-  /**
-   * Filters out data elements whose fields do not exist in the grid's columns.
-   *
-   * @param {Object} params - The parameters object.
-   * @param {Object} params.gridRef - A reference to the grid component.
-   * @param {Array} params.data - The data array to filter.
-   * @returns {Array} The filtered array containing only elements with existing columns in the grid.
-   */
-  const filterNonExistingColumns = ({ gridRef, data }) => {
-    return data.filter(ele => gridRef.current.getColumnIndex(ele.field) !== -1);
-  };
-
-  /**
-   * Applies the default grid preference if it exists for the user, otherwise applies the default enum.
-   * Updates the grid and state accordingly.
-   *
-   * @param {Object} params - The parameters object.
-   * @param {Object} params.gridRef - Reference to the grid component.
-   * @param {Object} params.history - History object for navigation.
-   * @param {Function} params.dispatchData - Dispatch function to update state.
-   * @param {string} params.Username - Username for which to fetch preferences.
-   * @param {string} params.preferenceName - Name of the grid or preference.
-   * @param {Function} params.setIsGridPreferenceFetched - Callback to set grid preference fetched state.
-   * @param {string} params.preferenceApi - API endpoint for preferences.
-   * @param {Object} [params.defaultPreferenceEnums={}] - Default preferences mapping.
-   */
-  async function applyDefaultPreferenceIfExists({ preferences = [], gridRef, dispatchData, preferenceName, setIsGridPreferenceFetched, defaultPreferenceEnums = {} }) {
-    const defaultPreference = preferences.find(pref => pref.isDefault && pref.GridId === preferenceName);
-    const userPreferenceCharts = defaultPreference ? JSON.parse(defaultPreference.prefValue) : defaultPreferenceEnums[preferenceName];
-    if (userPreferenceCharts && Object.keys(userPreferenceCharts).length) {
-      userPreferenceCharts.gridColumn = filterNonExistingColumns({ gridRef, data: userPreferenceCharts.gridColumn });
-      userPreferenceCharts.sortModel = filterNonExistingColumns({ gridRef, data: userPreferenceCharts.sortModel });
-      userPreferenceCharts.filterModel.items = filterNonExistingColumns({ gridRef, data: userPreferenceCharts.filterModel.items });
-      gridRef.current.setColumnVisibilityModel(userPreferenceCharts.columnVisibilityModel);
-      gridRef.current.setPinnedColumns(userPreferenceCharts.pinnedColumns);
-      gridRef.current.setSortModel(userPreferenceCharts.sortModel || []);
-      gridRef.current.setFilterModel(userPreferenceCharts?.filterModel);
-      dispatchData({ type: actionsStateProvider.SET_CURRENT_PREFERENCE_NAME, payload: defaultPreference ? defaultPreference.prefName : 'Default' });
-    }
-    if (setIsGridPreferenceFetched) {
-      setIsGridPreferenceFetched(true);
-    }
-  }
-
-  /**
-   * Removes the current preference name from the state.
-   *
-   * @param {Object} params - The parameters object.
-   * @param {Function} params.dispatchData - Dispatch function to update state.
-   */
-  function removeCurrentPreferenceName({ dispatchData }) {
-    dispatchData({ type: actionsStateProvider.SET_CURRENT_PREFERENCE_NAME, payload: null });
   }
 
   /**
@@ -180,7 +99,7 @@ const StateProvider = ({ children }) => {
   }
 
   return (
-    <StateContext.Provider value={{ stateData, dispatchData, systemDateTimeFormat, formatDate, removeCurrentPreferenceName, getAllSavedPreferences, applyDefaultPreferenceIfExists, useLocalization }}>
+    <StateContext.Provider value={{ stateData, dispatchData, systemDateTimeFormat, formatDate, useLocalization, getApiEndpoint, setApiEndpoint, buildUrl }}>
       {children}
     </StateContext.Provider>
   );

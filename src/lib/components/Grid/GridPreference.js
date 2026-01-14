@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -11,8 +11,7 @@ import * as yup from 'yup';
 import { useSnackbar } from '../SnackBar';
 import { useTranslation } from 'react-i18next';
 import request, { DATA_PARSERS } from './httpRequest';
-import { useStateContext, useRouter } from '../useRouter/StateProvider';
-import actionsStateProvider from '../useRouter/actions';
+import { useStateContext } from '../useRouter/StateProvider';
 import { DialogComponent } from '../Dialog';
 
 const actionTypes = {
@@ -43,9 +42,10 @@ const initialValues = {
 
 const pageSizeOptions = [5, 10, 20, 50, 100];
 
-const GridPreferences = ({ preferenceName, gridRef }) => {
-    const { stateData, dispatchData, removeCurrentPreferenceName, getAllSavedPreferences } = useStateContext();
-    const { navigate } = useRouter();
+const GridPreferences = ({ gridRef, onPreferenceChange }) => {
+    const { getApiEndpoint } = useStateContext();
+    const preferenceApi = getApiEndpoint("GridPreferenceManager");
+    const preferenceKey = gridRef.current?.prefKey;
     const apiRef = useGridApiRef();
     const snackbar = useSnackbar();
     const { t } = useTranslation();
@@ -53,154 +53,150 @@ const GridPreferences = ({ preferenceName, gridRef }) => {
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
     const [openPreferenceExistsModal, setOpenPreferenceExistsModal] = useState(false);
     const [openConfirmDeleteDialog, setOpenConfirmDeleteDialog] = useState({});
-    const { Username } = stateData?.getUserData ? stateData.getUserData : {};
-    const preferences = stateData?.preferences || [];
-    const currentPreference = stateData?.currentPreference;
-    const preferenceApi = stateData?.gridSettings?.permissions?.preferenceApi;
-    const defaultPreferenceEnums = stateData?.gridSettings?.permissions?.defaultPreferenceEnums;
+    const [preferences, setPreferences] = useState(null);
+    const [currentPreference, setCurrentPreference] = useState(null);
 
     // Filter out the default preference (prefId === 0) for the management grid
-    const nonDefaultPreferences = useMemo(() => 
-        preferences.filter(pref => pref.prefId !== 0), 
+    const nonDefaultPreferences = useMemo(() =>
+        preferences == null ? [] : preferences.filter(pref => pref.prefId !== 0),
         [preferences]
     );
 
-    const validationSchema = useMemo(() => {
-        const schema = yup.object({
-            prefName: yup
-                .string()
-                .trim(true)
-                .required('Preference Name is Required')
-                .max(20, 'Maximum Length is 20'),
-            prefDesc: yup.string().max(100, `Description maximum length is 100`)
-        });
-        return schema;
-    }, []);
+    const validationSchema = useMemo(() => 
+        yup.object({
+            prefName: yup.string().trim(true).required(t('Preference Name is Required')).max(20, t('Maximum Length is ') + '20'),
+            prefDesc: yup.string().max(100, t('Maximum Length is ') + '100')
+        }), [t]);
 
-    const formik = useFormik({
-        initialValues,
-        validationSchema: validationSchema,
-        onSubmit: async (values) => {
-            await savePreference(values);
-        },
-        mode: "onBlur"
-    });
-
-    const handleOpen = (event) => {
-        setMenuAnchorEl(event?.currentTarget);
-    };
-
-    const handleClose = () => {
-        setMenuAnchorEl(null);
-    };
-
+    const handleOpen = (event) => setMenuAnchorEl(event?.currentTarget);
+    const handleClose = () => setMenuAnchorEl(null);
     const handleDialogClose = () => {
         setDialogState(DIALOG_TYPES.NONE);
         handleClose();
     };
 
-    const savePreference = async (values) => {
-        const presetName = values.prefName.trim();
-        const preferenceAlreadyExists = preferences.findIndex(ele => ele.prefName === presetName);
+    const resetToDefault = () => {
+        if (gridRef.current?.initialGridState) {
+            gridRef.current.restoreState(gridRef.current.initialGridState);
+            setCurrentPreference(null);
+            if (onPreferenceChange) onPreferenceChange(null);
+            handleClose();
+        }
+    };
+
+    // Only memoize functions used in useEffect dependencies
+    const loadPreferences = useCallback(async ({ applyDefault = false }) => {
+        const response = await request({
+            url: preferenceApi,
+            params: { action: 'list', id: preferenceKey },
+            dataParser: DATA_PARSERS.json
+        });
         
-        if (preferenceAlreadyExists > -1 && (dialogState === DIALOG_TYPES.ADD || preferences[preferenceAlreadyExists].prefId !== values.prefId)) {
+        if (!Array.isArray(response)) {
+            snackbar.showMessage(t('Failed to load preferences.'));
+            if (onPreferenceChange) onPreferenceChange(null);
+            return;
+        }
+        
+        setPreferences(response);
+        
+        if (applyDefault) {
+            const defaultPref = response.find(pref => pref.isDefault);
+            if (defaultPref) {
+                return { defaultPrefId: defaultPref.prefId };
+            } else {
+                if (onPreferenceChange) onPreferenceChange(null);
+            }
+        }
+    }, [preferenceApi, preferenceKey, snackbar, t, onPreferenceChange]);
+
+    const applyPreference = useCallback(async (prefId) => {
+        // Store initial state before applying first preference
+        if (!gridRef.current?.initialGridState && gridRef.current?.exportState) {
+            gridRef.current.initialGridState = gridRef.current.exportState();
+        }
+
+        if (prefId === 0) {
+            resetToDefault();
+            return;
+        }
+
+        const preference = preferences.find(ele => ele.prefId === prefId);
+        if (!preference?.prefValue) {
+            snackbar.showMessage(t('Failed to load preference.'));
+            return;
+        }
+
+        let gridState;
+        try {
+            gridState = typeof preference.prefValue === 'string' ? JSON.parse(preference.prefValue) : preference.prefValue;
+        } catch (error) {
+            snackbar.showMessage(t('Failed to parse preference data.'));
+            return;
+        }
+
+        gridRef.current.restoreState(gridState);
+        setCurrentPreference(preference.prefName);
+        if (onPreferenceChange) onPreferenceChange(preference.prefName);
+        handleClose();
+    }, [gridRef, preferences, onPreferenceChange, snackbar, t]);
+
+    const savePreference = async (values) => {
+        const prefName = values.prefName.trim();
+
+        if (preferences.find(ele => ele.prefName === prefName && ele.prefId !== values.prefId)) {
             setOpenPreferenceExistsModal(true);
             return;
         }
 
-        // Use MUI's exportState to capture current grid state
-        const gridState = gridRef.current.exportState();
-        
-        const params = {
-            action: 'save',
-            id: preferenceName,
-            prefName: presetName,
-            prefDesc: values.prefDesc,
-            prefValue: gridState,
-            isDefault: values.isDefault
-        };
-        
-        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData, dataParser: DATA_PARSERS.json });
-        
+        const response = await request({ 
+            url: preferenceApi, 
+            params: {
+                action: 'save',
+                id: preferenceKey,
+                prefName,
+                prefDesc: values.prefDesc,
+                prefValue: gridRef.current.exportState(),
+                isDefault: values.isDefault
+            },
+            dataParser: DATA_PARSERS.json 
+        });
+
         if (response === true || response?.success === true) {
-            const action = dialogState === DIALOG_TYPES.ADD ? "Added" : "Saved";
-            snackbar.showMessage(t(`Preference ${action} Successfully.`));
+            snackbar.showMessage(t(`Preference ${dialogState === DIALOG_TYPES.ADD ? "Added" : "Saved"} Successfully.`));
             handleDialogClose();
-            getAllSavedPreferences({ preferenceName, Username, history: navigate, dispatchData, preferenceApi, defaultPreferenceEnums });
+            await loadPreferences({ applyDefault: false });
             return;
         }
 
         snackbar.showMessage(t(response.message || 'An error occurred while saving the preference.'));
     };
 
-    const applyPreference = async (prefId) => {
-        let gridState;
-        let newPreferenceName = 'Default';
-        
-        if (prefId === 0) {
-            gridState = defaultPreferenceEnums[newPreferenceName] || null;
-        } else {
-            const params = {
-                action: 'load',
-                id: preferenceName,
-                Username,
-                prefId
-            };
-            const response = await request({ url: preferenceApi, params, history: navigate, dispatchData, dataParser: DATA_PARSERS.json });
-            
-            if (response?.prefValue) {
-                try {
-                    gridState = typeof response.prefValue === 'string' ? JSON.parse(response.prefValue) : response.prefValue;
-                } catch (error) {
-                    snackbar.showMessage(t('Failed to parse preference data.'));
-                    return;
-                }
-            }
-
-            if (response?.prefName) {
-                newPreferenceName = response.prefName;
-            }
-        }
-
-        if (!gridState) {
-            snackbar.showMessage(t('Failed to load preference.'));
-            return;
-        }
-
-        // Use MUI's restoreState to apply the grid state
-        gridRef.current.restoreState(gridState);
-        
-        dispatchData({ type: actionsStateProvider.SET_CURRENT_PREFERENCE_NAME, payload: newPreferenceName });
-    };
     const deletePreference = async () => {
-        const { prefId, preferenceName: currentPrefname } = openConfirmDeleteDialog;
+        const response = await request({ 
+            url: preferenceApi, 
+            params: {
+                action: 'delete',
+                id: preferenceKey,
+                prefIdArray: openConfirmDeleteDialog.prefId
+            },
+            dataParser: DATA_PARSERS.json 
+        });
 
-        const params = {
-            action: 'delete',
-            id: currentPrefname,
-            Username,
-            prefIdArray: prefId
-        };
-        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData, dataParser: DATA_PARSERS.json });
-        
         if (response === true || response?.success === true) {
-            if (currentPrefname === currentPreference) {
-                removeCurrentPreferenceName({ dispatchData });
-            }
             snackbar.showMessage(t('Preference Deleted Successfully.'));
-            getAllSavedPreferences({ preferenceName: newPreferenceName, history: navigate, dispatchData, Username, preferenceApi, defaultPreferenceEnums });
+            await loadPreferences({ applyDefault: false });
             setOpenConfirmDeleteDialog({});
             return;
         }
-            
+
         snackbar.showMessage(t(response?.message || 'An error occurred while deleting the preference.'));
     };
 
-    const onCellClick = async (cellParams) => {
+    const onCellClick = (cellParams) => {
         const action = cellParams.field === 'editAction' ? actionTypes.Edit : cellParams.field === 'deleteAction' ? actionTypes.Delete : null;
         if (cellParams.id === 0 && action) {
-            const actionText = action === actionTypes.Edit ? 'Edited' : 'Deleted';
-            snackbar.showMessage(t(`Default preference cannot be ${actionText}`));
+            snackbar.showMessage(t(`Default preference cannot be ${action === actionTypes.Edit ? 'Edited' : 'Deleted'}`));
             return;
         }
         if (action === actionTypes.Edit) {
@@ -215,9 +211,6 @@ const GridPreferences = ({ preferenceName, gridRef }) => {
         }
     };
 
-    const isManageDialog = dialogState === DIALOG_TYPES.MANAGE;
-    const isFormDialog = dialogState === DIALOG_TYPES.ADD || dialogState === DIALOG_TYPES.EDIT;
-
     const openDialog = (type) => {
         setDialogState(type);
         handleClose();
@@ -225,7 +218,31 @@ const GridPreferences = ({ preferenceName, gridRef }) => {
             formik.resetForm();
         }
     };
-    
+
+    const formik = useFormik({
+        initialValues,
+        validationSchema,
+        onSubmit: savePreference,
+        mode: "onBlur"
+    });
+
+    // Load preferences on mount
+    useEffect(() => {
+        if (!preferenceKey) return;
+        
+        const loadAndApply = async () => {
+            const result = await loadPreferences({ applyDefault: true });
+            if (result?.defaultPrefId) {
+                await applyPreference(result.defaultPrefId);
+            }
+        };
+        
+        loadAndApply();
+    }, [preferenceKey, loadPreferences, applyPreference]);
+
+    const isManageDialog = dialogState === DIALOG_TYPES.MANAGE;
+    const isFormDialog = dialogState === DIALOG_TYPES.ADD || dialogState === DIALOG_TYPES.EDIT;
+
     return (
         <Box>
             <Button
@@ -265,12 +282,17 @@ const GridPreferences = ({ preferenceName, gridRef }) => {
                 <MenuItem component={ListItemButton} dense onClick={() => openDialog(DIALOG_TYPES.ADD)}>
                     {t('Add Preference')}
                 </MenuItem>
-                <MenuItem component={ListItemButton} dense divider={preferences?.length > 0} onClick={() => openDialog(DIALOG_TYPES.MANAGE)}>
+                <MenuItem component={ListItemButton} dense onClick={() => openDialog(DIALOG_TYPES.MANAGE)}>
                     <ListItemIcon>
                         <SettingsIcon />
                     </ListItemIcon>
                     {t('Manage Preferences')}
                 </MenuItem>
+                {gridRef.current?.initialGridState && (
+                    <MenuItem component={ListItemButton} dense divider={preferences?.length > 0} onClick={() => applyPreference(0)}>
+                        {t('Reset to Default')}
+                    </MenuItem>
+                )}
 
                 {preferences?.length > 0 && preferences?.map((ele) => {
                     const { prefName, prefDesc, prefId } = ele;
