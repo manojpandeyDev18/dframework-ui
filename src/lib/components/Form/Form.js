@@ -218,7 +218,6 @@ const Form = ({
     });
   };
   const handleFormCancel = function (event) {
-    console.log("formik.dirty", formik.dirty, recordEditable);
     if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
