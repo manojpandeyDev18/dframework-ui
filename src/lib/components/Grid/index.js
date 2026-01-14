@@ -613,7 +613,7 @@ const GridBase = memo(({
             pageSize: !contentType ? pageSize : 1000000,
             sortModel,
             filterModel: filters,
-            controllerType,
+            controllerType: model.controllerType,
             api: baseUrl,
             setIsLoading,
             setData,
@@ -725,7 +725,7 @@ const GridBase = memo(({
             historyObject.state = row;
         }
         navigate(historyObject);
-    }, [isReadOnly, onCellClick, lookupMap, model, idProperty, documentField, navigate, toLink, customActions, tableName, searchParamKey, searchParams, gridTitle, getApiEndpoint]);
+    }, [isReadOnly, onCellClick, lookupMap, model, idProperty, documentField, navigate, toLink, customActions, tableName, searchParamKey, searchParams, gridTitle, getApiEndpoint, handleDownload, openForm]);
 
     const handleDelete = async function () {
         const baseUrl =  buildUrl(model.controllerType, backendApi);

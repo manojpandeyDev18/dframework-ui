@@ -139,7 +139,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
         setCurrentPreference(preference.prefName);
         if (onPreferenceChange) onPreferenceChange(preference.prefName);
         handleClose();
-    }, [gridRef, preferences, onPreferenceChange, snackbar, t]);
+    }, [gridRef, resetToDefault, preferences, onPreferenceChange, snackbar, t]);
 
     const savePreference = async (values) => {
         const prefName = values.prefName.trim();
@@ -196,9 +196,8 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
 
     const onCellClick = (cellParams) => {
         const action = cellParams.field === 'editAction' ? actionTypes.Edit : cellParams.field === 'deleteAction' ? actionTypes.Delete : null;
-        const error = t(`Default preference cannot be ${action === actionTypes.Edit ? 'edited' : 'deleted'}`)
         if (cellParams.id === 0 && action) {
-            snackbar.showMessage(error);
+            snackbar.showMessage(t(`Default preference cannot be ${action === actionTypes.Edit ? 'edited' : 'deleted'}`));
             return;
         }
         if (action === actionTypes.Edit) {
@@ -240,7 +239,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
         };
         
         loadAndApply();
-    }, [preferenceKey, loadPreferences, applyPreference]);
+    }, [preferenceKey]);
 
     const isManageDialog = dialogState === DIALOG_TYPES.MANAGE;
     const isFormDialog = dialogState === DIALOG_TYPES.ADD || dialogState === DIALOG_TYPES.EDIT;

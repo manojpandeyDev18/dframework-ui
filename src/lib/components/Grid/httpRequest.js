@@ -217,7 +217,7 @@ const request = async ({
             dispatchData({ type: 'UPDATE_LOADER_STATE', loaderOpen: false });
         }
         // Only network errors will be caught here
-        return { error: true,  message: ex.message || 'Network error' };
+        return { error: true, message: ex.message || 'Network error' };
     }
 };
 

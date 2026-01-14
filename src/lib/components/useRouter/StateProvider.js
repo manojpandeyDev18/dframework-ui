@@ -18,18 +18,18 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   const [stateData, dispatchData] = useReducer(stateReducer, initialState);
 
   // Initialize with provided endpoints or empty object
-  const apiEndpoints = useRef(initialApiEndpoints).current;
+  const apiEndpoints = useRef(initialApiEndpoints);
 
   function setApiEndpoint(key, endpoint) {
-    apiEndpoints[key] = endpoint;
+    apiEndpoints.current[key] = endpoint;
   }
 
   function getApiEndpoint(key) {
-    return apiEndpoints[key];
+    return apiEndpoints.current[key];
   }
 
   function buildUrl(controllerType, url) {
-    const baseUrl = apiEndpoints[controllerType || "default"] || '';
+    const baseUrl = apiEndpoints.current[controllerType || "default"] || '';
     return `${baseUrl}${url}`;
   }
 
