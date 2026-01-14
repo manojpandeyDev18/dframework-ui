@@ -908,7 +908,7 @@ const GridBase = memo(({
     useEffect(() => {
         if (!backendApi || !preferencesReady) return;
         fetchData();
-    }, [paginationModel, sortModel, filterModel, backendApi, gridColumns, model, parentFilters, assigned, selected, available, preferencesReady, reRenderKey]);
+    }, [backendApi, preferencesReady, fetchData]);
 
     useEffect(() => {
         if (props.isChildGrid || forAssignment || !updatePageTitle) {

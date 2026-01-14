@@ -191,7 +191,7 @@ const request = async ({
         }
         if (response.status !== HTTP_STATUS_CODES.OK) {
             // You can return the error object or handle as needed
-            return { error: true,  message: data.message || 'An error occurred' };
+            return { error: true, message: data.message || 'An error occurred' };
         }
 
         // Apply data parser to normalize response
