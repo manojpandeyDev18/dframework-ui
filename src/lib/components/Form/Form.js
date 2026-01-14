@@ -164,6 +164,7 @@ const Form = ({
           * This behavior can be controlled by setting navigateBack "false" / false in model config which disables navigation completely.
           */
           navigateBack !== false && handleNavigation();
+          resetForm({ values: formik.values});
         })
         .catch((err) => {
           snackbar.showError(
@@ -217,6 +218,7 @@ const Form = ({
     });
   };
   const handleFormCancel = function (event) {
+    console.log("formik.dirty", formik.dirty, recordEditable);
     if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
