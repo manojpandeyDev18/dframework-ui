@@ -21,7 +21,7 @@ const actionTypes = {
 
 const DIALOG_TYPES = {
     ADD: "Add",
-    EDIT: "Modify",
+    EDIT: "Edit",
     MANAGE: "Manage",
     NONE: null
 };
@@ -154,6 +154,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
             params: {
                 action: 'save',
                 id: preferenceKey,
+                prefId: values.prefId,
                 prefName,
                 prefDesc: values.prefDesc,
                 prefValue: gridRef.current.exportState(),
@@ -163,13 +164,13 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
         });
 
         if (response === true || response?.success === true) {
-            snackbar.showMessage(t(`Preference ${dialogState === DIALOG_TYPES.ADD ? "Added" : "Saved"} Successfully.`));
+            snackbar.showMessage(t(`Preference ${dialogState === DIALOG_TYPES.ADD ? "added" : "saved"} successfully.`));
             handleDialogClose();
             await loadPreferences({ applyDefault: false });
             return;
         }
 
-        snackbar.showMessage(t(response.message || 'An error occurred while saving the preference.'));
+        snackbar.showMessage(t('Error saving preference: ') + (response?.message || t('Unknown error')));
     };
 
     const deletePreference = async () => {
@@ -184,19 +185,20 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
         });
 
         if (response === true || response?.success === true) {
-            snackbar.showMessage(t('Preference Deleted Successfully.'));
+            snackbar.showMessage(t('Preference deleted successfully.'));
             await loadPreferences({ applyDefault: false });
             setOpenConfirmDeleteDialog({});
             return;
         }
 
-        snackbar.showMessage(t(response?.message || 'An error occurred while deleting the preference.'));
+        snackbar.showMessage(t('Error deleting preference: ') + (response?.message || t('Unknown error')));
     };
 
     const onCellClick = (cellParams) => {
         const action = cellParams.field === 'editAction' ? actionTypes.Edit : cellParams.field === 'deleteAction' ? actionTypes.Delete : null;
+        const error = t(`Default preference cannot be ${action === actionTypes.Edit ? 'edited' : 'deleted'}`)
         if (cellParams.id === 0 && action) {
-            snackbar.showMessage(t(`Default preference cannot be ${action === actionTypes.Edit ? 'Edited' : 'Deleted'}`));
+            snackbar.showMessage(error);
             return;
         }
         if (action === actionTypes.Edit) {
@@ -305,7 +307,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                             title={t(prefDesc)}
                             dense
                         >
-                            <ListItemText primary={t(prefName)} />
+                            <ListItemText primary={prefName} />
                         </MenuItem>
                     );
                 })}
@@ -471,7 +473,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                 okText={t('Ok')}
                 cancelText=""
             >
-                "{formik.values.prefName.trim()}" {t('name already in use, please use another name.')}
+                "{formik.values.prefName.trim()}": {t('name already in use, please use another name.')}
             </DialogComponent>
             <DialogComponent
                 open={!!openConfirmDeleteDialog.preferenceName}
@@ -480,7 +482,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                 title={t('Confirm delete')}
                 yesNo={true}
             >
-                {t('Are you sure you wish to delete')} "{openConfirmDeleteDialog.preferenceName}"
+                {t('Are you sure you wish to delete')} "{openConfirmDeleteDialog.preferenceName}"?
             </DialogComponent>
         </Box>
     );

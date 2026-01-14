@@ -172,7 +172,7 @@ const CustomToolbar = function (props) {
         >
             <div>
                 {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
-                {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)} - {currentPreference.prefName}</Typography>}
+                {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)}: {currentPreference}</Typography>}
                 {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
                 {!forAssignment && canAdd && !isReadOnly && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" >{addText}</ButtonWithMargin>}
                 {(selectionApi.length && data.records.length) ? (
@@ -362,7 +362,7 @@ const GridBase = memo(({
             setSelection(Array.from(newSet));
             return newSet;
         });
-    }, [idProperty]);
+    }, [idProperty, setSelectedSet, setSelection]);
 
     const gridColumnTypes = {
         "radio": {
@@ -656,7 +656,7 @@ const GridBase = memo(({
             path += `?${searchParams.toString()}`;
         }
         navigate(path);
-    }, [setActiveRecord, api, model, parentFilters, where, pathname, addUrlParamKey, searchParams, navigate, dispatchData, getRecord]);
+    }, [setActiveRecord, backendApi, model, parentFilters, where, pathname, addUrlParamKey, searchParams, navigate, dispatchData, getRecord]);
 
     const handleDownload = useCallback(({ documentLink }) => {
         if (!documentLink) return;
@@ -793,6 +793,7 @@ const GridBase = memo(({
             );
         }
 
+        const baseUrl =  buildUrl(model.controllerType, backendApi);
         try {
             const result = await saveRecord({
                 id: 0,
@@ -864,7 +865,7 @@ const GridBase = memo(({
             setSelectedSet(new Set(allIds));
             setSelection(allIds);
         }
-    }, [selectedSet.size, data.records, idProperty]);
+    }, [selectedSet.size, data.records, idProperty, setSelection, setSelectedSet]);
 
     const getGridRowId = (row) => {
         return row[idProperty];

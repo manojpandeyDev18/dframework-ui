@@ -157,6 +157,7 @@ const request = async ({
     if (params.exportData) {
         return exportRequest(url, params);
     }
+    disableLoader = disableLoader || typeof dispatchData !== 'function';
     if (!disableLoader) {
         dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
     }
@@ -184,13 +185,13 @@ const request = async ({
         }
 
         // Handle HTTP errors here
-        if (response.status === HTTP_STATUS_CODES.SESSION_EXPIRED) {
+        if (response.status === HTTP_STATUS_CODES.SESSION_EXPIRED && history) {
             history('/login');
             return;
         }
         if (response.status !== HTTP_STATUS_CODES.OK) {
             // You can return the error object or handle as needed
-            return { data: { message: data.message || 'An error occurred' } };
+            return { error: true,  message: data.message || 'An error occurred' };
         }
 
         // Apply data parser to normalize response
@@ -212,11 +213,11 @@ const request = async ({
         return data;
     } catch (ex) {
         pendingRequests--;
-        if (pendingRequests === 0) {
+        if (pendingRequests === 0 && !disableLoader) {
             dispatchData({ type: 'UPDATE_LOADER_STATE', loaderOpen: false });
         }
         // Only network errors will be caught here
-        return { data: { message: ex.message || 'Network error' } };
+        return { error: true,  message: ex.message || 'Network error' };
     }
 };
 
