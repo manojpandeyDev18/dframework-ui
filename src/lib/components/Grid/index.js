@@ -25,7 +25,7 @@ import { DialogComponent } from '../Dialog/index';
 import { getList, getRecord, deleteRecord, saveRecord } from './crud-helper';
 import { Footer } from './footer';
 import template from './template';
-import { Tooltip, CardContent, Card } from "@mui/material";
+import { Tooltip, Box, Badge } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import PageTitle from '../PageTitle';
@@ -137,10 +137,12 @@ const CustomToolbar = function (props) {
         gridColumns,
         setIsGridPreferenceFetched,
         tTranslate,
-        tOpts
+        tOpts,
+        filterModel
     } = props;
 
     const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
+    const activeFilterCount = filterModel?.items?.length || 0;
 
     return (
         <div
@@ -161,12 +163,12 @@ const CustomToolbar = function (props) {
                         size="medium"
                         variant="contained"
                     >
-                        {selectedSet.current.size === data.records.length ? "Deselect All" : "Select All"}
+                        {selectedSet.current.size === data.records.length ? tTranslate("Deselect All", tOpts) : tTranslate("Select All", tOpts)}
                     </ButtonWithMargin>) :
                     <></>
                 }
-                {available && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained"  >{"Assign"}</ButtonWithMargin>}
-                {assigned && <ButtonWithMargin startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained"  >{"Remove"}</ButtonWithMargin>}
+                {available && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained"  >{tTranslate("Assign", tOpts)}</ButtonWithMargin>}
+                {assigned && <ButtonWithMargin startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained"  >{tTranslate("Remove", tOpts)}</ButtonWithMargin>}
             </div>
             <GridToolBar {...props}>
                 {effectivePermissions.showColumnsOrder && (
@@ -188,7 +190,11 @@ const CustomToolbar = function (props) {
                         render={(triggerProps) => (
                             <Button
                                 {...triggerProps}
-                                startIcon={<FilterListIcon />}
+                                startIcon={
+                                    <Badge badgeContent={activeFilterCount} color="primary">
+                                        <FilterListIcon />
+                                    </Badge>
+                                }
                                 size="small"
                                 variant="text"
                             >
@@ -196,7 +202,7 @@ const CustomToolbar = function (props) {
                             </Button>
                         )}
                     />
-                    <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{"CLEAR FILTER"}</Button>
+                    <Button startIcon={<FilterListOffIcon />} onClick={clearFilters} size="small">{tTranslate("CLEAR FILTER", tOpts)}</Button>
                 </>)}
 
                 {effectivePermissions.export && (
@@ -292,7 +298,8 @@ const GridBase = memo(({
                 withControllersUrl,
                 defaultPreferenceEnums,
                 preferenceApi,
-                historyScreenName = "historyScreen"
+                historyScreenName = "historyScreen",
+                showPageTitle = true
             } = {}
         } = {},
         currentPreference
@@ -303,7 +310,7 @@ const GridBase = memo(({
     const userDefinedPermissions = { add: effectivePermissions.add, edit: effectivePermissions.edit, delete: effectivePermissions.delete };
     const { canAdd, canEdit, canDelete } = getPermissions({ userData, model, userDefinedPermissions });
     const tTranslate = model.tTranslate ?? ((key) => key);
-    const { addUrlParamKey, searchParamKey, hideBreadcrumb = false, tableName, showHistory = true, hideBreadcrumbInGrid = false, breadcrumbColor } = model;
+    const { addUrlParamKey, searchParamKey, hideBreadcrumb = false, tableName, showHistory = true, hideBreadcrumbInGrid = false, breadcrumbColor, disablePivoting = false, columnHeaderHeight = 70 } = model;
     const gridTitle = model.gridTitle || model.title;
     const preferenceName = model.preferenceId || model.module?.preferenceId;
     const searchParams = new URLSearchParams(window.location.search);
@@ -364,13 +371,13 @@ const GridBase = memo(({
             "valueFormatter": (value) => (
                 formatDate({ value, useSystemFormat: true, showOnlyDate: false, state: stateData.dateTime, timeZone })
             ),
-            "filterOperators": LocalizedDatePicker({ columnType: "date" })
+            "filterOperators": LocalizedDatePicker({ columnType: "date", label: tTranslate('Value', tOpts) })
         },
         "dateTime": {
             "valueFormatter": (value) => (
                 formatDate({ value, useSystemFormat: false, showOnlyDate: false, state: stateData.dateTime, timeZone })
             ),
-            "filterOperators": LocalizedDatePicker({ columnType: "datetime" })
+            "filterOperators": LocalizedDatePicker({ columnType: "datetime", label: tTranslate('Value', tOpts) })
         },
         "dateTimeLocal": {
             "valueFormatter": (value) => (
@@ -1047,10 +1054,10 @@ const GridBase = memo(({
         : [{ text: pageTitle }];
     return (
         <>
-            <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
-                breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />
-            <Card style={gridStyle || customStyle} elevation={0} sx={{ '& .MuiCardContent-root': { p: 0 } }}>
-                <CardContent>
+            {showPageTitle && <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
+                breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />}
+            <Box style={gridStyle || customStyle}>
+                <Box sx={{ display: 'flex', maxHeight: '80vh', flexDirection: 'column' }}>
                     <DataGridPremium
                         sx={{
                             "& .MuiTablePagination-selectLabel": {
@@ -1059,11 +1066,12 @@ const GridBase = memo(({
                             "& .MuiTablePagination-displayedRows": {
                                 marginTop: 2
                             },
-                            "& .MuiDataGrid-columnHeader .MuiInputLabel-shrink": {
-                                display: "none"
+                            "& .MuiDataGrid-virtualScroller ": {
+                                zIndex: 2,
                             }
                         }}
-                        unstable_headerFilters={showHeaderFilters}
+                        headerFilters={showHeaderFilters}
+                        unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
                         loading={isLoading}
                         className="pagination-fix"
@@ -1120,7 +1128,8 @@ const GridBase = memo(({
                                 setIsGridPreferenceFetched,
                                 tTranslate,
                                 tOpts,
-                                idProperty
+                                idProperty,
+                                filterModel
                             },
                             footer: {
                                 pagination: true,
@@ -1137,7 +1146,7 @@ const GridBase = memo(({
                         disableAggregation={true}
                         disableRowGrouping={true}
                         disableRowSelectionOnClick={disableRowSelectionOnClick}
-                        autoHeight
+                        disablePivoting={disablePivoting}
                         initialState={{
                             columns: {
                                 columnVisibilityModel: visibilityModel
@@ -1145,35 +1154,150 @@ const GridBase = memo(({
                             pinnedColumns: pinnedColumns
                         }}
                         localeText={{
-                            filterValueTrue: 'Yes',
-                            filterValueFalse: 'No'
+                            filterValueTrue: tTranslate('Yes', tOpts),
+                            filterValueFalse: tTranslate('No', tOpts),
+                            noRowsLabel: tTranslate('No data', tOpts),
+                            footerTotalRows: `${tTranslate('Total rows', tOpts)}:`,
+                            MuiTablePagination: {
+                                labelRowsPerPage: tTranslate('Rows per page', tOpts),
+                                labelDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
+                            },
+                            toolbarQuickFilterPlaceholder: tTranslate(model?.searchPlaceholder || 'Search...', tOpts),
+                            toolbarColumns: tTranslate('Columns', tOpts),
+                            toolbarFilters: tTranslate('Filters', tOpts),
+                            toolbarExport: tTranslate('Export', tOpts),
+                            filterPanelAddFilter: tTranslate('Add filter', tOpts),
+                            filterPanelRemoveAll: tTranslate('Remove all', tOpts),
+                            filterPanelDeleteIconLabel: tTranslate('Delete', tOpts),
+                            filterPanelColumns: tTranslate('Columns', tOpts),
+                            filterPanelOperator: tTranslate('Operator', tOpts),
+                            filterPanelValue: tTranslate('Value', tOpts),
+                            filterPanelInputLabel: tTranslate('Value', tOpts),
+                            filterPanelInputPlaceholder: tTranslate('Filter value', tOpts),
+                            columnMenuLabel: tTranslate('Menu', tOpts),
+                            columnMenuShowColumns: tTranslate('Show columns', tOpts),
+                            columnMenuManageColumns: tTranslate('Manage columns', tOpts),
+                            columnMenuFilter: tTranslate('Filter', tOpts),
+                            columnMenuHideColumn: tTranslate('Hide column', tOpts),
+                            columnMenuManagePivot: tTranslate('Manage pivot', tOpts),
+                            toolbarColumnsLabel: tTranslate('Select columns', tOpts),
+                            toolbarExportLabel: tTranslate('Export', tOpts),
+                            pivotDragToColumns: tTranslate('Drag here to pivot by', tOpts),
+                            pivotDragToRows: tTranslate('Drag here to group by', tOpts),
+                            pivotDragToValues: tTranslate('Drag here to create values', tOpts),
+                            pivotColumns: tTranslate('Pivot columns', tOpts),
+                            pivotRows: tTranslate('Row groups', tOpts),
+                            pivotValues: tTranslate('Values', tOpts),
+                            pivotMenuRows: tTranslate('Rows', tOpts),
+                            pivotMenuColumns: tTranslate('Columns', tOpts),
+                            pivotMenuValues: tTranslate('Values', tOpts),
+                            pivotToggleLabel: tTranslate('Pivot', tOpts),
+                            pivotSearchControlPlaceholder: tTranslate('Search pivot columns', tOpts),
+                            columnMenuUnsort: tTranslate('Unsort', tOpts),
+                            columnMenuSortAsc: tTranslate('Sort by ascending', tOpts),
+                            columnMenuSortDesc: tTranslate('Sort by descending', tOpts),
+                            columnMenuUnpin: tTranslate('Unpin', tOpts),
+                            columnsPanelTextFieldLabel: tTranslate('Find column', tOpts),
+                            columnsPanelTextFieldPlaceholder: tTranslate('Column title', tOpts),
+                            columnsPanelHideAllButton: tTranslate('Hide all', tOpts),
+                            columnsPanelShowAllButton: tTranslate('Show all', tOpts),
+                            pinToLeft: tTranslate('Pin to left', tOpts),
+                            pinToRight: tTranslate('Pin to right', tOpts),
+                            unpin: tTranslate('Unpin', tOpts),
+                            filterValueAny: tTranslate('any', tOpts),
+                            filterOperatorIs: tTranslate('is', tOpts),
+                            filterOperatorNot: tTranslate('is not', tOpts),
+                            filterOperatorIsAnyOf: tTranslate('is any of', tOpts),
+                            filterOperatorContains: tTranslate('contains', tOpts),
+                            filterOperatorDoesNotContain: tTranslate('does not contain', tOpts),
+                            filterOperatorEquals: tTranslate('equals', tOpts),
+                            filterOperatorDoesNotEqual: tTranslate('does not equal', tOpts),
+                            filterOperatorStartsWith: tTranslate('starts with', tOpts),
+                            filterOperatorEndsWith: tTranslate('ends with', tOpts),
+                            filterOperatorIsEmpty: tTranslate('is empty', tOpts),
+                            filterOperatorIsNotEmpty: tTranslate('is not empty', tOpts),
+                            filterOperatorAfter: tTranslate('is after', tOpts),
+                            filterOperatorOnOrAfter: tTranslate('is on or after', tOpts),
+                            filterOperatorBefore: tTranslate('is before', tOpts),
+                            filterOperatorOnOrBefore: tTranslate('is on or before', tOpts),
+                            toolbarFiltersTooltipHide: tTranslate('Hide filters', tOpts),
+                            toolbarFiltersTooltipShow: tTranslate('Show filters', tOpts),
+
+                            //filter textfield labels
+                            headerFilterOperatorContains: tTranslate('contains', tOpts),
+                            headerFilterOperatorEquals: tTranslate('equals', tOpts),
+                            headerFilterOperatorStartsWith: tTranslate('starts with', tOpts),
+                            headerFilterOperatorEndsWith: tTranslate('ends with', tOpts),
+                            headerFilterOperatorIsEmpty: tTranslate('is empty', tOpts),
+                            headerFilterOperatorIsNotEmpty: tTranslate('is not empty', tOpts),
+                            headerFilterOperatorAfter: tTranslate('is after', tOpts),
+                            headerFilterOperatorOnOrAfter: tTranslate('is on or after', tOpts),
+                            headerFilterOperatorBefore: tTranslate('is before', tOpts),
+                            headerFilterOperatorOnOrBefore: tTranslate('is on or before', tOpts),
+                            headerFilterOperatorIs: tTranslate('is', tOpts),
+                            'headerFilterOperator=': tTranslate('equals', tOpts),
+                            'headerFilterOperator!=': tTranslate('does not equal', tOpts),
+                            'headerFilterOperator>': tTranslate('greater than', tOpts),
+                            'headerFilterOperator>=': tTranslate('greater than or equal to', tOpts),
+                            'headerFilterOperator<': tTranslate('less than', tOpts),
+                            'headerFilterOperator<=': tTranslate('less than or equal to', tOpts),
+                            columnsManagementSearchTitle: tTranslate('Search', tOpts),
+                            columnsManagementNoColumns: tTranslate('No columns', tOpts),
+                            paginationRowsPerPage: tTranslate('Rows per page', tOpts),
+                            paginationDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
+                            toolbarQuickFilterLabel: tTranslate('Search', tOpts),
+                            toolbarFiltersTooltipActive: (count) => {
+                                const key = count === 1 ? 'active filter' : 'active filters';
+                                return `${count} ${tTranslate(key, tOpts)}`;
+                            },
+                            columnHeaderSortIconLabel: tTranslate('Sort', tOpts),
+                            filterPanelOperatorAnd: tTranslate('And', tOpts),
+                            filterPanelOperatorOr: tTranslate('Or', tOpts),
+                            noResultsOverlayLabel: tTranslate('No results found', tOpts),
+                            columnHeaderFiltersTooltipActive: (count) => {
+                                const key = count === 1 ? 'active filter' : 'active filters';
+                                return `${count} ${tTranslate(key, tOpts)}`;
+                            },
+                            detailPanelToggle: tTranslate('Detail panel toggle', tOpts),
+                            checkboxSelectionHeaderName: tTranslate('Checkbox selection', tOpts),
+                            columnsManagementShowHideAllText: tTranslate('Show/Hide all', tOpts),
+                            noColumnsOverlayLabel: tTranslate('No columns', tOpts),
+                            noColumnsOverlayManageColumns: tTranslate('Manage columns', tOpts),
+                            columnsManagementReset: tTranslate('Reset', tOpts),
+                            groupColumn: (name) => `${tTranslate('Group by', tOpts)} ${name}`,
+                            unGroupColumn: (name) => `${tTranslate('Ungroup', tOpts)} ${name}`,
+                            footerRowSelected: (count) => {
+                                const key = count === 1 ? 'item selected' : 'items selected';
+                                return `${count.toLocaleString()} ${tTranslate(key, tOpts)}`;
+                            }
                         }}
                         showToolbar={true}
+                        columnHeaderHeight={columnHeaderHeight}
                     />
-                    {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
-                    }
-                    {isDeleting && !errorMessage && (
-                        <DialogComponent open={isDeleting} onConfirm={handleDelete} onCancel={() => setIsDeleting(false)} title="Confirm Delete">
-                            <DeleteContentText>
-                                Are you sure you want to delete {record.name && <Tooltip style={{ display: "inline" }} title={record.name} arrow>
-                                    {record.name.length > 30 ? `${record.name.slice(0, 30)}...` : record.name}
-                                </Tooltip>} ?
-                            </DeleteContentText>
-                        </DialogComponent>)}
-                    {showAddConfirmation && (
-                        <DialogComponent
-                            open={showAddConfirmation}
-                            onConfirm={handleAddRecords}
-                            onCancel={() => setShowAddConfirmation(false)}
-                            title="Confirm Add"
-                        >
-                            <DeleteContentText>
-                                Are you sure you want to add {selectedSet.current.size} records?
-                            </DeleteContentText>
-                        </DialogComponent>
-                    )}
-                </CardContent>
-            </Card >
+                </Box>
+                {errorMessage && (<DialogComponent open={!!errorMessage} onConfirm={clearError} onCancel={clearError} title="Info" hideCancelButton={true} > {errorMessage}</DialogComponent>)
+                }
+                {isDeleting && !errorMessage && (
+                    <DialogComponent open={isDeleting} onConfirm={handleDelete} onCancel={() => setIsDeleting(false)} title="Confirm Delete">
+                        <DeleteContentText>
+                            {tTranslate("Are you sure you want to delete", tOpts)} {record.name && <Tooltip style={{ display: "inline" }} title={record.name} arrow>
+                                {record.name.length > 30 ? `${record.name.slice(0, 30)}...` : record.name}
+                            </Tooltip>} ?
+                        </DeleteContentText>
+                    </DialogComponent>)}
+                {showAddConfirmation && (
+                    <DialogComponent
+                        open={showAddConfirmation}
+                        onConfirm={handleAddRecords}
+                        onCancel={() => setShowAddConfirmation(false)}
+                        title="Confirm Add"
+                    >
+                        <DeleteContentText>
+                            {tTranslate("Are you sure you want to add", tOpts)} {selectedSet.current.size} {tTranslate("records", { count: selectedSet.current.size, ...tOpts })}?
+                        </DeleteContentText>
+                    </DialogComponent>
+                )}
+            </Box >
         </>
     );
 }, areEqual);

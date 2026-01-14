@@ -212,6 +212,8 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
     } catch (error) {
         if (error.response && !handleCommonErrors(error.response, setError)) {
             setError('Could not list record', error.message || error.toString());
+        } else{
+            setError('Network failure or server unreachable. Please try again.');
         }
     } finally {
         setIsLoading(false);

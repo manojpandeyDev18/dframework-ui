@@ -108,7 +108,19 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
             Username,
             prefIdArray: id
         };
-        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        let response = rawResponse;
+        if (typeof rawResponse === 'string') {
+            try {
+                response = JSON.parse(rawResponse);
+            } catch (error) {
+                if (typeof console !== 'undefined' && typeof console.error === 'function') {
+                    console.error('Failed to parse deletePreference response:', error, rawResponse);
+                }
+                snackbar.showMessage('An error occurred while processing the server response.');
+                return;
+            }
+        }
         if (response === true || response?.success) {
             if (prefName === currentPreference) {
                 removeCurrentPreferenceName({ dispatchData });
@@ -156,7 +168,8 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
         if (values.prefId) {
             params["prefId"] = values.prefId;
         }
-        const response = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData });
+        const response = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
         const action = formType === formTypes.Add ? "Added" : "Saved";
         if (response === true || response?.success === true) {
             snackbar.showMessage(`Preference ${action} Successfully.`);
@@ -178,9 +191,27 @@ const GridPreferences = ({ tTranslate = (key) => key, preferenceName, gridRef, c
                 Username,
                 prefId
             };
-            const response = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
-            userPreferenceCharts = response.prefValue ? JSON.parse(response.prefValue) : null;
-            if (response.prefName) {
+            const rawResponse = await request({ url: preferenceApi, params, history: navigate, dispatchData }) || {};
+            let response = rawResponse;
+            if (typeof rawResponse === 'string') {
+                try {
+                    response = JSON.parse(rawResponse);
+                } catch (error) {
+                    console.error('Failed to parse preference response JSON', { error, rawResponse });
+                    return;
+                }
+            }
+            if (response && response.prefValue) {
+                try {
+                    userPreferenceCharts = JSON.parse(response.prefValue);
+                } catch (error) {
+                    console.error('Failed to parse preference value JSON', { error, prefValue: response.prefValue });
+                    return;
+                }
+            } else {
+                userPreferenceCharts = null;
+            }
+            if (response && response.prefName) {
                 defaultPreference = response.prefName;
             }
         }

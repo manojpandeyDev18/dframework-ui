@@ -37,12 +37,14 @@ const DialogComponent = ({ open, onConfirm, title = "Confirm", onCancel, okText,
             maxWidth={maxWidth}
             fullWidth={fullWidth}
         >
-            <DialogTitle id="alert-dialog-title" >
+            <DialogTitle id="alert-dialog-title" sx={{ fontSize: children ? 'inherit' : '1.25rem' }} >
                 {title}
             </DialogTitle>
-            <DialogContent dividers>
-                <DialogContentText>{children}</DialogContentText>
-            </DialogContent>
+            {children && (
+                <DialogContent dividers>
+                    <DialogContentText>{children}</DialogContentText>
+                </DialogContent>
+            )}
             {(onCancel || onConfirm) && (
                 < DialogActions >
                     {onCancel && <Button onClick={onCancel}>{cancelText}</Button>}

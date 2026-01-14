@@ -15,6 +15,9 @@ const componentMap = {
     datetime: DateTimePicker,
     dateTimeLocal: DateTimePicker
 };
+const DATEPICKER_MARGIN_TOP = '-10px';
+const DATEPICKER_MARGIN_BOTTOM = '-16px';
+
 const LocalizedDatePicker = (props) => {
     const { fixedFilterFormat } = utils;
     const { item, applyValue, convert } = props;
@@ -64,7 +67,15 @@ const LocalizedDatePicker = (props) => {
                 format={format}
                 value={Dateformatvalue}
                 onChange={handleFilterChange}
-                slotProps={{ textField: { variant: "standard", label: "Value" } }}
+                slotProps={{
+                    textField: {
+                        variant: "standard", label: props.label,
+                        sx: {
+                            marginTop: DATEPICKER_MARGIN_TOP,
+                            marginBottom: DATEPICKER_MARGIN_BOTTOM
+                        }
+                    }
+                }}
                 localeText={{
                     fieldMonthPlaceholder: () => {
                         const monthAbbreviation = getMonthAbbreviation(format);
