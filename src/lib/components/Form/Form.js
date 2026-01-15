@@ -164,6 +164,7 @@ const Form = ({
           * This behavior can be controlled by setting navigateBack "false" / false in model config which disables navigation completely.
           */
           navigateBack !== false && handleNavigation();
+          resetForm({ values: formik.values});
         })
         .catch((err) => {
           snackbar.showError(
@@ -178,12 +179,10 @@ const Form = ({
     }
   });
 
-  const { dirty } = formik;
-
   const handleDiscardChanges = () => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
-    handleNavigation();
+    navigateBack !== false && handleNavigation();
   };
 
   const errorOnLoad = function (title, error) {
@@ -219,10 +218,10 @@ const Form = ({
     });
   };
   const handleFormCancel = function (event) {
-    if (dirty) {
+    if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
-      handleNavigation();
+      navigateBack !== false && handleNavigation();
     }
     event.preventDefault();
   };
@@ -238,7 +237,7 @@ const Form = ({
       });
       if (response === true) {
         snackbar.showMessage("Record Deleted Successfully.");
-        handleNavigation();
+        navigateBack !== false && handleNavigation();
       }
     } catch (error) {
       snackbar.showError("An error occured, please try after some time.");
