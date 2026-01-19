@@ -72,7 +72,7 @@ function MyComponent() {
     setApiEndpoint,      // Set/update API endpoint
     formatDate,          // Format dates with timezone support
     systemDateTimeFormat,// Get system date/time format
-    useLocalization      // Get localization utilities
+    useLocalization,      // Get localization utilities
   } = useStateContext();
 
   // Your component logic

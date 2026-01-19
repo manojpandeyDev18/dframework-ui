@@ -181,7 +181,7 @@ const request = async ({
         let data = response.data;
 
         if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: 'UPDATE_LOADER_STATE', loaderOpen: false });
+            dispatchData({ type: 'UPDATE_LOADER_STATE', payload: false });
         }
 
         // Handle HTTP errors here
@@ -214,7 +214,7 @@ const request = async ({
     } catch (ex) {
         pendingRequests--;
         if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: 'UPDATE_LOADER_STATE', loaderOpen: false });
+            dispatchData({ type: 'UPDATE_LOADER_STATE', payload: false });
         }
         // Only network errors will be caught here
         return { error: true, message: ex.message || 'Network error' };

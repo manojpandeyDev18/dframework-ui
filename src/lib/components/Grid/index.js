@@ -647,7 +647,7 @@ const GridBase = memo(({
             showFullScreenLoader,
             history: navigate,
         });
-    }
+    };
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
         if (setActiveRecord) {
@@ -921,7 +921,7 @@ const GridBase = memo(({
     }, [data?.recordCount, apiRef, gridColumns, snackbar, fetchData, isElasticScreen]);
 
     useEffect(() => {
-        if (!backendApi || !preferencesReady) return
+        if (!backendApi || !preferencesReady) return;
         fetchData();
     }, [paginationModel, model, assigned, available, selected, filterModel, id, additionalFilters, props.extraParams, sortModel, backendApi, gridColumns, parentFilters, isElasticScreen, preferencesReady, baseFilters]);
 

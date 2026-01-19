@@ -112,7 +112,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange, t, tOpts }) => {
                 if (onPreferenceChange) onPreferenceChange(null);
             }
         }
-    }, [preferenceApi, preferenceKey, snackbar, t, onPreferenceChange]);
+    }, [preferenceApi, preferenceKey, snackbar, t, tOpts, onPreferenceChange]);
 
     const applyPreference = useCallback(async (prefId) => {
         // Store initial state before applying first preference
@@ -143,7 +143,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange, t, tOpts }) => {
         setCurrentPreference(preference.prefName);
         if (onPreferenceChange) onPreferenceChange(preference.prefName);
         handleClose();
-    }, [gridRef, resetToDefault, preferences, onPreferenceChange, snackbar, t]);
+    }, [gridRef, resetToDefault, preferences, onPreferenceChange, snackbar, t, tOpts]);
 
     const savePreference = async (values) => {
         const prefName = values.prefName.trim();
