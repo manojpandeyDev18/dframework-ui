@@ -1,6 +1,5 @@
 import actionsStateProvider from "../useRouter/actions";
 import { transport, HTTP_STATUS_CODES } from "./httpRequest";
-import utils from '../utils';
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
@@ -379,5 +378,15 @@ export {
     getRecord,
     deleteRecord,
     saveRecord,
-    getLookups
+    getLookups,
 };
+
+const crudHelper = {
+    getList,
+    getRecord,
+    deleteRecord,
+    saveRecord,
+    getLookups,
+};
+
+export default crudHelper;

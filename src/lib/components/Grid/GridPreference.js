@@ -40,15 +40,17 @@ const initialValues = {
     isDefault: false
 };
 
+const paginationModel = { pageSize: 50, page: 0 };
+
 const pageSizeOptions = [5, 10, 20, 50, 100];
 
-const GridPreferences = ({ gridRef, onPreferenceChange }) => {
+const GridPreferences = ({ gridRef, onPreferenceChange, t, tOpts }) => {
     const { getApiEndpoint } = useStateContext();
     const preferenceApi = getApiEndpoint("GridPreferenceManager");
     const preferenceKey = gridRef.current?.prefKey;
     const apiRef = useGridApiRef();
     const snackbar = useSnackbar();
-    const { t } = useTranslation();
+    //const { t } = useTranslation(); // To do: to fix useTranslation directly in next release
     const [dialogState, setDialogState] = useState(DIALOG_TYPES.NONE);
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
     const [openPreferenceExistsModal, setOpenPreferenceExistsModal] = useState(false);
@@ -64,9 +66,9 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
 
     const validationSchema = useMemo(() => 
         yup.object({
-            prefName: yup.string().trim(true).required(t('Preference Name is Required')).max(20, t('Maximum Length is ') + '20'),
-            prefDesc: yup.string().max(100, t('Maximum Length is ') + '100')
-        }), [t]);
+            prefName: yup.string().trim(true).required(t('Preference Name is Required')).max(20, t('Maximum Length is ', tOpts) + '20'),
+            prefDesc: yup.string().max(100, t('Maximum Length is ', tOpts) + '100')
+        }), [t, tOpts]);
 
     const handleOpen = (event) => setMenuAnchorEl(event?.currentTarget);
     const handleClose = () => setMenuAnchorEl(null);
@@ -92,16 +94,18 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
             dataParser: DATA_PARSERS.json
         });
         
-        if (!Array.isArray(response)) {
-            snackbar.showMessage(t('Failed to load preferences.'));
+        if (!response?.preferences) {
+            snackbar.showMessage(t('Failed to load preferences.', tOpts));
             if (onPreferenceChange) onPreferenceChange(null);
             return;
         }
+
+        const preferences = response.preferences.filter(pref => pref.prefName.trim() !== '');
         
-        setPreferences(response);
+        setPreferences(preferences);
         
         if (applyDefault) {
-            const defaultPref = response.find(pref => pref.isDefault);
+            const defaultPref = preferences.find(pref => pref.isDefault);
             if (defaultPref) {
                 return { defaultPrefId: defaultPref.prefId };
             } else {
@@ -123,7 +127,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
 
         const preference = preferences.find(ele => ele.prefId === prefId);
         if (!preference?.prefValue) {
-            snackbar.showMessage(t('Failed to load preference.'));
+            snackbar.showMessage(t('Failed to load preference.', tOpts));
             return;
         }
 
@@ -131,7 +135,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
         try {
             gridState = typeof preference.prefValue === 'string' ? JSON.parse(preference.prefValue) : preference.prefValue;
         } catch (error) {
-            snackbar.showMessage(t('Failed to parse preference data.'));
+            snackbar.showMessage(t('Failed to parse preference data.', tOpts));
             return;
         }
 
@@ -143,8 +147,9 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
 
     const savePreference = async (values) => {
         const prefName = values.prefName.trim();
+        const caseInsensitivePrefName = prefName.toLocaleLowerCase();
 
-        if (preferences.find(ele => ele.prefName === prefName && ele.prefId !== values.prefId)) {
+        if (preferences.find(ele => ele.prefName.toLocaleLowerCase() === caseInsensitivePrefName && ele.prefId !== values.prefId)) {
             setOpenPreferenceExistsModal(true);
             return;
         }
@@ -157,20 +162,20 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                 prefId: values.prefId,
                 prefName,
                 prefDesc: values.prefDesc,
-                prefValue: gridRef.current.exportState(),
+                prefValue: JSON.stringify(gridRef.current.exportState()),
                 isDefault: values.isDefault
             },
             dataParser: DATA_PARSERS.json 
         });
 
         if (response === true || response?.success === true) {
-            snackbar.showMessage(t(`Preference ${dialogState === DIALOG_TYPES.ADD ? "added" : "saved"} successfully.`));
+            snackbar.showMessage(t(`Preference ${dialogState === DIALOG_TYPES.ADD ? "added" : "saved"} successfully.`, tOpts));
             handleDialogClose();
             await loadPreferences({ applyDefault: false });
             return;
         }
 
-        snackbar.showMessage(t('Error saving preference: ') + (response?.message || t('Unknown error')));
+        snackbar.showMessage(t('Error saving preference: ', tOpts) + (response?.message || t('Unknown error', tOpts)));
     };
 
     const deletePreference = async () => {
@@ -185,19 +190,19 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
         });
 
         if (response === true || response?.success === true) {
-            snackbar.showMessage(t('Preference deleted successfully.'));
+            snackbar.showMessage(t('Preference deleted successfully.', tOpts));
             await loadPreferences({ applyDefault: false });
             setOpenConfirmDeleteDialog({});
             return;
         }
 
-        snackbar.showMessage(t('Error deleting preference: ') + (response?.message || t('Unknown error')));
+        snackbar.showMessage(t('Error deleting preference: ', tOpts) + (response?.message || t('Unknown error', tOpts)));
     };
 
     const onCellClick = (cellParams) => {
         const action = cellParams.field === 'editAction' ? actionTypes.Edit : cellParams.field === 'deleteAction' ? actionTypes.Delete : null;
         if (cellParams.id === 0 && action) {
-            snackbar.showMessage(t(`Default preference cannot be ${action === actionTypes.Edit ? 'edited' : 'deleted'}`));
+            snackbar.showMessage(t(`Default preference cannot be ${action === actionTypes.Edit ? 'edited' : 'deleted'}`, tOpts));
             return;
         }
         if (action === actionTypes.Edit) {
@@ -252,10 +257,10 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                 aria-haspopup="true"
                 aria-expanded={menuAnchorEl ? 'true' : undefined}
                 onClick={handleOpen}
-                title={t('Preference')}
+                title={t('Preference', tOpts)}
                 startIcon={<SettingsIcon />}
             >
-                {t('Preferences')} {currentPreference && `(${currentPreference})`}
+                {t('Preferences', tOpts)} {currentPreference && `(${currentPreference})`}
             </Button>
             <Menu
                 id={`grid-preference-menu`}
@@ -281,17 +286,17 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                 }}
             >
                 <MenuItem component={ListItemButton} dense onClick={() => openDialog(DIALOG_TYPES.ADD)}>
-                    {t('Add Preference')}
+                    {t('Add Preference', tOpts)}
                 </MenuItem>
                 <MenuItem component={ListItemButton} dense onClick={() => openDialog(DIALOG_TYPES.MANAGE)}>
                     <ListItemIcon>
                         <SettingsIcon />
                     </ListItemIcon>
-                    {t('Manage Preferences')}
+                    {t('Manage Preferences', tOpts)}
                 </MenuItem>
                 {gridRef.current?.initialGridState && (
                     <MenuItem component={ListItemButton} dense divider={preferences?.length > 0} onClick={() => applyPreference(0)}>
-                        {t('Reset to Default')}
+                        {t('Reset to Default', tOpts)}
                     </MenuItem>
                 )}
 
@@ -303,7 +308,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                             component={ListItem}
                             selected={currentPreference === prefName}
                             key={`pref-item-${prefId}`}
-                            title={t(prefDesc)}
+                            title={t(prefDesc, tOpts)}
                             dense
                         >
                             <ListItemText primary={prefName} />
@@ -316,7 +321,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                 disableRestoreFocus
                 title={
                     <Typography variant="h5">
-                        {dialogState} {t(isManageDialog ? 'Preferences' : 'Preference')}
+                        {dialogState} {t(isManageDialog ? 'Preferences' : 'Preference', tOpts)}
                     </Typography>
                 }
                 maxWidth={isManageDialog ? 'md' : 'sm'}
@@ -345,7 +350,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                                 margin="dense"
                                 label={
                                     <span>
-                                        {t('Preference Name')} <span style={{ color: 'red' }}>*</span>
+                                        {t('Preference Name', tOpts)} <span style={{ color: 'red' }}>*</span>
                                     </span>
                                 }
                                 autoFocus
@@ -364,7 +369,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                                 rows={2}
                                 size="small"
                                 margin="dense"
-                                label={t('Preference Description')}
+                                label={t('Preference Description', tOpts)}
                                 name="prefDesc"
                                 onChange={formik.handleChange}
                                 error={!!formik.errors.prefDesc}
@@ -381,7 +386,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                                         onChange={formik.handleChange}
                                     />
                                 }
-                                label={t('Default')}
+                                label={t('Default', tOpts)}
                             />
                         </Grid>
                         <Grid size={12}>
@@ -394,7 +399,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                                     variant="contained"
                                     disableElevation
                                 >
-                                    {t('Save')}
+                                    {t('Save', tOpts)}
                                 </Button>
                                 <Button
                                     type="button"
@@ -405,7 +410,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                                     onClick={handleDialogClose}
                                     disableElevation
                                 >
-                                    {t('Close')}
+                                    {t('Close', tOpts)}
                                 </Button>
                             </Stack>
                         </Grid>
@@ -444,7 +449,11 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                                 disableAggregation={true}
                                 disableRowGrouping={true}
                                 disableRowSelectionOnClick={true}
-                                autoHeight
+                                initialState={{
+                                    pagination: {
+                                        paginationModel
+                                    }
+                                }}
                             />
                         </Grid>
                         <Grid size={12}>
@@ -458,7 +467,7 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                                     onClick={handleDialogClose}
                                     disableElevation
                                 >
-                                    {t('Close')}
+                                    {t('Close', tOpts)}
                                 </Button>
                             </Stack>
                         </Grid>
@@ -469,19 +478,19 @@ const GridPreferences = ({ gridRef, onPreferenceChange }) => {
                 open={openPreferenceExistsModal}
                 onConfirm={() => setOpenPreferenceExistsModal(false)}
                 title=""
-                okText={t('Ok')}
+                okText={t('Ok', tOpts)}
                 cancelText=""
             >
-                "{formik.values.prefName.trim()}": {t('name already in use, please use another name.')}
+                "{formik.values.prefName.trim()}": {t('name already in use, please use another name.', tOpts)}
             </DialogComponent>
             <DialogComponent
                 open={!!openConfirmDeleteDialog.preferenceName}
                 onConfirm={deletePreference}
                 onCancel={() => setOpenConfirmDeleteDialog({})}
-                title={t('Confirm delete')}
+                title={t('Confirm delete', tOpts)}
                 yesNo={true}
             >
-                {t('Are you sure you wish to delete')} "{openConfirmDeleteDialog.preferenceName}"?
+                {t('Are you sure you wish to delete', tOpts)} "{openConfirmDeleteDialog.preferenceName}"?
             </DialogComponent>
         </Box>
     );

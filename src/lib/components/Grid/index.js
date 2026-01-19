@@ -44,7 +44,7 @@ import { styled } from '@mui/material/styles';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
-const defaultPageSize = 10;
+const defaultPageSize = 50;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
 const recordCounts = 60000;
 const actionTypes = {
@@ -156,7 +156,8 @@ const CustomToolbar = function (props) {
         tTranslate,
         tOpts,
         filterModel,
-        onPreferenceChange
+        onPreferenceChange,
+        toolbarItems
     } = props;
 
     const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
@@ -174,7 +175,7 @@ const CustomToolbar = function (props) {
                 {model.gridSubTitle && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }}> {tTranslate(model.gridSubTitle, tOpts)}</Typography>}
                 {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)}: {currentPreference}</Typography>}
                 {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
-                {!forAssignment && canAdd && !isReadOnly && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" >{addText}</ButtonWithMargin>}
+                {!forAssignment && canAdd && !isReadOnly && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" >{tTranslate(addText, tOpts)}</ButtonWithMargin>}
                 {(selectionApi.length && data.records.length) ? (
                     <ButtonWithMargin
                         onClick={selectAll}
@@ -226,10 +227,13 @@ const CustomToolbar = function (props) {
                 {effectivePermissions.export && (
                     <CustomExportButton handleExport={handleExport} showPivotExportBtn={model.pivotApi} exportFormats={model.exportFormats || {}} tTranslate={tTranslate} tOpts={tOpts} />
                 )}
+                {toolbarItems}
                 {preferenceKey &&
                     <GridPreferences 
                         gridRef={apiRef} 
                         onPreferenceChange={onPreferenceChange} 
+                        t={tTranslate}
+                        tOpts={tOpts}
                     />
                 }
             </GridToolBar>
@@ -247,6 +251,7 @@ const GridBase = memo(({
     parent,
     where,
     title,
+    showPageTitle,
     permissions,
     selected,
     assigned,
@@ -266,8 +271,11 @@ const GridBase = memo(({
     onCellDoubleClickOverride,
     onAddOverride,
     dynamicColumns,
+    toolbarItems,
     readOnly = false,
-    baseFilters = [],
+    onListParamsChange,
+    apiRef: propsApiRef,
+    baseFilters,
     ...props
 }) => {
     const [paginationModel, setPaginationModel] = useState({ pageSize: defaultPageSize, page: 0 });
@@ -297,7 +305,7 @@ const GridBase = memo(({
     const { navigate, getParams, useParams, pathname } = useRouter();
     const { id: idWithOptions } = useParams() || getParams;
     const id = idWithOptions?.split('-')[0];
-    const apiRef = useGridApiRef();
+    const apiRef = propsApiRef || useGridApiRef();
     const { idProperty = "id", showHeaderFilters = true, disableRowSelectionOnClick = true, hideTopFilters = true, updatePageTitle = true, isElasticScreen = false, navigateBack = false, selectionApi = {} } = model;
     const isReadOnly = model.readOnly === true || readOnly;
     const isDoubleClicked = model.allowDoubleClick === false;
@@ -499,7 +507,7 @@ const GridBase = memo(({
                 overrides.cellClassName = 'mui-grid-linkColumn';
             }
             const headerName = tTranslate(column.gridLabel || column.label, tOpts);
-            finalColumns.push({ headerName, description: headerName, ...column, ...overrides });
+            finalColumns.push({ ...column, ...overrides,  headerName, description: headerName });
             if (column.pinned) {
                 pinnedColumns[column.pinned === constants.right ? constants.right : constants.left].push(column.field);
             }
@@ -512,7 +520,7 @@ const GridBase = memo(({
         if (auditColumns && typeof auditColumns === constants.object) {
             auditColumnMappings.forEach(({ key, field, type, header }) => {
                 if (auditColumns[key] === true) {
-                    const column = { field, type, headerName: header, width: 200 };
+                    const column = { field, type, headerName: tTranslate(header, tOpts), width: 200 };
                     if (type === constants.dateTime) {
                         column.filterOperators = LocalizedDatePicker({ columnType: 'date' });
                         column.valueFormatter = gridColumnTypes.dateTime.valueFormatter;
@@ -583,9 +591,9 @@ const GridBase = memo(({
         }
         pinnedColumns.right.push('actions');
         return { gridColumns: finalColumns, pinnedColumns, lookupMap };
-    }, [columns, model, parent, permissions, forAssignment, dynamicColumns]);
+    }, [columns, model, parent, permissions, forAssignment, dynamicColumns, translate]);
 
-    const fetchData = useCallback((action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
+    const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
         const { pageSize, page } = paginationModel;
 
         const baseUrl =  buildUrl(model.controllerType, isPivotExport ? model.pivotApi : backendApi);
@@ -595,7 +603,7 @@ const GridBase = memo(({
         }
 
         const filters = { ...filterModel };
-        const finalBaseFilters = [...baseFilters];
+        const finalBaseFilters = Array.isArray(baseFilters) ? [...baseFilters] : [];
         if (model.joinColumn && id) {
             finalBaseFilters.push({ field: model.joinColumn, operator: "is", type: "number", value: Number(id) });
         }
@@ -607,7 +615,7 @@ const GridBase = memo(({
         const isValidFilters = !filters.items.length || filters.items.every(item => "value" in item && item.value !== undefined);
         if (!isValidFilters) return;
 
-        getList({
+        const listParams = {
             action,
             page: !contentType ? page : 0,
             pageSize: !contentType ? pageSize : 1000000,
@@ -615,24 +623,31 @@ const GridBase = memo(({
             filterModel: filters,
             controllerType: model.controllerType,
             api: baseUrl,
-            setIsLoading,
-            setData,
             gridColumns,
             model,
             parentFilters,
             extraParams,
-            setError: snackbar.showError,
             contentType,
             columns,
             template: isPivotExport ? model.exportTemplate : null,
             configFileName: isPivotExport ? model.configFileName : null,
+            baseFilters: finalBaseFilters,
+            isElasticExport
+        };
+        if (typeof onListParamsChange === 'function') {
+            onListParamsChange(listParams);
+        }
+        apiRef.current.listParams = listParams;
+        return getList({
+            ...listParams,
+            setError: snackbar.showError,
+            setIsLoading,
+            setData,
             dispatchData,
             showFullScreenLoader,
             history: navigate,
-            baseFilters: finalBaseFilters,
-            isElasticExport
         });
-    }, [paginationModel, model, assigned, available, selected, filterModel, id, additionalFilters, props.extraParams, sortModel, buildUrl, backendApi, gridColumns, parentFilters, snackbar, dispatchData, showFullScreenLoader, navigate, baseFilters, isElasticScreen, getList]);
+    }
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
         if (setActiveRecord) {
@@ -906,9 +921,9 @@ const GridBase = memo(({
     }, [data?.recordCount, apiRef, gridColumns, snackbar, fetchData, isElasticScreen]);
 
     useEffect(() => {
-        if (!backendApi || !preferencesReady) return;
+        if (!backendApi || !preferencesReady) return
         fetchData();
-    }, [backendApi, preferencesReady, fetchData]);
+    }, [paginationModel, model, assigned, available, selected, filterModel, id, additionalFilters, props.extraParams, sortModel, backendApi, gridColumns, parentFilters, isElasticScreen, preferencesReady, baseFilters]);
 
     useEffect(() => {
         if (props.isChildGrid || forAssignment || !updatePageTitle) {
@@ -966,8 +981,8 @@ const GridBase = memo(({
         : [{ text: pageTitle }];
     return (
         <>
-            <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
-                breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />
+            {showPageTitle !== false && <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
+                breadcrumbs={breadCrumbs} enableBackButton={navigateBack} breadcrumbColor={breadcrumbColor} />}
             <Box style={gridStyle || customStyle}>
                 <Box sx={{ display: 'flex', maxHeight: '80vh', flexDirection: 'column' }}>
                     <DataGridPremium
@@ -1041,7 +1056,8 @@ const GridBase = memo(({
                                 tOpts,
                                 idProperty,
                                 filterModel,
-                                onPreferenceChange
+                                onPreferenceChange,
+                                toolbarItems
                             },
                             footer: {
                                 pagination: true,
