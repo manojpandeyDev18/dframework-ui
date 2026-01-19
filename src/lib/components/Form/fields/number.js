@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useId } from 'react';
 import { NumberField as BaseNumberField } from '@base-ui/react/number-field';
 import {
     IconButton,
@@ -70,12 +70,12 @@ const NumberFieldAdornment = () => (
 const Field = ({ column, otherProps, formik, field, ...props }) => {
     const { min, max, readOnly } = column;
     const theme = useTheme();
-    
+
     const resolvedMin = useMemo(
         () => resolveValue({ value: min, state: formik.values }),
         [min, formik.values]
     );
-    
+
     const resolvedMax = useMemo(
         () => resolveValue({ value: max, state: formik.values }),
         [max, formik.values]
@@ -83,9 +83,6 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
 
     const [inputValue, setInputValue] = useState(formik.values[field] ?? null);
     const debouncedValue = useDebounce(inputValue, 400);
-    
-    const error = formik.touched[field] && Boolean(formik.errors[field]);
-    const helperText = formik.touched[field] && formik.errors[field];
 
     useEffect(() => {
         if (isNumber(debouncedValue) && debouncedValue !== formik.values[field]) {
@@ -116,7 +113,8 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
         }
     };
 
-    const id = `number-field-${field}`;
+    const inputId = useId();
+    const id = `number-field-${field}-${inputId}`;
     const variant = column.variant || 'standard';
     const InputComponent = inputComponentMap[variant];
     return (
@@ -130,11 +128,10 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
                 <FormControl
                     fullWidth
                     ref={baseProps.ref}
-                    error={error}
+                    error={formik.touched[field] && Boolean(formik.errors[field])}
                     sx={readOnly ? {
                         backgroundColor: theme.palette?.action?.disabled
                     } : undefined}
-                    {...state}
                 >
                     {baseProps.children}
                 </FormControl>
@@ -153,16 +150,13 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
                         slotProps={{
                             input: inputProps,
                         }}
-                        {...inputProps}
                         endAdornment={<NumberFieldAdornment />}
                         sx={{ pr: 0 }}
                         {...otherProps}
                     />
                 )}
             />
-            <FormHelperText sx={{ ml: 0, '&:empty': { mt: 0 } }}>
-                {helperText}
-            </FormHelperText>
+            <FormHelperText> {formik.touched[field] && formik.errors[field]} </FormHelperText>
         </BaseNumberField.Root>
     );
 };
