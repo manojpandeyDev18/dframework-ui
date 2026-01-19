@@ -62,6 +62,7 @@ export default defineConfig({
                     '@mui/x-data-grid-premium',
                     '@mui/x-date-pickers',
                     '@mui/x-tree-view',
+                    '@base-ui/react',
                     'dayjs',
                     'formik',
                     'i18next',
