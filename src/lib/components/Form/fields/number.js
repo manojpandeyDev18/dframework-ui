@@ -106,17 +106,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
             return;
         }
 
-        let nextValue = value;
-
-        if (resolvedMin != null && nextValue < resolvedMin) {
-            nextValue = resolvedMin;
-        }
-
-        if (resolvedMax != null && nextValue > resolvedMax) {
-            nextValue = resolvedMax;
-        }
-
-        setInputValue(nextValue);
+        setInputValue(value);
     };
 
     const handleBlur = (event) => {
