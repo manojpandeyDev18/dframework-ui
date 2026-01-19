@@ -1,16 +1,19 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import StringField from './string';
+import React, { useMemo, useState, useEffect } from 'react';
+import { NumberField as BaseNumberField } from '@base-ui/react/number-field';
+import {
+    IconButton,
+    FormControl,
+    FormHelperText,
+    Input,
+    OutlinedInput,
+    FilledInput,
+    InputAdornment,
+    useTheme
+} from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import useDebounce from '../../../hooks/useDebounce';
-import { useTheme } from '@mui/material';
 
-// Key code constants
-const DIGIT_START = 47;
-const DIGIT_END = 58;
-const ARROW_LEFT = 37;
-const ARROW_RIGHT = 40;
-
-// Control key codes
-const CONTROL_KEYS = [8, 46, 9, 27, 13]; // backspace, delete, tab, escape, enter
 const resolveValue = ({ value, state }) => {
     if (typeof value === 'string' && value.startsWith('{') && value.endsWith('}')) {
         const key = value.slice(1, -1); // Extract key inside the braces
@@ -18,72 +21,160 @@ const resolveValue = ({ value, state }) => {
     }
     return value;
 };
-const Field = ({ column, otherProps, formik, field, ...props }) => {
-    const { min, max } = column;
-    const theme = useTheme();
-    const [inputValue, setInputValue] = useState(formik.values[field]);
-    const debouncedValue = useDebounce(inputValue, 400);
 
+const isNumber = (value) => {
+    return typeof value === 'number' && !isNaN(value);
+};
+
+const inputComponentMap = {
+    outlined: OutlinedInput,
+    filled: FilledInput,
+    standard: Input,
+};
+
+const NumberFieldAdornment = () => (
+    <InputAdornment
+        position="end"
+        sx={{
+            flexDirection: 'column',
+            maxHeight: 'unset',
+            alignSelf: 'stretch',
+            ml: 0,
+            '& button': {
+                py: 0,
+                flex: 1,
+                borderRadius: 0.5,
+            },
+        }}
+    >
+        <BaseNumberField.Increment
+            render={<IconButton size="small" aria-label="Increase" />}
+        >
+            <KeyboardArrowUpIcon
+                fontSize="small"
+                sx={{ transform: 'translateY(2px)' }}
+            />
+        </BaseNumberField.Increment>
+
+        <BaseNumberField.Decrement
+            render={<IconButton size="small" aria-label="Decrease" />}
+        >
+            <KeyboardArrowDownIcon
+                fontSize="small"
+                sx={{ transform: 'translateY(-2px)' }}
+            />
+        </BaseNumberField.Decrement>
+    </InputAdornment>
+);
+
+const Field = ({ column, otherProps, formik, field, ...props }) => {
+    const { min, max, readOnly } = column;
+    const theme = useTheme();
+    
     const resolvedMin = useMemo(
-        () => Math.max(0, resolveValue({ value: min, state: formik.values })),
+        () => resolveValue({ value: min, state: formik.values }),
         [min, formik.values]
     );
+    
     const resolvedMax = useMemo(
         () => resolveValue({ value: max, state: formik.values }),
         [max, formik.values]
     );
 
-    // Update formik when debounced value changes
-    useEffect(() => {
-        if (debouncedValue !== formik.values[field]) {
-            const numValue = Number(debouncedValue);
-            if (isNaN(numValue)) {
-                return;
-            }
-            if (numValue < resolvedMin) {
-                formik.setFieldValue(field, resolvedMin);
-            } else if (resolvedMax && numValue > resolvedMax) {
-                formik.setFieldValue(field, resolvedMax);
-            } else {
-                formik.setFieldValue(field, numValue);
-            }
-        }
-    }, [debouncedValue, field, resolvedMin, resolvedMax]);
+    const [inputValue, setInputValue] = useState(formik.values[field] ?? null);
+    const debouncedValue = useDebounce(inputValue, 400);
+    
+    const error = formik.touched[field] && Boolean(formik.errors[field]);
+    const helperText = formik.touched[field] && formik.errors[field];
 
-    const { onBlur } = props;
-    otherProps = {
-        InputProps: {
-            inputProps: {
-                min: resolvedMin,
-                max: resolvedMax,
-                readOnly: column.readOnly === true,
-                onKeyDown: (event) => {
-                    const keyCode = event.which ? event.which : event.keyCode;
-                    // Allow: backspace, delete, tab, escape, enter, arrows
-                    if (CONTROL_KEYS.includes(keyCode) || (keyCode >= ARROW_LEFT && keyCode <= ARROW_RIGHT)) {
-                        return;
-                    }
-                    // Allow number keys (0-9)
-                    if (!(keyCode > DIGIT_START && keyCode < DIGIT_END)) {
-                        event.preventDefault();
-                    }
-                },
-                sx: column.readOnly
-                    ? { backgroundColor: theme.palette?.action?.disabled } // Light grey background for read-only inputs
-                    : undefined,
-            }
-        },
-        type: 'number',
-        ...otherProps,
-        onChange: (event) => {
-            setInputValue(event.target.value);
-            if (typeof onBlur === "function") {
-                onBlur(event);
-            }
-        },
+    useEffect(() => {
+        if (isNumber(debouncedValue) && debouncedValue !== formik.values[field]) {
+
+            formik.setFieldValue(field, debouncedValue);
+        }
+    }, [debouncedValue, field]);
+
+    // Sync with formik value changes from external sources
+    useEffect(() => {
+        if (formik.values[field] !== inputValue) {
+            setInputValue(formik.values[field] ?? null);
+        }
+    }, [formik.values[field]]);
+
+    const handleValueChange = (value) => {
+        if (!isNumber(value)) {
+            return;
+        }
+
+        let nextValue = value;
+
+        if (resolvedMin != null && nextValue < resolvedMin) {
+            nextValue = resolvedMin;
+        }
+
+        if (resolvedMax != null && nextValue > resolvedMax) {
+            nextValue = resolvedMax;
+        }
+
+        setInputValue(nextValue);
     };
 
-    return <StringField column={column} otherProps={otherProps} formik={formik} field={field} {...props} />;
+    const handleBlur = (event) => {
+        formik.setFieldTouched(field, true);
+        if (typeof props.onBlur === "function") {
+            props.onBlur(event);
+        }
+    };
+
+    const id = `number-field-${field}`;
+    const variant = column.variant || 'standard';
+    const InputComponent = inputComponentMap[variant];
+    return (
+        <BaseNumberField.Root
+            value={inputValue}
+            onValueChange={handleValueChange}
+            min={resolvedMin}
+            max={resolvedMax}
+            disabled={readOnly}
+            render={(baseProps, state) => (
+                <FormControl
+                    fullWidth
+                    ref={baseProps.ref}
+                    error={error}
+                    sx={readOnly ? {
+                        backgroundColor: theme.palette?.action?.disabled
+                    } : undefined}
+                    {...state}
+                >
+                    {baseProps.children}
+                </FormControl>
+            )}
+        >
+            <BaseNumberField.Input
+                render={(inputProps, state) => (
+                    <InputComponent
+                        id={id}
+                        inputRef={inputProps.ref}
+                        value={state.inputValue}
+                        onBlur={(e) => {
+                            inputProps.onBlur(e);
+                            handleBlur(e);
+                        }}
+                        slotProps={{
+                            input: inputProps,
+                        }}
+                        {...inputProps}
+                        endAdornment={<NumberFieldAdornment />}
+                        sx={{ pr: 0 }}
+                        {...otherProps}
+                    />
+                )}
+            />
+            <FormHelperText sx={{ ml: 0, '&:empty': { mt: 0 } }}>
+                {helperText}
+            </FormHelperText>
+        </BaseNumberField.Root>
+    );
 };
 
 export default Field;
