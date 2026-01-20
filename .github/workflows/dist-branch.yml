@@ -1,8 +1,8 @@
 name: Push Dist to Branch
 on:
   push:
-    tags:
-      - 'v*' # Trigger on version tags
+    branches:
+      - release-pipeline
 
 permissions:
   contents: write
