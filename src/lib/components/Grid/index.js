@@ -1061,7 +1061,9 @@ const GridBase = memo(({
                             },
                             footer: {
                                 pagination: true,
-                                apiRef
+                                apiRef,
+                                tTranslate,
+                                tOpts
                             },
                             panel: {
                                 placement: "bottom-end"
