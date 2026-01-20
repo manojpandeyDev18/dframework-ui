@@ -107,14 +107,16 @@ const GridPreferences = ({ gridRef, onPreferenceChange, t, tOpts }) => {
         if (applyDefault) {
             const defaultPref = preferences.find(pref => pref.isDefault);
             if (defaultPref) {
-                return { defaultPrefId: defaultPref.prefId };
+                return { defaultPrefId: defaultPref.prefId, preferences };
             } else {
                 if (onPreferenceChange) onPreferenceChange(null);
             }
         }
+        
+        return { preferences };
     }, [preferenceApi, preferenceKey, snackbar, t, tOpts, onPreferenceChange]);
 
-    const applyPreference = useCallback(async (prefId) => {
+    const applyPreference = useCallback(async (prefId, preferencesArray = null) => {
         // Store initial state before applying first preference
         if (!gridRef.current?.initialGridState && gridRef.current?.exportState) {
             gridRef.current.initialGridState = gridRef.current.exportState();
@@ -125,7 +127,14 @@ const GridPreferences = ({ gridRef, onPreferenceChange, t, tOpts }) => {
             return;
         }
 
-        const preference = preferences.find(ele => ele.prefId === prefId);
+        // Use provided preferences array or fall back to state
+        const prefsToSearch = preferencesArray || preferences;
+        if (!prefsToSearch) {
+            snackbar.showMessage(t('Preferences not loaded yet.', tOpts));
+            return;
+        }
+
+        const preference = prefsToSearch.find(ele => ele.prefId === prefId);
         if (!preference?.prefValue) {
             snackbar.showMessage(t('Failed to load preference.', tOpts));
             return;
@@ -238,8 +247,8 @@ const GridPreferences = ({ gridRef, onPreferenceChange, t, tOpts }) => {
         
         const loadAndApply = async () => {
             const result = await loadPreferences({ applyDefault: true });
-            if (result?.defaultPrefId) {
-                await applyPreference(result.defaultPrefId);
+            if (result?.defaultPrefId && result?.preferences) {
+                await applyPreference(result.defaultPrefId, result.preferences);
             }
         };
         
