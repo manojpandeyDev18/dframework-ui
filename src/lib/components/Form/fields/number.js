@@ -150,7 +150,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
                     />
                 )}
             />
-            {formik.touched[field] && formik.errors[field] && <FormHelperText id={`${id}-error`}> {formik.errors[field]} </FormHelperText>}
+            {formik.touched[field] && formik.errors[field] && <FormHelperText id={`${id}-error`} error={true}> {formik.errors[field]} </FormHelperText>}
         </BaseNumberField.Root>
     );
 };
