@@ -142,6 +142,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
                         }}
                         inputProps={{
                             ...inputProps,
+                            'aria-describedby': formik.touched[field] && formik.errors[field] ? `${id}-error` : undefined,
                         }}
                         endAdornment={<NumberFieldAdornment />}
                         sx={{ pr: 0 }}
@@ -149,7 +150,7 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
                     />
                 )}
             />
-            <FormHelperText> {formik.touched[field] && formik.errors[field]} </FormHelperText>
+            {formik.touched[field] && formik.errors[field] && <FormHelperText id={`${id}-error`}> {formik.errors[field]} </FormHelperText>}
         </BaseNumberField.Root>
     );
 };
