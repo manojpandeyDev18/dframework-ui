@@ -240,7 +240,7 @@ const Form = ({
         navigateBack !== false && handleNavigation();
       }
     } catch (error) {
-      snackbar.showError("An error occured, please try after some time.");
+      snackbar.showError("An error occurred, please try after some time.");
     } finally {
       setIsDeleting(false);
     }

@@ -22,9 +22,6 @@ const resolveValue = ({ value, state }) => {
     return value;
 };
 
-const isNumber = (value) => {
-    return typeof value === 'number' && !isNaN(value);
-};
 
 const inputComponentMap = {
     outlined: OutlinedInput,
@@ -80,29 +77,24 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
         () => resolveValue({ value: max, state: formik.values }),
         [max, formik.values]
     );
-
-    const [inputValue, setInputValue] = useState(formik.values[field] ?? null);
+    const formikFieldValue = useMemo(() => formik.values[field] ?? null, [formik.values[field]]);
+    const [inputValue, setInputValue] = useState(formikFieldValue);
     const debouncedValue = useDebounce(inputValue, 400);
 
     useEffect(() => {
-        if (isNumber(debouncedValue) && debouncedValue !== formik.values[field]) {
-
+        if (debouncedValue !== formikFieldValue) {
             formik.setFieldValue(field, debouncedValue);
         }
-    }, [debouncedValue, field]);
+    }, [debouncedValue]);
 
     // Sync with formik value changes from external sources
     useEffect(() => {
-        if (formik.values[field] !== inputValue) {
-            setInputValue(formik.values[field] ?? null);
+        if (formikFieldValue !== inputValue) {
+            setInputValue(formikFieldValue);
         }
-    }, [formik.values[field]]);
+    }, [formikFieldValue]);
 
     const handleValueChange = (value) => {
-        if (!isNumber(value)) {
-            return;
-        }
-
         setInputValue(value);
     };
 
@@ -143,12 +135,13 @@ const Field = ({ column, otherProps, formik, field, ...props }) => {
                         id={id}
                         inputRef={inputProps.ref}
                         value={state.inputValue}
+                        onChange={inputProps.onChange}
                         onBlur={(e) => {
                             inputProps.onBlur(e);
                             handleBlur(e);
                         }}
-                        slotProps={{
-                            input: inputProps,
+                        inputProps={{
+                            ...inputProps,
                         }}
                         endAdornment={<NumberFieldAdornment />}
                         sx={{ pr: 0 }}
