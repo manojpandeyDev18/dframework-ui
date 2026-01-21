@@ -34,6 +34,7 @@ import LocalizedDatePicker from './LocalizedDatePicker';
 import actionsStateProvider from '../useRouter/actions';
 import GridPreferences from './GridPreference';
 import CustomDropdownMenu from './CustomDropdownMenu';
+import ToolbarFilter from './ToolbarFilter';
 import { getPermissions } from '../utils';
 import HistoryIcon from '@mui/icons-material/History';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
@@ -156,12 +157,18 @@ const CustomToolbar = function (props) {
         tTranslate,
         tOpts,
         filterModel,
+        setFilterModel,
         onPreferenceChange,
-        toolbarItems
+        toolbarItems,
+        gridColumns
     } = props;
 
     const addText = model.customAddText || (model.title ? `Add ${model.title}` : 'Add');
     const activeFilterCount = filterModel?.items?.length || 0;
+
+    // Get columns that should have toolbar filters
+    const toolbarFilterColumns = gridColumns?.filter(col => col.toolbarFilter) || [];
+    const lookupData = data?.lookups || {};
 
     return (
         <div
@@ -189,6 +196,21 @@ const CustomToolbar = function (props) {
                 {available && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAssign} size="medium" variant="contained"  >{tTranslate("Assign", tOpts)}</ButtonWithMargin>}
                 {assigned && <ButtonWithMargin startIcon={!showAddIcon ? null : <RemoveIcon />} onClick={onUnassign} size="medium" variant="contained"  >{tTranslate("Remove", tOpts)}</ButtonWithMargin>}
             </div>
+            {toolbarFilterColumns.length > 0 && (
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {toolbarFilterColumns.map((column) => (
+                        <ToolbarFilter
+                            key={column.field}
+                            column={column}
+                            filterModel={filterModel}
+                            setFilterModel={setFilterModel}
+                            lookupData={lookupData}
+                            tTranslate={tTranslate}
+                            tOpts={tOpts}
+                        />
+                    ))}
+                </div>
+            )}
             <GridToolBar {...props}>
                 {effectivePermissions.showColumnsOrder && (
                     <ColumnsPanelTrigger
@@ -592,6 +614,45 @@ const GridBase = memo(({
         pinnedColumns.right.push('actions');
         return { gridColumns: finalColumns, pinnedColumns, lookupMap };
     }, [columns, model, parent, permissions, forAssignment, dynamicColumns, translate]);
+
+    // Initialize toolbar filters with default values
+    useEffect(() => {
+        const toolbarFilterColumns = gridColumns?.filter(col => col.toolbarFilter?.defaultFilterValue !== undefined) || [];
+        if (toolbarFilterColumns.length === 0) return;
+
+        // Only add default toolbar filters on initial mount
+        const hasInitialized = filterModel.items.some(item => 
+            toolbarFilterColumns.some(col => col.field === item.field)
+        );
+        if (hasInitialized) return;
+
+        const getDefaultOperator = (type, customOperator) => {
+            if (customOperator) return customOperator;
+            switch (type) {
+                case 'string': return 'contains';
+                case 'number': return '=';
+                case 'date':
+                case 'dateTime': return 'is';
+                case 'boolean': return 'is';
+                case 'select':
+                case 'lookup': return 'isAnyOf';
+                default: return 'contains';
+            }
+        };
+
+        const toolbarFilters = toolbarFilterColumns.map(col => ({
+            field: col.field,
+            operator: getDefaultOperator(col.type, col.toolbarFilter?.defaultOperator),
+            value: col.toolbarFilter.defaultFilterValue,
+            type: col.type
+        }));
+
+        setFilterModel(prev => ({
+            ...prev,
+            items: [...prev.items, ...toolbarFilters]
+        }));
+    }, [gridColumns]);
+
 
     const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
         const { pageSize, page } = paginationModel;
@@ -1056,6 +1117,7 @@ const GridBase = memo(({
                                 tOpts,
                                 idProperty,
                                 filterModel,
+                                setFilterModel,
                                 onPreferenceChange,
                                 toolbarItems
                             },
