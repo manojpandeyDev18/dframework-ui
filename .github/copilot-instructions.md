@@ -66,7 +66,8 @@ dframework-ui/
 │       └── index.js            # Main export file
 ├── vite.config.js              # Vite configuration
 ├── package.json                # Package configuration
-└── migration.md                # Migration guide for breaking changes
+├── migration.md                # Migration guide for breaking changes
+└── TODO.md                     # Project todos and planned features
 ```
 
 ## Main Components
@@ -81,6 +82,9 @@ dframework-ui/
   - `GridPreference.js` - User preferences management
   - `footer.js` - Grid footer component
   - `helper.js` - Helper functions
+  - `template.js` - Grid templates
+  - `CustomDropdownMenu.js` - Custom dropdown menu component
+  - `LocalizedDatePicker.js` - Localized date picker component
 - **Features**: CRUD operations, filtering, sorting, pagination, column management, preferences, localization
 
 ### 2. Form
@@ -108,6 +112,13 @@ dframework-ui/
 - **Files**: `StateProvider.js`, `initialState.js`, `stateReducer.js`, `actions.js`
 - **Purpose**: Centralized state management, API endpoint configuration, router utilities
 - **Documentation**: See `docs/StateProvider.md`
+
+### 6. Custom Hooks
+- **Location**: `src/lib/hooks/`
+- **Available Hooks**:
+  - `useCascadingLookup.js` - Handle cascading dropdown dependencies
+  - `useDebounce.js` - Debounce input values
+- **Additional Hooks**: `useMobile.js` (in components/) - Detect mobile devices
 
 ## Build and Development
 
@@ -146,7 +157,8 @@ npm run preview  # Preview production build
 - Package is scoped: `@durlabh/dframework-ui`
 - Current version: 1.0.5
 - Main entry: `./index.js`
-- Package is marked as private in package.json
+- Package is marked as private in package.json (not published to npm, distributed via git)
+- Distribution: Built library is deployed to `dist-release` branch for consumption
 
 ## Coding Conventions
 
@@ -196,11 +208,20 @@ The following packages are externalized in the build and not bundled:
 
 ## Common Patterns
 
+### Exported Components and Utilities
+The following are exported from the library (see `src/lib/index.js`):
+- Components: `GridBase`, `DialogComponent`, `HelpModal`, `PageTitle`, `MuiTypography`
+- Models: `UiModel`
+- State Management: `StateProvider`, `RouterProvider`, `useStateContext`, `useRouter`
+- Notifications: `SnackbarProvider`, `SnackbarContext`, `useSnackbar`
+- Utilities: `httpRequest`, `crudHelper`, `useMobile`
+- Localization: `locales`, `daDKGrid`, `deDEGrid`, `elGRGrid`, `esESGrid`, `frFRGrid`, `itITGrid`, `ptPT`, `trTRGrid`
+
+**Note**: `Form` component is NOT currently exported. Grid and other components handle form functionality internally.
+
 ### CRUD Operations
 ```javascript
 import { httpRequest, crudHelper } from '@durlabh/dframework-ui';
-// Or access via the exported functions:
-// getList, getRecord, saveRecord, deleteRecord
 ```
 - Use crud-helper functions for consistent API interactions
 - Functions handle error handling and response formatting
@@ -220,13 +241,6 @@ const model = new UiModel({
 });
 
 <GridBase model={model} />
-```
-
-### Form Usage
-```javascript
-import { Form } from '@durlabh/dframework-ui';
-
-<Form model={formModel} api="MyApi" />
 ```
 
 ### Snackbar Usage
@@ -289,7 +303,7 @@ Before committing changes:
 
 4. **Component Patterns**: Follow the existing component patterns. Look at similar components for reference.
 
-5. **Exports**: When adding new components, update `src/lib/index.js` to export them.
+5. **Exports**: When adding new components, update `src/lib/index.js` to export them. Check existing exports to ensure consistency.
 
 6. **Localization**: If adding user-facing text, consider adding i18next support.
 
