@@ -221,6 +221,7 @@ export default function App() {
 | `placeHolder`      | `string`                   | To show `placeHolder` only for type [select](#2-type-select).                                                                                                                    | -               | `No`       |
 | `config`      | `string`                   | To Specify configuration for the dynamic columns.       | -               | Required for `dynamic` type      |
 | `limitTags`      | `string`                   | To Specify number of tags to be shown in autocomplete (while not in focus). Specific to type [autocomplete](#10-type-autocomplete).       | 5              | Required for `dynamic` type      |
+| `toolbarFilter`    | `object`                   | Configuration for displaying an always-visible filter in the toolbar. Properties: `defaultOperator`, `defaultFilterValue`, `label`. [See Toolbar Filters Documentation](./docs/ToolbarFilters.md)                        | -               | `No`       |
 
 
 # **Field Components Properties Table**
