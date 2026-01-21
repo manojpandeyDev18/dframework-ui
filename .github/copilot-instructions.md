@@ -198,10 +198,13 @@ The following packages are externalized in the build and not bundled:
 
 ### CRUD Operations
 ```javascript
-import { getList, getRecord, saveRecord, deleteRecord } from './Grid/crud-helper';
+import { httpRequest, crudHelper } from '@durlabh/dframework-ui';
+// Or access via the exported functions:
+// getList, getRecord, saveRecord, deleteRecord
 ```
 - Use crud-helper functions for consistent API interactions
 - Functions handle error handling and response formatting
+- These utilities are primarily used internally by Grid and Form components
 
 ### Grid Usage
 ```javascript
