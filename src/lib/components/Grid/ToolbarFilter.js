@@ -11,6 +11,26 @@ import { getGridStringOperators, getGridBooleanOperators } from '@mui/x-data-gri
 
 dayjs.extend(utcPlugin);
 
+// Utility function to get default operator based on column type
+const getDefaultOperator = (type) => {
+    switch (type) {
+        case 'string':
+            return 'contains';
+        case 'number':
+            return '=';
+        case 'date':
+        case 'dateTime':
+            return 'is';
+        case 'boolean':
+            return 'is';
+        case 'select':
+        case 'lookup':
+            return 'isAnyOf';
+        default:
+            return 'contains';
+    }
+};
+
 const ToolbarFilter = ({
     column,
     filterModel,
@@ -59,26 +79,6 @@ const ToolbarFilter = ({
         });
     }, [column, filterModel, setFilterModel]);
 
-    // Get default operator based on column type
-    const getDefaultOperator = (type) => {
-        switch (type) {
-            case 'string':
-                return 'contains';
-            case 'number':
-                return '=';
-            case 'date':
-            case 'dateTime':
-                return 'is';
-            case 'boolean':
-                return 'is';
-            case 'select':
-            case 'lookup':
-                return 'isAnyOf';
-            default:
-                return 'contains';
-        }
-    };
-
     // Render based on column type
     const renderFilterInput = () => {
         const label = column.toolbarFilter?.label || column.header || column.label || column.field;
@@ -118,14 +118,17 @@ const ToolbarFilter = ({
             case 'lookup':
                 const options = column.customLookup || lookupData?.[column.lookup] || [];
                 const normalizedOptions = typeof column.lookup === 'string'
-                    ? options.map(({ label, value }) => ({ label, value }))
+                    ? options.map((option) => ({
+                        label: option?.label || '',
+                        value: option?.value ?? ''
+                    }))
                     : options;
 
                 return (
                     <FormControl variant="standard" sx={{ minWidth: 150 }}>
                         <InputLabel>{tTranslate(label, tOpts)}</InputLabel>
                         <Select
-                            value={filterValue || []}
+                            value={filterValue ?? []}
                             onChange={(e) => handleFilterChange(e.target.value)}
                             multiple={existingFilter?.operator === 'isAnyOf' || column.toolbarFilter?.defaultOperator === 'isAnyOf'}
                             size="small"

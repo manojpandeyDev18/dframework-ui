@@ -616,15 +616,22 @@ const GridBase = memo(({
     }, [columns, model, parent, permissions, forAssignment, dynamicColumns, translate]);
 
     // Initialize toolbar filters with default values
+    const hasInitializedRef = useRef(false);
     useEffect(() => {
+        // Only run once on initial mount
+        if (hasInitializedRef.current) return;
+        
         const toolbarFilterColumns = gridColumns?.filter(col => col.toolbarFilter?.defaultFilterValue !== undefined) || [];
         if (toolbarFilterColumns.length === 0) return;
 
-        // Only add default toolbar filters on initial mount
-        const hasInitialized = filterModel.items.some(item => 
+        // Check if any toolbar filters already exist in filterModel
+        const hasExistingToolbarFilters = filterModel.items.some(item => 
             toolbarFilterColumns.some(col => col.field === item.field)
         );
-        if (hasInitialized) return;
+        if (hasExistingToolbarFilters) {
+            hasInitializedRef.current = true;
+            return;
+        }
 
         const getDefaultOperator = (type, customOperator) => {
             if (customOperator) return customOperator;
@@ -651,6 +658,8 @@ const GridBase = memo(({
             ...prev,
             items: [...prev.items, ...toolbarFilters]
         }));
+        
+        hasInitializedRef.current = true;
     }, [gridColumns]);
 
 
