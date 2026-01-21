@@ -94,7 +94,7 @@ dframework-ui/
   - `field-mapper.js` - Field type mapping
   - `relations.js` - Relationship handling
   - `fields/` - Individual field components
-- **Field Types**: string, number, date, dateTime, time, boolean, select, autocomplete, password, radio, chipInput, jsonInput, fileUpload, treeCheckBox, dayRadio, grid-transfer
+- **Common Field Types** (see `field-mapper.js` for full list): string, email, number, date, dateTime, time, boolean, select, autocomplete, password, radio, chipInput, jsonInput, fileUpload, treeCheckBox, dayRadio, oneToMany
 - **Uses**: Formik for form state, Yup for validation
 
 ### 3. SnackBar (Notifications)

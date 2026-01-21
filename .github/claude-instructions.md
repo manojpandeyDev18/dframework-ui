@@ -192,12 +192,12 @@ Located: `src/lib/components/Form/`
 
 **Important notes:**
 - **NOT exported** from library (used internally)
-- Supports 15+ field types via `field-mapper.js`
+- Supports 17 field types via `field-mapper.js`
 - Uses Formik for state, Yup for validation
 - Handles complex relationships via `relations.js`
 
 **Field types:**
-string, number, date, dateTime, time, boolean, select, autocomplete, password, radio, chipInput, jsonInput, fileUpload, treeCheckBox, dayRadio, grid-transfer
+string, number, date, dateTime, time, boolean, select, autocomplete, email, password, radio, chipInput, jsonInput, fileUpload, treeCheckBox, dayRadio, oneToMany
 
 ### StateProvider (Global State)
 
