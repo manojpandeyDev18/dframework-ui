@@ -139,7 +139,7 @@ const ToolbarFilter = ({
                         value={filterValue}
                         onChange={(e) => handleFilterChange(e.target.value)}
                         type="text"
-                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                        inputProps={{ inputMode: 'numeric' }}
                         size="small"
                         sx={{ minWidth: 150 }}
                     />
@@ -218,9 +218,13 @@ const ToolbarFilter = ({
                 const filterFormat = fixedFilterFormat[columnType];
                 const format = systemDateTimeFormat(columnType !== 'dateTime', false, stateData.dateTime);
                 const DateComponent = columnType === 'dateTime' ? DateTimePicker : DatePicker;
-                const dateValue = filterValue
-                    ? (dayjs(filterValue).isValid() ? dayjs(filterValue) : null)
-                    : null;
+                
+                // Parse and validate date value once
+                let dateValue = null;
+                if (filterValue) {
+                    const parsedDate = dayjs(filterValue);
+                    dateValue = parsedDate.isValid() ? parsedDate : null;
+                }
 
                 return (
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
