@@ -34,7 +34,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
-import { convertDefaultSort, CustomExportButton, areEqual, getDefaultOperator } from './helper';
+import { convertDefaultSort, areEqual, getDefaultOperator } from './helper';
 import { styled } from '@mui/material/styles';
 
 const defaultPageSize = 50;
@@ -493,7 +493,7 @@ const GridBase = memo(({
         }));
         
         hasInitializedRef.current = true;
-    }, [gridColumns, filterModel]);
+    }, [gridColumns]);
 
 
     const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
