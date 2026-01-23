@@ -177,18 +177,18 @@ const advancedModel = new UiModel({
 ## Supported Operators by Type
 
 ### String
-- `contains` (default)
+- `startsWith` (default - no operator label shown)
+- `contains`
 - `equals`
-- `startsWith`
 - `endsWith`
 
 ### Number
-- `=` (default)
-- `!=`
-- `>`
-- `>=`
-- `<`
-- `<=`
+- `=` (default) - Displayed as `=`
+- `!=` - Displayed as `≠`
+- `>` - Displayed as `>`
+- `>=` - Displayed as `≥`
+- `<` - Displayed as `<`
+- `<=` - Displayed as `≤`
 
 ### Date/DateTime
 - `is` (default)

@@ -75,13 +75,29 @@ If you don't specify a `defaultOperator`, the following defaults are used:
 
 | Column Type | Default Operator | Description |
 |-------------|------------------|-------------|
-| `string` | `contains` | Matches if the cell value contains the filter value |
+| `string` | `startsWith` | Matches if the cell value starts with the filter value |
 | `number` | `=` | Matches if values are equal |
 | `date` | `is` | Matches exact date |
 | `dateTime` | `is` | Matches exact date/time |
 | `boolean` | `is` | Matches exact boolean value |
 | `select` | `isAnyOf` | Matches if value is in the selected options |
 | `lookup` | `isAnyOf` | Matches if value is in the selected options |
+
+## Operator Labels in UI
+
+Toolbar filters automatically display operator symbols or labels to clarify the filter behavior:
+
+- **Number operators**: Display as symbols (e.g., `=`, `≥`, `≤`, `>`, `<`, `≠`) to save space
+- **String operators**: Show verbose labels only for non-obvious operators (e.g., "exact match", "contains", "ends with")
+- **Default string operator** (`startsWith`): No label shown to keep the UI clean
+- **Other operators**: Display readable text (e.g., "is", "is not", "any of")
+
+### Examples of Operator Display
+
+- Number field with `>=` operator: Label shows `"≥ Age"`
+- String field with `startsWith` operator: Label shows `"Name"` (no operator shown)
+- String field with `equals` operator: Label shows `"Name (exact match)"`
+- String field with `contains` operator: Label shows `"Name (contains)"`
 
 ## Supported Filter Operators
 

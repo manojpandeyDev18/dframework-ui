@@ -15,7 +15,7 @@ dayjs.extend(utcPlugin);
 const getDefaultOperator = (type) => {
     switch (type) {
         case 'string':
-            return 'contains';
+            return 'startsWith';
         case 'number':
             return '=';
         case 'date':
@@ -27,7 +27,7 @@ const getDefaultOperator = (type) => {
         case 'lookup':
             return 'isAnyOf';
         default:
-            return 'contains';
+            return 'startsWith';
     }
 };
 
@@ -79,9 +79,58 @@ const ToolbarFilter = ({
         });
     }, [column, filterModel, setFilterModel]);
 
+    // Get operator label/symbol for display
+    const getOperatorLabel = useCallback((operator, type) => {
+        // For number operators, use symbols
+        if (type === 'number') {
+            const symbolMap = {
+                '=': '=',
+                '!=': '≠',
+                '>': '>',
+                '>=': '≥',
+                '<': '<',
+                '<=': '≤'
+            };
+            return symbolMap[operator] || operator;
+        }
+        
+        // For string operators, use verbose labels for non-obvious ones
+        if (type === 'string') {
+            const labelMap = {
+                'contains': 'contains',
+                'equals': 'exact match',
+                'startsWith': 'starts with',
+                'endsWith': 'ends with',
+                'isEmpty': 'is empty',
+                'isNotEmpty': 'is not empty'
+            };
+            return labelMap[operator] || operator;
+        }
+        
+        // For other types, return the operator as-is or a readable version
+        const labelMap = {
+            'is': 'is',
+            'not': 'is not',
+            'isAnyOf': 'any of',
+            'after': 'after',
+            'onOrAfter': 'on or after',
+            'before': 'before',
+            'onOrBefore': 'on or before'
+        };
+        return labelMap[operator] || operator;
+    }, []);
+
     // Render based on column type
     const renderFilterInput = () => {
-        const label = column.toolbarFilter?.label || column.header || column.label || column.field;
+        const baseLabel = column.toolbarFilter?.label || column.header || column.label || column.field;
+        const operator = column.toolbarFilter?.defaultOperator || getDefaultOperator(column.type);
+        const operatorLabel = getOperatorLabel(operator, column.type);
+        
+        // For number fields, prepend operator symbol. For others, append operator text if verbose
+        const shouldShowOperator = column.type === 'number' || (column.type === 'string' && operator !== 'startsWith');
+        const label = shouldShowOperator 
+            ? (column.type === 'number' ? `${operatorLabel} ${baseLabel}` : `${baseLabel} (${operatorLabel})`)
+            : baseLabel;
 
         switch (column.type) {
             case 'string':
