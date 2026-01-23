@@ -34,7 +34,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
-import { convertDefaultSort, CustomExportButton, areEqual } from './helper';
+import { convertDefaultSort, CustomExportButton, areEqual, getDefaultOperator } from './helper';
 import { styled } from '@mui/material/styles';
 
 const defaultPageSize = 50;
@@ -480,20 +480,6 @@ const GridBase = memo(({
             return;
         }
 
-        const getDefaultOperator = (type, customOperator) => {
-            if (customOperator) return customOperator;
-            switch (type) {
-                case 'string': return 'startsWith';
-                case 'number': return '=';
-                case 'date':
-                case 'dateTime': return 'is';
-                case 'boolean': return 'is';
-                case 'select':
-                case 'lookup': return 'isAnyOf';
-                default: return 'startsWith';
-            }
-        };
-
         const toolbarFilters = toolbarFilterColumns.map(col => ({
             field: col.field,
             operator: getDefaultOperator(col.type, col.toolbarFilter?.defaultOperator),
@@ -507,7 +493,7 @@ const GridBase = memo(({
         }));
         
         hasInitializedRef.current = true;
-    }, [gridColumns]);
+    }, [gridColumns, filterModel]);
 
 
     const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {

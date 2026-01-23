@@ -44,6 +44,27 @@ export const CustomExportButton = ({ exportFormats, ...props }) => (
     </GridToolbarExportContainer>
 );
 
+// Get default operator based on column type
+export const getDefaultOperator = (type, customOperator) => {
+    if (customOperator) return customOperator;
+    switch (type) {
+        case 'string':
+            return 'startsWith';
+        case 'number':
+            return '=';
+        case 'date':
+        case 'dateTime':
+            return 'is';
+        case 'boolean':
+            return 'is';
+        case 'select':
+        case 'lookup':
+            return 'isAnyOf';
+        default:
+            return 'startsWith';
+    }
+};
+
 // Shallow props comparison
 export const areEqual = (prevProps = {}, nextProps = {}) => {
     let equal = true;

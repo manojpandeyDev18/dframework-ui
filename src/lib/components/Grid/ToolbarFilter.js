@@ -7,29 +7,9 @@ import dayjs from 'dayjs';
 import utcPlugin from 'dayjs/plugin/utc.js';
 import { useStateContext } from '../useRouter/StateProvider';
 import utils from '../utils';
-import { getGridStringOperators, getGridBooleanOperators } from '@mui/x-data-grid-premium';
+import { getDefaultOperator } from './helper';
 
 dayjs.extend(utcPlugin);
-
-// Utility function to get default operator based on column type
-const getDefaultOperator = (type) => {
-    switch (type) {
-        case 'string':
-            return 'startsWith';
-        case 'number':
-            return '=';
-        case 'date':
-        case 'dateTime':
-            return 'is';
-        case 'boolean':
-            return 'is';
-        case 'select':
-        case 'lookup':
-            return 'isAnyOf';
-        default:
-            return 'startsWith';
-    }
-};
 
 const ToolbarFilter = ({
     column,
@@ -47,37 +27,40 @@ const ToolbarFilter = ({
         return filterModel?.items?.find(item => item.field === column.field);
     }, [filterModel, column.field]);
 
-    // Get current filter value
-    const filterValue = existingFilter?.value ?? (column.toolbarFilter?.defaultFilterValue || '');
+    // Get current filter value - use ?? to properly handle falsy but valid values like 0, false, ""
+    const filterValue = existingFilter?.value ?? (column.toolbarFilter?.defaultFilterValue ?? '');
 
-    // Handle filter change
+    // Handle filter change - use functional update to avoid filterModel dependency
     const handleFilterChange = useCallback((newValue) => {
         const operator = column.toolbarFilter?.defaultOperator || getDefaultOperator(column.type);
         
-        // If value is empty, remove filter
-        if (newValue === '' || newValue === null || (Array.isArray(newValue) && newValue.length === 0)) {
-            const newItems = filterModel.items.filter(item => item.field !== column.field);
-            setFilterModel({
-                ...filterModel,
-                items: newItems
-            });
-            return;
-        }
+        setFilterModel((prevFilterModel) => {
+            const currentItems = prevFilterModel?.items || [];
 
-        // Update or add filter
-        const newFilter = {
-            field: column.field,
-            operator: operator,
-            value: newValue,
-            type: column.type
-        };
+            // If value is empty, remove filter
+            if (newValue === '' || newValue === null || (Array.isArray(newValue) && newValue.length === 0)) {
+                const newItems = currentItems.filter((item) => item.field !== column.field);
+                return {
+                    ...prevFilterModel,
+                    items: newItems,
+                };
+            }
 
-        const otherFilters = filterModel.items.filter(item => item.field !== column.field);
-        setFilterModel({
-            ...filterModel,
-            items: [...otherFilters, newFilter]
+            // Update or add filter
+            const newFilter = {
+                field: column.field,
+                operator: operator,
+                value: newValue,
+                type: column.type,
+            };
+
+            const otherFilters = currentItems.filter((item) => item.field !== column.field);
+            return {
+                ...prevFilterModel,
+                items: [...otherFilters, newFilter],
+            };
         });
-    }, [column, filterModel, setFilterModel]);
+    }, [column, setFilterModel]);
 
     // Get operator label/symbol for display
     const getOperatorLabel = useCallback((operator, type) => {
@@ -124,7 +107,7 @@ const ToolbarFilter = ({
 
     // Render based on column type
     const renderFilterInput = () => {
-        const baseLabel = column.toolbarFilter?.label || column.header || column.label || column.field;
+        const baseLabel = column.toolbarFilter?.label || column.headerName || column.label || column.field;
         const operator = column.toolbarFilter?.defaultOperator || getDefaultOperator(column.type);
         const operatorLabel = getOperatorLabel(operator, column.type);
         
@@ -136,6 +119,18 @@ const ToolbarFilter = ({
 
         switch (column.type) {
             case 'string':
+                return (
+                    <TextField
+                        variant="standard"
+                        label={tTranslate(label, tOpts)}
+                        value={filterValue}
+                        onChange={(e) => handleFilterChange(e.target.value)}
+                        type="text"
+                        size="small"
+                        sx={{ minWidth: 150 }}
+                    />
+                );
+
             case 'number':
                 return (
                     <TextField
@@ -143,27 +138,51 @@ const ToolbarFilter = ({
                         label={tTranslate(label, tOpts)}
                         value={filterValue}
                         onChange={(e) => handleFilterChange(e.target.value)}
-                        type={column.type === 'number' ? 'number' : 'text'}
+                        type="text"
+                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                         size="small"
                         sx={{ minWidth: 150 }}
                     />
                 );
 
-            case 'boolean':
+            case 'boolean': {
+                const booleanSelectValue =
+                    filterValue === '' || filterValue === undefined || filterValue === null
+                        ? ''
+                        : filterValue === true || filterValue === 'true'
+                            ? 'true'
+                            : filterValue === false || filterValue === 'false'
+                                ? 'false'
+                                : '';
+
                 return (
                     <FormControl variant="standard" sx={{ minWidth: 150 }}>
                         <InputLabel>{tTranslate(label, tOpts)}</InputLabel>
                         <Select
-                            value={filterValue}
-                            onChange={(e) => handleFilterChange(e.target.value)}
+                            value={booleanSelectValue}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                let newValue;
+                                if (val === '') {
+                                    newValue = '';
+                                } else if (val === 'true') {
+                                    newValue = true;
+                                } else if (val === 'false') {
+                                    newValue = false;
+                                } else {
+                                    newValue = val;
+                                }
+                                handleFilterChange(newValue);
+                            }}
                             size="small"
                         >
                             <MenuItem value="">{tTranslate('All', tOpts)}</MenuItem>
-                            <MenuItem value={true}>{tTranslate('True', tOpts)}</MenuItem>
-                            <MenuItem value={false}>{tTranslate('False', tOpts)}</MenuItem>
+                            <MenuItem value="true">{tTranslate('True', tOpts)}</MenuItem>
+                            <MenuItem value="false">{tTranslate('False', tOpts)}</MenuItem>
                         </Select>
                     </FormControl>
                 );
+            }
 
             case 'select':
             case 'lookup':
@@ -184,8 +203,8 @@ const ToolbarFilter = ({
                             multiple={existingFilter?.operator === 'isAnyOf' || column.toolbarFilter?.defaultOperator === 'isAnyOf'}
                             size="small"
                         >
-                            {normalizedOptions.map((option, index) => (
-                                <MenuItem key={index} value={option.value}>
+                            {normalizedOptions.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
                                     {option.label}
                                 </MenuItem>
                             ))}
@@ -199,7 +218,9 @@ const ToolbarFilter = ({
                 const filterFormat = fixedFilterFormat[columnType];
                 const format = systemDateTimeFormat(columnType !== 'dateTime', false, stateData.dateTime);
                 const DateComponent = columnType === 'dateTime' ? DateTimePicker : DatePicker;
-                const dateValue = filterValue ? dayjs(filterValue) : null;
+                const dateValue = filterValue
+                    ? (dayjs(filterValue).isValid() ? dayjs(filterValue) : null)
+                    : null;
 
                 return (
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
