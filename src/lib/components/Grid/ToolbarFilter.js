@@ -194,13 +194,15 @@ const ToolbarFilter = ({
                     }))
                     : options;
 
+                const isMultiple = existingFilter?.operator === 'isAnyOf' || column.toolbarFilter?.defaultOperator === 'isAnyOf';
+
                 return (
                     <FormControl variant="standard" sx={{ minWidth: 150 }}>
                         <InputLabel>{tTranslate(label, tOpts)}</InputLabel>
                         <Select
-                            value={filterValue ?? []}
+                            value={isMultiple ? (filterValue ?? []) : (filterValue ?? '')}
                             onChange={(e) => handleFilterChange(e.target.value)}
-                            multiple={existingFilter?.operator === 'isAnyOf' || column.toolbarFilter?.defaultOperator === 'isAnyOf'}
+                            multiple={isMultiple}
                             size="small"
                         >
                             {normalizedOptions.map((option) => (
