@@ -95,6 +95,8 @@ const ToolbarFilter = ({
         }
         
         // For string operators, use verbose labels for non-obvious ones
+        // Note: 'startsWith' is included for completeness but won't be displayed
+        // due to shouldShowOperator logic below (it's the default and doesn't need a label)
         if (type === 'string') {
             const labelMap = {
                 'contains': 'contains',
