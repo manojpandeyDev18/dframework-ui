@@ -152,6 +152,7 @@ const CustomToolbar = function (props) {
                 {preferenceKey &&
                     <GridPreferences 
                         gridRef={apiRef} 
+                        preferenceKey={preferenceKey}
                         onPreferenceChange={onPreferenceChange} 
                         t={tTranslate}
                         tOpts={tOpts}

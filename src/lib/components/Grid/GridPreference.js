@@ -44,10 +44,9 @@ const paginationModel = { pageSize: 50, page: 0 };
 
 const pageSizeOptions = [5, 10, 20, 50, 100];
 
-const GridPreferences = ({ gridRef, onPreferenceChange, t, tOpts }) => {
+const GridPreferences = ({ gridRef, preferenceKey, onPreferenceChange, t, tOpts }) => {
     const { getApiEndpoint } = useStateContext();
     const preferenceApi = getApiEndpoint("GridPreferenceManager");
-    const preferenceKey = gridRef.current?.prefKey;
     const apiRef = useGridApiRef();
     const snackbar = useSnackbar();
     //const { t } = useTranslation(); // To do: to fix useTranslation directly in next release
