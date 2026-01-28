@@ -6,7 +6,10 @@ import {
     getGridStringOperators,
     getGridBooleanOperators,
     GridActionsCellItem,
-    useGridApiRef
+    useGridApiRef,
+    useGridApiContext,
+    useGridSelector,
+    gridRowSelectionStateSelector
 } from '@mui/x-data-grid-premium';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CopyIcon from '@mui/icons-material/FileCopy';
@@ -26,7 +29,6 @@ import PageTitle from '../PageTitle';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
 import LocalizedDatePicker from './LocalizedDatePicker';
 import actionsStateProvider from '../useRouter/actions';
-import GridPreferences from './GridPreference';
 import CustomDropdownMenu from './CustomDropdownMenu';
 import CustomToolbar from './CustomToolbar';
 import { getPermissions } from '../utils';
@@ -91,9 +93,12 @@ const DeleteContentText = styled('span')({
     textOverflow: 'ellipsis'
 });
 
-const CustomCheckBox = ({ params, selectedSet, handleSelectRow, idProperty }) => {
+const CustomCheckBox = ({ params, handleSelectRow, idProperty }) => {
+    const apiRef = useGridApiContext();
     const rowId = params.row[idProperty];
-    const isChecked = selectedSet.has(rowId);
+    // useGridSelector subscribes to state changes and triggers re-render when selection updates
+    const selectionModel = useGridSelector(apiRef, gridRowSelectionStateSelector);
+    const isChecked = selectionModel?.ids?.has(rowId) ?? false;
 
     const handleCheckboxClick = (event) => {
         event.stopPropagation();
@@ -105,6 +110,7 @@ const CustomCheckBox = ({ params, selectedSet, handleSelectRow, idProperty }) =>
             onClick={handleCheckboxClick}
             checked={isChecked}
             color="primary"
+            value={rowId}
             inputProps={{ 'aria-label': 'checkbox' }}
         />
     );
@@ -152,7 +158,11 @@ const GridBase = memo(({
     const [isLoading, setIsLoading] = useState(true);
     const forAssignment = !!onAssignChange;
     const rowsSelected = showRowsSelected;
-    const [selection, setSelection] = useState([]);
+    // MUI v8: rowSelectionModel uses object format with type ('include'/'exclude') and ids (Set)
+    const [rowSelectionModel, setRowSelectionModel] = useState({
+        type: 'include',
+        ids: new Set()
+    });
     const [isDeleting, setIsDeleting] = useState(false);
     const [record, setRecord] = useState(null);
     const visibilityModel = { CreatedOn: false, CreatedByUser: false, ...model.columnVisibilityModel };
@@ -225,21 +235,19 @@ const GridBase = memo(({
         }
         return {};
     }, [baseDataFromParams]);
-    const [selectedSet, setSelectedSet] = useState(new Set());
 
     const handleSelectRow = useCallback(({ row }) => {
         const rowId = row[idProperty];
-        setSelectedSet(prevSet => {
-            const newSet = new Set(prevSet);
-            if (newSet.has(rowId)) {
-                newSet.delete(rowId);
+        setRowSelectionModel(prevModel => {
+            const newIds = new Set(prevModel?.ids || []);
+            if (newIds.has(rowId)) {
+                newIds.delete(rowId);
             } else {
-                newSet.add(rowId);
+                newIds.add(rowId);
             }
-            setSelection(Array.from(newSet));
-            return newSet;
+            return { type: 'include', ids: newIds };
         });
-    }, [idProperty, setSelectedSet, setSelection]);
+    }, [idProperty]);
 
     const gridColumnTypes = {
         "radio": {
@@ -272,7 +280,7 @@ const GridBase = memo(({
             "valueOptions": "lookup"
         },
         "selection": {
-            renderCell: (params) => <CustomCheckBox params={params} selectedSet={selectedSet} handleSelectRow={handleSelectRow} idProperty={idProperty} />
+            renderCell: (params) => <CustomCheckBox params={params} handleSelectRow={handleSelectRow} idProperty={idProperty} />
         }
     };
 
@@ -695,12 +703,12 @@ const GridBase = memo(({
     };
 
     const handleAddRecords = async () => {
-        if (selectedSet.size < 1) {
+        if (rowSelectionModel.ids.size < 1) {
             snackbar.showError("Please select at least one record to proceed");
             return;
         }
 
-        const selectedIds = Array.from(selectedSet);
+        const selectedIds = Array.from(rowSelectionModel.ids);
         const recordMap = new Map(data.records.map(record => [record[idProperty], record]));
         let selectedRecords = selectedIds.map(id => ({ ...baseSaveData, ...recordMap.get(id) }));
 
@@ -711,11 +719,11 @@ const GridBase = memo(({
             );
         }
 
-        const baseUrl =  buildUrl(model.controllerType, backendApi);
+        const baseUrl =  buildUrl(model.controllerType, selectionApi);
         try {
             const result = await saveRecord({
                 id: 0,
-                api: `${baseUrl}${selectionApi || api}/updateMany`,
+                api: `${baseUrl}/updateMany`,
                 values: { items: selectedRecords },
                 setIsLoading,
                 setError: snackbar.showError
@@ -729,15 +737,17 @@ const GridBase = memo(({
         } catch (err) {
             snackbar.showError(err.message || "An error occurred, please try again later.");
         } finally {
-            setSelectedSet(new Set());
-            setIsLoading(false);
+            setRowSelectionModel({
+                type: 'include',
+                ids: new Set()
+            });
             setShowAddConfirmation(false);
         }
     };
 
     const onAdd = useCallback(() => {
         if (selectionApi.length > 0) {
-            if (selectedSet.size) {
+            if (rowSelectionModel.ids.size > 0) {
                 setShowAddConfirmation(true);
                 return;
             }
@@ -752,7 +762,7 @@ const GridBase = memo(({
         } else {
             openForm({ id: 0 });
         }
-    }, [selectionApi, selectedSet.size, snackbar, onAddOverride, openForm]);
+    }, [selectionApi, snackbar, onAddOverride, openForm, rowSelectionModel.ids.size]);
 
     const clearFilters = useCallback(() => {
         if (!filterModel?.items?.length) return;
@@ -765,25 +775,30 @@ const GridBase = memo(({
     };
 
     const onAssign = () => {
-        updateAssignment({ assign: selection });
+        updateAssignment({ assign: Array.from(rowSelectionModel.ids) });
     };
 
     const onUnassign = () => {
-        updateAssignment({ unassign: selection });
+        updateAssignment({ unassign: Array.from(rowSelectionModel.ids) });
     };
 
     const selectAll = useCallback(() => {
-        if (selectedSet.size === data.records.length) {
+        const currentCount = rowSelectionModel.ids.size;
+        if (currentCount === data.records.length) {
             // If all records are selected, deselect all
-            setSelectedSet(new Set());
-            setSelection([]);
+            setRowSelectionModel({
+                type: 'include',
+                ids: new Set()
+            });
         } else {
             // Select all records
             const allIds = data.records.map(record => record[idProperty]);
-            setSelectedSet(new Set(allIds));
-            setSelection(allIds);
+            setRowSelectionModel({
+                type: 'include',
+                ids: new Set(allIds)
+            });
         }
-    }, [selectedSet.size, data.records, idProperty, setSelection, setSelectedSet]);
+    }, [rowSelectionModel, data.records, idProperty]);
 
     const getGridRowId = (row) => {
         return row[idProperty];
@@ -922,8 +937,8 @@ const GridBase = memo(({
                         keepNonExistentRowsSelected
                         onSortModelChange={updateSort}
                         onFilterModelChange={updateFilters}
-                        rowSelection={selection}
-                        onRowSelectionModelChange={setSelection}
+                        rowSelectionModel={rowSelectionModel}
+                        onRowSelectionModelChange={setRowSelectionModel}
                         filterModel={filterModel}
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
@@ -943,7 +958,7 @@ const GridBase = memo(({
                                 showAddIcon,
                                 onAdd,
                                 selectionApi,
-                                selectedSet,
+                                rowSelectionModel,
                                 selectAll,
                                 available,
                                 onAssign,
@@ -1127,7 +1142,7 @@ const GridBase = memo(({
                         title="Confirm Add"
                     >
                         <DeleteContentText>
-                            {tTranslate("Are you sure you want to add", tOpts)} {selectedSet.size} {tTranslate("records", { count: selectedSet.size, ...tOpts })}?
+                            {tTranslate("Are you sure you want to add", tOpts)} {rowSelectionModel.ids.size} {tTranslate("records", { count: rowSelectionModel.ids.size, ...tOpts })}?
                         </DeleteContentText>
                     </DialogComponent>
                 )}
