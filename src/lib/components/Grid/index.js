@@ -719,7 +719,7 @@ const GridBase = memo(({
             );
         }
 
-        const baseUrl =  buildUrl(model.controllerType, selectionApi);
+        const baseUrl =  buildUrl(model.controllerType, selectionApi || backendApi);
         try {
             const result = await saveRecord({
                 id: 0,
