@@ -1,10 +1,8 @@
 import actionsStateProvider from "../useRouter/actions";
 import request, { transport, HTTP_STATUS_CODES, DATA_PARSERS } from "./httpRequest";
-import utils from "../utils";
-import dayjs from "dayjs";
 
 const dateDataTypes = ['date', 'dateTime'];
-const lookupDataTypes = ['singleSelect', 'radio', 'select'];
+const lookupDataTypes = ['singleSelect'];
 const timeInterval = 200;
 const contentTypeToFileType = {
     "text/csv": "CSV",
@@ -16,13 +14,24 @@ const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(d
 
 /**
  * Transform combo records to lookup format
+ * Handles both array and object formats for records
  */
 const transformComboRecords = (combos = {}) => {
     const transformedCombos = {};
 
     for (const [comboType, records] of Object.entries(combos)) {
+        let recordsArray = [];
+
+        // Handle different record formats
         if (Array.isArray(records)) {
-            transformedCombos[comboType] = records.map(record => {
+            recordsArray = records;
+        } else if (records && typeof records === 'object') {
+            // If records is an object, treat it as a single record
+            recordsArray = [records];
+        }
+
+        if (recordsArray.length > 0) {
+            transformedCombos[comboType] = recordsArray.map(record => {
                 if (Array.isArray(record)) {
                     return { value: record[0], label: record[1] };
                 }
@@ -232,6 +241,32 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
             response = await request({  url, params:  requestData, dispatchData, disableLoader: true, dataParser: DATA_PARSERS.json });
         } else {
             response = await transport(params);
+            if (response.data) {
+                const { records } = response.data;
+                if (records) {
+                    records.forEach(record => {
+                        dateColumns.forEach(column => {
+                            const { field, keepLocal, keepLocalDate } = column;
+                            if (record[field]) {
+                                record[field] = new Date(record[field]);
+                                if (keepLocalDate) {
+                                    const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                                    record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                                }
+                                if (keepLocal && !isLocalTime(record[field])) {
+                                    const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                                    record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                                }
+                            }
+                        });
+                        model.columns.forEach(({ field, displayIndex }) => {
+                            if (!displayIndex) return;
+                            record[field] = record[displayIndex];
+                        });
+                    });
+                }
+
+            }
         }
         if (response.status === HTTP_STATUS_CODES.OK || response.records) {
             // Process response data and merge combo lookups

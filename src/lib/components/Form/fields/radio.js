@@ -13,7 +13,7 @@ const Field = ({ field, formik, orientation = "row", label, lookups, fieldConfig
     return (
         <>
             <FormControl component="fieldset" error={isError}>
-                {formik.values[field] !== undefined && ( // to prevent initial render of undefined value for formik
+                {formik.values[field] !== undefined && ( // display only if value is defined
                     <RadioGroup
                         row={orientation === "row"}
                         aria-label={label}
