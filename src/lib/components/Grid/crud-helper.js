@@ -170,7 +170,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         requestData.limitToSurveyed = model?.limitToSurveyed;
     }
 
-    if (isCSController && model.processPayload && typeof model.processPayload === 'function') {
+    if (typeof model.processPayload === 'function') {
         model.processPayload({ requestData, model, where, sortModel });
     }
 
@@ -189,7 +189,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         requestData.columns = columns;
         if (isCSController) {
             requestData.exportFormat = contentTypeToFileType[contentType];
-            if (model.processExportFields && typeof model.processExportFields === 'function') {
+            if (typeof model.processExportFields === 'function') {
                 model.processExportFields(requestData, columns);
             }
         }
