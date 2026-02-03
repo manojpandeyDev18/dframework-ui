@@ -43,17 +43,21 @@ const Form = ({
   sx,
   readOnly,
   beforeSubmit,
-  deletePromptText
+  deletePromptText,
+  detailPanelToggleId = null, //id of row selected in grid to show detail panel for 
+  onCustomCancel,
+  onCustomSaveSuccess
 }) => {
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
   const { relations = [] } = model;
-  const { dispatchData, stateData } = useStateContext();
+  const { dispatchData, stateData, buildUrl } = useStateContext();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
-  const id = idWithOptions.split("-")[0];
+  const id = detailPanelToggleId || idWithOptions.split("-")[0];
   const searchParams = new URLSearchParams(window.location.search);
   const baseDataFromParams = searchParams.has(consts.baseData) && searchParams.get(consts.baseData);
+  const isCSController = model.controllerType === 'cs';
   if (baseDataFromParams) {
     const parsedData = JSON.parse(baseDataFromParams);
     if (typeof parsedData === consts.object && parsedData !== null) {
@@ -74,7 +78,7 @@ const Form = ({
   const fieldConfigs = typeof model.applyFieldConfig === consts.function
     ? model.applyFieldConfig({ data, lookups })
     : defaultFieldConfigs;
-  const gridApi = useMemo(() => `${url}${model.api || api || ''}`, [url, model.api, api]);
+  const gridApi = buildUrl(model.controllerType, model.api);
   const { mode } = stateData.dataForm;
   const userData = stateData.getUserData || {};
   const userDefinedPermissions = {
@@ -125,9 +129,10 @@ const Form = ({
     };
     getRecord({
       ...params,
-      id: options.length > 1 ? options[1] : options[0],
+      id: detailPanelToggleId || (options.length > 1 ? options[1] : options[0]),
       setIsLoading,
-      setActiveRecord
+      setActiveRecord,
+      dispatchData
     });
 
   }, [id, idWithOptions, model, url]);
@@ -138,7 +143,11 @@ const Form = ({
     validationSchema: validationSchema,
     validateOnBlur: false,
     onSubmit: async (values, { resetForm }) => {
+      const formColumns = model.columns.filter(col => col.label !== null).map(col => col.field);
       Object.keys(values).forEach(key => {
+        if (!formColumns.includes(key)) {
+          delete values[key];
+        }
         if (typeof values[key] === consts.string) {
           values[key] = values[key].trim();
         }
@@ -150,11 +159,15 @@ const Form = ({
         values: values,
         setIsLoading,
         setError: snackbar.showError,
+        model
       })
         .then((success) => {
           if (!success) return;
           if (model.reloadOnSave) {
             return window.location.reload();
+          }
+          if (onCustomSaveSuccess) {
+            onCustomSaveSuccess();
           }
           const message = success.info ? success.info : `Record ${id === 0 ? "Added" : "Updated"} Successfully.`;
           snackbar.showMessage(message);
@@ -182,6 +195,9 @@ const Form = ({
   const handleDiscardChanges = () => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
+     if (onCustomCancel) {
+      onCustomCancel();
+    }
     navigateBack !== false && handleNavigation();
   };
 
@@ -221,6 +237,9 @@ const Form = ({
     if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
+      if (onCustomCancel) {
+        onCustomCancel();
+      }
       navigateBack !== false && handleNavigation();
     }
     event.preventDefault();
@@ -290,15 +309,18 @@ const Form = ({
   const recordEditable = !("canEdit" in data) || data.canEdit;
   const readOnlyRelations = !recordEditable || data.readOnlyRelations;
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
+  const { showPageTitle = true } = model;
   return (
     <>
-      <PageTitle
-        navigate={navigate}
-        title={formTitle}
-        showBreadcrumbs={!hideBreadcrumb}
-        breadcrumbs={breadcrumbs}
-        model={model}
-      />
+      {showPageTitle && (
+        <PageTitle
+          navigate={navigate}
+          title={formTitle}
+          showBreadcrumbs={!hideBreadcrumb}
+          breadcrumbs={breadcrumbs}
+          model={model}
+        />
+      )}
       <ActiveStepContext.Provider value={{ activeStep, setActiveStep }}>
         <Paper sx={{ padding: 2, ...sx }}>
           <form>

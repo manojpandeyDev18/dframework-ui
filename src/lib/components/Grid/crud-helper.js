@@ -1,11 +1,86 @@
 import actionsStateProvider from "../useRouter/actions";
-import { transport, HTTP_STATUS_CODES } from "./httpRequest";
+import request, { transport, HTTP_STATUS_CODES, DATA_PARSERS } from "./httpRequest";
+import utils from "../utils";
+import dayjs from "dayjs";
 
 const dateDataTypes = ['date', 'dateTime'];
-const lookupDataTypes = ['singleSelect'];
+const lookupDataTypes = ['singleSelect', 'radio', 'select'];
 const timeInterval = 200;
+const contentTypeToFileType = {
+    "text/csv": "CSV",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "XLSX",
+    'application/json': "JSON"
+};
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
+
+/**
+ * Transform combo records to lookup format
+ */
+const transformComboRecords = (combos = {}) => {
+    const transformedCombos = {};
+
+    for (const [comboType, records] of Object.entries(combos)) {
+        if (Array.isArray(records)) {
+            transformedCombos[comboType] = records.map(record => {
+                if (Array.isArray(record)) {
+                    return { value: record[0], label: record[1] };
+                }
+                return {
+                    value: record.LookupId ?? record.value ?? record.id,
+                    label: record.DisplayValue ?? record.label ?? record.name
+                };
+            });
+        }
+    }
+
+    return transformedCombos;
+};
+
+/**
+ * Process response data and merge combo lookups
+ */
+const processResponseData = async ({ responseData, model, dateColumns }) => {
+    const { records = [] } = responseData;
+    if (records && records.length) {
+        records.forEach(record => {
+            dateColumns.forEach(column => {
+                const { field, keepLocal, keepLocalDate } = column;
+                if (record[field]) {
+                    // Try to parse compact timestamp format first (handles various lengths)
+                    let parsedDate = dayjs(record[field]);
+
+                    // If not compact format, try standard Date parsing
+                    if (!parsedDate) {
+                        parsedDate = new Date(record[field]);
+                        // Check if the date is valid
+                        if (isNaN(parsedDate.getTime())) {
+                            console.warn(`Invalid date format for field ${field}:`, record[field]);
+                            return; // Skip processing invalid dates
+                        }
+                    }
+
+                    record[field] = parsedDate;
+
+                    if (keepLocalDate) {
+                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                    }
+                    if (keepLocal && !isLocalTime(record[field])) {
+                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                    }
+                }
+            });
+            model.columns.forEach(({ field, displayIndex }) => {
+                if (!displayIndex) return;
+                record[field] = record[displayIndex];
+            });
+        });
+    }
+
+    return responseData;
+};
 
 /**
  * Handles common HTTP error responses such as session expiration and forbidden access.
@@ -56,6 +131,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
     const lookups = [];
     const lookupWithDeps = []; // for backward compatibility having two lookups arrays
     const dateColumns = [];
+    const isCSController = controllerType === 'cs';
     gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true, dependsOn }) => {
         if (dateDataTypes.includes(type)) {
             dateColumns.push({ field, keepLocal, keepLocalDate });
@@ -68,6 +144,9 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
             lookupWithDeps.push({ lookup, dependsOn });
         }
     });
+    if (model?.formActions?.export && contentType) {
+        action = model.formActions.export;
+    }
 
     const where = [];
     if (filterModel?.items?.length) {
@@ -111,6 +190,10 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         fileName: model.overrideFileName
     };
 
+    if(model?.comboTypes){
+        requestData.comboTypes = model.comboTypes;
+    }
+
     if (lookups.length) {
         requestData.lookups = lookups.join(',');
     }
@@ -121,6 +204,36 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
 
     if (model?.limitToSurveyed) {
         requestData.limitToSurveyed = model?.limitToSurveyed;
+    }
+
+    if (isCSController) {
+        // payloadFilter keeps all filters for individual field mappings
+        let payloadFilter = where, removedFields = [];
+
+        // Remove fields that should not be in the where array or filters
+        if (model.fieldsToRemoveFromPayload && model.fieldsToRemoveFromPayload.length) {
+            payloadFilter = where.filter(ele => !model.fieldsToRemoveFromPayload.includes(ele.field));
+            removedFields = where.filter(ele => model.fieldsToRemoveFromPayload.includes(ele.field));
+        }
+
+        delete requestData.where; // Remove where as CS controller uses filters
+        // Pass filtered filters to createCSPayload
+        utils.createCSPayload(payloadFilter, requestData);
+
+        // Map filtered filters to individual fields
+        if (payloadFilter?.length) {
+            payloadFilter.map((ele) => { requestData[ele.field] = ele.value; })
+        }
+
+        // Add removed fields directly to requestData (not as filters)
+        if (removedFields?.length) {
+            removedFields.map((ele) => { requestData[ele.field] = ele.value; })
+        }
+
+        if (sortModel?.length) {
+            requestData.sort = sortModel[0].field;
+            requestData.dir = sortModel[0].sort;
+        }
     }
 
     const headers = {};
@@ -136,6 +249,18 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         const form = document.createElement("form");
         requestData.responseType = contentType;
         requestData.columns = columns;
+        if (isCSController) {
+            requestData.exportFormat = contentTypeToFileType[contentType];
+            requestData.selectedFields = Object.keys(columns).join();
+            if (requestData.sort && !Object.keys(columns).includes(requestData.sort)) {
+                requestData.selectedFields += `,${requestData.sort}`;
+            }
+            requestData.cols = Object.keys(columns).map(col => {
+                return { ColumnName: columns[col].field, Header: columns[col].headerName, Width: columns[col].width }
+            });
+            delete requestData.columns;
+            delete requestData.responseType;
+        }
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
@@ -179,34 +304,18 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
             ...prevData,
             records: [] // reset records to empty array before fetching new data
         }));
-        const response = await transport(params);
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            const { records } = response.data;
-            if (records) {
-                records.forEach(record => {
-                    dateColumns.forEach(column => {
-                        const { field, keepLocal, keepLocalDate } = column;
-                        if (record[field]) {
-                            record[field] = new Date(record[field]);
-                            if (keepLocalDate) {
-                                const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                                record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                            }
-                            if (keepLocal && !isLocalTime(record[field])) {
-                                const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                                record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                            }
-                        }
-                    });
-                    model.columns.forEach(({ field, displayIndex }) => {
-                        if (!displayIndex) return;
-                        record[field] = record[displayIndex];
-                    });
-                });
-            }
-            setData(response.data);
+        let response;
+        if (isCSController) {
+            response = await request({  url, params:  requestData, dispatchData, disableLoader: true, dataParser: DATA_PARSERS.json });
+        } else {
+            response = await transport(params);
+        }
+        if (response.status === HTTP_STATUS_CODES.OK || response.records) {
+            // Process response data and merge combo lookups
+            const processedData = await processResponseData({ responseData: response.data || response, model, dateColumns });
+            setData({ ...processedData, ...(isCSController ? { lookups: transformComboRecords(response.combos) } : {}) });
         } else if (!handleCommonErrors(response, setError)) {
-            setError(response.statusText);
+            setError(response.statusText || response.message);
         }
     } catch (error) {
         if (error.response && !handleCommonErrors(error.response, setError)) {
@@ -222,52 +331,101 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
     }
 };
 
-const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parentFilters, where = {}, setError }) => {
+const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parentFilters, where = {}, setError, dispatchData }) => {
+    const isCSController = model.controllerType === 'cs';
+    let activeRecord = {}
     api = api || model.api;
     setIsLoading(true);
-    const searchParams = new URLSearchParams();
-    const url = `${api}/${id === undefined || id === null ? '-' : id}`;
-    const lookupsToFetch = [];
-    const fields = model.formDef || model.columns;
-    fields?.forEach(field => {
-        if (field.lookup && !lookupsToFetch.includes(field.lookup) && !field.dependsOn) {
-            lookupsToFetch.push(field.lookup);
+    if (isCSController) {
+        // Fetch record using POST with action
+        const requestData = { 
+            id, 
+            action: model.formActions?.fetch || 'load', 
+            method: 'POST' 
+        };
+        if (model.comboTypes) {
+            requestData.comboTypes = model.comboTypes;
         }
-    });
-    searchParams.set("lookups", lookupsToFetch);
-    if (where && Object.keys(where)?.length) {
-        searchParams.set("where", JSON.stringify(where));
-    }
-    try {
-        const response = await transport({
-            url: `${url}?${searchParams.toString()}`,
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            const { data: record, lookups } = response.data;
+
+        try {
+            const response = await request({ 
+                url: api, 
+                params: requestData,  
+                dispatchData,
+                disableLoader: true, 
+                dataParser: DATA_PARSERS.json 
+            });
+            if (response.error) {
+                setError(response.error);
+                return;
+            }
+            const record = response.data; // data is a single object for getRecord
             let title = record[model.linkColumn];
-            const columnConfig = model.columns.find(a => a.field === model.linkColumn);
-            if (columnConfig && columnConfig.lookup) {
-                if (lookups && lookups[columnConfig.lookup] && lookups[columnConfig.lookup]?.length) {
-                    const lookupValue = lookups[columnConfig.lookup].find(a => a.value === title);
-                    if (lookupValue) {
-                        title = lookupValue.label;
+
+            // Apply default values if they exist
+            const defaultValues = { ...model.defaultValues };
+            const processedRecord = { ...defaultValues, ...record, ...parentFilters };
+            activeRecord ={
+                id,
+                title: title,
+                record: processedRecord,
+                lookups: transformComboRecords(response.combos || {})
+            }
+        } catch (error) {
+            if (error.response && !handleCommonErrors(error.response, setError)) {
+                setError('Could not load record', error.message || error.toString());
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    } else {
+        // Handle default (node) controller type
+        const searchParams = new URLSearchParams();
+        const url = `${api}/${id === undefined || id === null ? '-' : id}`;
+        const lookupsToFetch = [];
+        const fields = model.formDef || model.columns;
+        fields?.forEach(field => {
+            if (field.lookup && !lookupsToFetch.includes(field.lookup) && !field.dependsOn) {
+                lookupsToFetch.push(field.lookup);
+            }
+        });
+        searchParams.set("lookups", lookupsToFetch);
+        if (where && Object.keys(where)?.length) {
+            searchParams.set("where", JSON.stringify(where));
+        }
+        try {
+            const response = await transport({
+                url: `${url}?${searchParams.toString()}`,
+                method: 'GET',
+                credentials: 'include'
+            });
+            if (response.status === HTTP_STATUS_CODES.OK) {
+                const { data: record, lookups } = response.data;
+                let title = record[model.linkColumn];
+                const columnConfig = model.columns.find(a => a.field === model.linkColumn);
+                if (columnConfig && columnConfig.lookup) {
+                    if (lookups && lookups[columnConfig.lookup] && lookups[columnConfig.lookup]?.length) {
+                        const lookupValue = lookups[columnConfig.lookup].find(a => a.value === title);
+                        if (lookupValue) {
+                            title = lookupValue.label;
+                        }
                     }
                 }
+                const defaultValues = { ...model.defaultValues };
+                activeRecord = { id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups };
+            } else if (!handleCommonErrors(response, setError)) {
+                setError('Could not load record', response.body.toString());
             }
-            const defaultValues = { ...model.defaultValues };
-            setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups });
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Could not load record', response.body.toString());
+        } catch (error) {
+            if (error.response && handleCommonErrors(error.response, setError)) {
+                setError('Could not load record', error.message || error.toString());
+            }
+        } finally {
+            setIsLoading(false);
         }
-    } catch (error) {
-        if (error.response && handleCommonErrors(error.response, setError)) {
-            setError('Could not load record', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
     }
+
+    setActiveRecord(activeRecord);
 };
 
 const deleteRecord = async function ({ id, api, setIsLoading, setError }) {
@@ -304,47 +462,74 @@ const deleteRecord = async function ({ id, api, setIsLoading, setError }) {
     return result;
 };
 
-const saveRecord = async function ({ id, api, values, setIsLoading, setError }) {
-    let url, method;
-
-    if (id !== 0) {
-        url = `${api}/${id}`;
-        method = 'PUT';
-    } else {
-        url = api;
-        method = 'POST';
-    }
-
-
+const saveRecord = async function ({ id, api, values, setIsLoading, setError, model }) {
+    const isCSController = model?.controllerType === 'cs';
     try {
         setIsLoading(true);
-        const response = await transport({
-            url,
-            method,
-            data: values,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            const data = response.data;
-            if (data.success) {
-                return data;
+        if (isCSController) {
+            // Handle CS controller save
+            const isNew = !id || id === "0";
+            const action = isNew ? model.formActions?.save || 'save' : model.formActions?.edit || 'quickSave';
+            const idProperty = model.idProperty || 'id';
+            const formEditParams = model.formEditParams || 'lineItems';
+
+            const requestData = {
+                action,
+                method: 'POST',
+                ...values,
+            };
+            if (!isNew) {
+                requestData[formEditParams] = [{
+                    ...values,
+                    [idProperty]: id,
+                    isQuickSave: true, // Indicate quick save
+                    id
+                }]
+            };
+
+            const response = await request({
+                url: api,
+                params: requestData,
+                disableLoader: true,
+                dataParser: DATA_PARSERS.json
+            });
+
+            if (response.error) {
+                setError(response.message || response.error);
+                return null;
             }
-            setError('Save failed', data.err || data.message);
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Save failed', response.body);
+
+            return response.success !== false ? response : null;
+        } else {
+            // Handle default (node) controller type
+            const url = id !== 0 ? `${api}/${id}` : api;
+            const method = id !== 0 ? 'PUT' : 'POST';
+
+            const response = await transport({
+                url,
+                method,
+                data: values,
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (response.status === HTTP_STATUS_CODES.OK) {
+                const data = response.data;
+                return data.success ? data : null;
+            }
+
+            throw new Error(response.body || 'Save failed');
         }
     } catch (error) {
-        if (error.response && !handleCommonErrors(error.response, setError)) {
-            setError('Could not save record', error.message || error.toString());
+        if (error.response && handleCommonErrors(error.response, setError)) {
+            return false;
         }
+        const errorMessage = error.message || error.toString() || 'Could not save record';
+        setError('Save failed', errorMessage);
+        return false;
     } finally {
         setIsLoading(false);
     }
-
-    return false;
 };
 
 const getLookups = async ({ api, setIsLoading, setActiveRecord, model, setError, lookups, scopeId }) => {

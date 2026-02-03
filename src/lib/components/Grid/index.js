@@ -38,6 +38,7 @@ import Checkbox from '@mui/material/Checkbox';
 import { useTranslation } from 'react-i18next';
 import { convertDefaultSort, areEqual, getDefaultOperator } from './helper';
 import { styled } from '@mui/material/styles';
+import useDebounce from '../../hooks/useDebounce';
 
 const defaultPageSize = 50;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
@@ -181,6 +182,7 @@ const GridBase = memo(({
         });
     }
     const [filterModel, setFilterModel] = useState({ ...initialFilterModel });
+    const debouncedFilterModel = useDebounce(filterModel, 500);
     const { navigate, getParams, useParams, pathname } = useRouter();
     const { id: idWithOptions } = useParams() || getParams;
     const id = idWithOptions?.split('-')[0];
@@ -207,6 +209,8 @@ const GridBase = memo(({
     const [currentPreference, setCurrentPreference] = useState(null);
     const [preferencesReady, setPreferencesReady] = useState(!preferenceKey);
     const backendApi = api || model.api;
+     // State for single expanded detail panel row
+    const [expandedRowId, setExpandedRowId] = useState(null);
 
     useEffect(() => {
         if (!apiRef.current) return;
@@ -278,6 +282,9 @@ const GridBase = memo(({
         "select": {
             "type": "singleSelect",
             "valueOptions": "lookup"
+        },
+        "string": {
+            "filterOperators": getGridStringOperators().filter(op => !['doesNotContain', 'doesNotEqual'].includes(op.value))
         },
         "selection": {
             renderCell: (params) => <CustomCheckBox params={params} handleSelectRow={handleSelectRow} idProperty={idProperty} />
@@ -422,16 +429,7 @@ const GridBase = memo(({
                 actions.push(<GridActionsCellItem icon={<Tooltip title="History"><HistoryIcon /> </Tooltip>} data-action={actionTypes.History} label="History" color="primary" />);
             }
             if (customActions.length) {
-                customActions.forEach(({ icon, action, color }) => {
-                    actions.push(
-                        <GridActionsCellItem
-                            icon={<Tooltip title={action}>{iconMapper[icon] || <CopyIcon />}</Tooltip>}
-                            data-action={action}
-                            label={action}
-                            color={color || "primary"}
-                        />
-                    );
-                });
+                actions.push(...Array(customActions.length).fill(null)); // Placeholder for custom actions
             }
         }
         if (documentField.length) {
@@ -442,7 +440,7 @@ const GridBase = memo(({
                 field: 'actions',
                 type: 'actions',
                 label: '',
-                width: actions.length * 50,
+                width: actions.length * ( model.actionWidth || 50),
                 hidable: false,
                 getActions: (params) => {
                     const rowActions = [...actions];
@@ -461,6 +459,29 @@ const GridBase = memo(({
                                 disabled={isDisabled}
                             />
                         );
+                    }
+                    // Add custom actions with showCondition evaluation
+                    if (customActions.length) {
+                        customActions.forEach(({ icon, action, color, showCondition }) => {
+                            if (typeof showCondition === 'function') {
+                                const shouldShow = showCondition(params.row);
+                                if (!shouldShow) {
+                                    return;
+                                }
+                            }
+                            rowActions.push(
+                                <GridActionsCellItem
+                                    icon={<Tooltip title={action}>{
+                                        typeof icon === 'string' ? (iconMapper[icon] || <span style={{ fontSize: "medium" }}>{icon}</span>) :
+                                            typeof icon === 'function' ? icon({ tTranslate, tOpts }) :
+                                                <CopyIcon />
+                                    }</Tooltip>}
+                                    data-action={action}
+                                    label={action}
+                                    color={color || "primary"}
+                                />
+                            );
+                        });
                     }
                     return rowActions;
                 }
@@ -615,8 +636,15 @@ const GridBase = memo(({
                 return;
             }
             switch (action) {
-                case actionTypes.Edit:
-                    return openForm({ id: record[idProperty], record });
+                case actionTypes.Edit: {
+                    if (model.getDetailPanelContent) {
+                        const rowId = record[idProperty];
+                        setExpandedRowId(prevId => prevId === rowId ? null : rowId);
+                        return;
+                    } else {
+                        return openForm({ id: record[idProperty], record });
+                    }
+                }
                 case actionTypes.Copy:
                     return openForm({ id: record[idProperty], mode: 'copy' });
                 case actionTypes.Delete:
@@ -841,7 +869,7 @@ const GridBase = memo(({
     useEffect(() => {
         if (!backendApi || !preferencesReady) return;
         fetchData();
-    }, [paginationModel, model, assigned, available, selected, filterModel, id, additionalFilters, props.extraParams, sortModel, backendApi, gridColumns, parentFilters, isElasticScreen, preferencesReady, baseFilters]);
+    }, [paginationModel, model, assigned, available, selected, debouncedFilterModel, id, additionalFilters, props.extraParams, sortModel, backendApi, gridColumns, parentFilters, isElasticScreen, preferencesReady, baseFilters]);
 
     useEffect(() => {
         if (props.isChildGrid || forAssignment || !updatePageTitle) {
@@ -860,7 +888,7 @@ const GridBase = memo(({
         const updatedItems = items.map(item => {
             const { field, operator, type, value } = item;
             const column = gridColumns.find(col => col.field === field) || {};
-            const isNumber = column.type === constants.number;
+            const isNumber = column.type === constants.Number;
 
             if (isNumber && value < 0) {
                 return { ...item, value: null };
@@ -913,6 +941,9 @@ const GridBase = memo(({
                             },
                             "& .MuiDataGrid-virtualScroller ": {
                                 zIndex: 2,
+                            },
+                            "& .MuiDataGrid-detailPanelToggleCell, & .MuiDataGrid-cell--withRenderer.MuiDataGrid-cell--detailPanelToggle": {
+                                display: 'none'
                             }
                         }}
                         headerFilters={showHeaderFilters}
@@ -948,6 +979,7 @@ const GridBase = memo(({
                             footer: Footer
                         }}
                         slotProps={{
+                            headerFilterCell: { showClearIcon: true },
                             toolbar: {
                                 model,
                                 data,
@@ -986,6 +1018,16 @@ const GridBase = memo(({
                             },
                             panel: {
                                 placement: "bottom-end"
+                            },
+                            pagination: {
+                                backIconButtonProps: {
+                                    title: tTranslate('Go to previous page', tOpts),
+                                    'aria-label': tTranslate('Go to previous page', tOpts),
+                                },
+                                nextIconButtonProps: {
+                                    title: tTranslate('Go to next page', tOpts),
+                                    'aria-label': tTranslate('Go to next page', tOpts),
+                                },
                             }
                         }}
                         hideFooterSelectedRowCount={rowsSelected}
@@ -1001,6 +1043,21 @@ const GridBase = memo(({
                                 columnVisibilityModel: visibilityModel
                             },
                             pinnedColumns: pinnedColumns
+                        }}
+                        getDetailPanelContent={model.getDetailPanelContent ? (params) =>
+                            model.getDetailPanelContent({
+                                ...params,
+                                onRefresh: () => {
+                                    // Close the expanded panel and refresh data
+                                    setExpandedRowId(null);
+                                    fetchData();
+                                }
+                            })
+                            : undefined
+                        }
+                        detailPanelExpandedRowIds={new Set(expandedRowId ? [expandedRowId] : [])}
+                        onDetailPanelExpandedRowIdsChange={(ids) => {
+                            setExpandedRowId(ids.size > 0 ? [...ids].pop() : null);
                         }}
                         localeText={{
                             filterValueTrue: tTranslate('Yes', tOpts),

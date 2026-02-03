@@ -6,10 +6,8 @@ const emptyValues = [null, undefined, ''];
 
 export default function useCascadingLookup({ column, formik, lookups, dependsOn = [], isAutoComplete = false, userSelected, model }) {
     const [options, setOptions] = useState([]);
-    const { stateData } = useStateContext();
-    const url = stateData?.gridSettings?.permissions?.Url || '';
-    const api = useMemo(() => `${url}${model?.api || ''}`, [url, model?.api]);
-    
+    const { stateData, buildUrl } = useStateContext();
+    const api = buildUrl(model.controllerType, model.api);
     // Memoize dependency values
     const dependencyValues = useMemo(() => {
         const toReturn = {};

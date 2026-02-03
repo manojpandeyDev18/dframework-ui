@@ -27,8 +27,11 @@ const ToolbarFilter = ({
         return filterModel?.items?.find(item => item.field === column.field);
     }, [filterModel, column.field]);
 
-    // Get current filter value - use ?? to properly handle falsy but valid values like 0, false, ""
-    const filterValue = existingFilter?.value ?? (column.toolbarFilter?.defaultFilterValue ?? '');
+    // Get current filter value
+    // If there's an existing filter, use its value (even if it's falsy like 0, false, "")
+    const filterValue = useMemo(() => {
+        if (existingFilter !== undefined) return existingFilter.value ?? '';
+    }, [existingFilter, column.toolbarFilter?.defaultOperator]);
 
     // Handle filter change - use functional update to avoid filterModel dependency
     const handleFilterChange = useCallback((newValue) => {
@@ -185,6 +188,7 @@ const ToolbarFilter = ({
             }
 
             case 'select':
+            case 'singleSelect':
             case 'lookup':
                 const options = column.customLookup || lookupData?.[column.lookup] || [];
                 const normalizedOptions = typeof column.lookup === 'string'

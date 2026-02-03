@@ -83,6 +83,7 @@ class UiModel {
 			if (!formLabel) {
 				continue;
 			}
+			if (label === null || label === '') continue; // Skip fields that should not be validated in form mode
 			let config;
 			switch (type) {
 				case 'string':
