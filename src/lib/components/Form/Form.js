@@ -45,8 +45,8 @@ const Form = ({
   beforeSubmit,
   deletePromptText,
   detailPanelToggleId = null, //id of row selected in grid to show detail panel for 
-  onCustomCancel,
-  onCustomSaveSuccess
+  onCancel,
+  onSaveSuccess
 }) => {
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
@@ -166,8 +166,8 @@ const Form = ({
           if (model.reloadOnSave) {
             return window.location.reload();
           }
-          if (onCustomSaveSuccess) {
-            onCustomSaveSuccess();
+          if (onSaveSuccess) {
+            onSaveSuccess();
           }
           const message = success.info ? success.info : `Record ${id === 0 ? "Added" : "Updated"} Successfully.`;
           snackbar.showMessage(message);
@@ -195,8 +195,8 @@ const Form = ({
   const handleDiscardChanges = () => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
-     if (onCustomCancel) {
-      onCustomCancel();
+     if (onCancel) {
+      onCancel();
     }
     navigateBack !== false && handleNavigation();
   };
@@ -237,8 +237,8 @@ const Form = ({
     if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
-      if (onCustomCancel) {
-        onCustomCancel();
+      if (onCancel) {
+        onCancel();
       }
       navigateBack !== false && handleNavigation();
     }

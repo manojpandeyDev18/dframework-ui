@@ -427,7 +427,7 @@ const GridBase = memo(({
                 actions.push(<GridActionsCellItem icon={<Tooltip title="History"><HistoryIcon /> </Tooltip>} data-action={actionTypes.History} label="History" color="primary" />);
             }
             if (customActions.length) {
-                actions.push(...Array(customActions.length).fill(null)); // Placeholder for custom actions
+                actions.push(...Array.from({ length: customActions.length }, () => null)); // Placeholder for custom actions
             }
         }
         if (documentField.length) {
@@ -460,14 +460,9 @@ const GridBase = memo(({
                     }
                     // Add custom actions with showCondition evaluation
                     if (customActions.length) {
-                        customActions.forEach(({ icon, action, color, showCondition }) => {
-                            if (typeof showCondition === 'function') {
-                                const shouldShow = showCondition(params.row);
-                                if (!shouldShow) {
-                                    return;
-                                }
-                            }
-                            rowActions.push(
+                        const filteredCustomActions = customActions
+                            .filter(({ showCondition }) => typeof showCondition !== 'function' || showCondition(params.row))
+                            .map(({ icon, action, color }) => (
                                 <GridActionsCellItem
                                     icon={<Tooltip title={action}>{
                                         typeof icon === 'string' ? (iconMapper[icon] || <span style={{ fontSize: "medium" }}>{icon}</span>) :
@@ -478,8 +473,9 @@ const GridBase = memo(({
                                     label={action}
                                     color={color || "primary"}
                                 />
-                            );
-                        });
+                            ));
+                        
+                        rowActions.push(...filteredCustomActions);
                     }
                     return rowActions;
                 }
