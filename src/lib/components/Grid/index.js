@@ -283,9 +283,6 @@ const GridBase = memo(({
             "type": "singleSelect",
             "valueOptions": "lookup"
         },
-        "string": {
-            "filterOperators": getGridStringOperators().filter(op => !['doesNotContain', 'doesNotEqual'].includes(op.value))
-        },
         "selection": {
             renderCell: (params) => <CustomCheckBox params={params} handleSelectRow={handleSelectRow} idProperty={idProperty} />
         }
@@ -345,8 +342,9 @@ const GridBase = memo(({
                 overrides.type = 'number';
                 overrides.field = column.field.replace(/s$/, 'Count');
             }
-            if (gridColumnTypes[column.type]) {
-                Object.assign(overrides, gridColumnTypes[column.type]);
+            const updatedColumnType = { ...gridColumnTypes, ...model.gridColumnTypes };
+            if (updatedColumnType[column.type]) {
+                Object.assign(overrides, updatedColumnType[column.type]);
             }
             // Common filter operator pattern
             if (overrides.valueOptions === constants.lookup || column.type === constants.boolean) {

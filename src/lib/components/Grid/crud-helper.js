@@ -38,51 +38,6 @@ const transformComboRecords = (combos = {}) => {
 };
 
 /**
- * Process response data and merge combo lookups
- */
-const processResponseData = async ({ responseData, model, dateColumns }) => {
-    const { records = [] } = responseData;
-    if (records && records.length) {
-        records.forEach(record => {
-            dateColumns.forEach(column => {
-                const { field, keepLocal, keepLocalDate } = column;
-                if (record[field]) {
-                    // Try to parse compact timestamp format first (handles various lengths)
-                    let parsedDate = dayjs(record[field]);
-
-                    // If not compact format, try standard Date parsing
-                    if (!parsedDate) {
-                        parsedDate = new Date(record[field]);
-                        // Check if the date is valid
-                        if (isNaN(parsedDate.getTime())) {
-                            console.warn(`Invalid date format for field ${field}:`, record[field]);
-                            return; // Skip processing invalid dates
-                        }
-                    }
-
-                    record[field] = parsedDate;
-
-                    if (keepLocalDate) {
-                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                    }
-                    if (keepLocal && !isLocalTime(record[field])) {
-                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                    }
-                }
-            });
-            model.columns.forEach(({ field, displayIndex }) => {
-                if (!displayIndex) return;
-                record[field] = record[displayIndex];
-            });
-        });
-    }
-
-    return responseData;
-};
-
-/**
  * Handles common HTTP error responses such as session expiration and forbidden access.
  * If an error is detected, sets an appropriate error message and redirects the user after a delay.
  * Returns true if a common error was handled, otherwise false.
@@ -206,34 +161,8 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         requestData.limitToSurveyed = model?.limitToSurveyed;
     }
 
-    if (isCSController) {
-        // payloadFilter keeps all filters for individual field mappings
-        let payloadFilter = where, removedFields = [];
-
-        // Remove fields that should not be in the where array or filters
-        if (model.fieldsToRemoveFromPayload && model.fieldsToRemoveFromPayload.length) {
-            payloadFilter = where.filter(ele => !model.fieldsToRemoveFromPayload.includes(ele.field));
-            removedFields = where.filter(ele => model.fieldsToRemoveFromPayload.includes(ele.field));
-        }
-
-        delete requestData.where; // Remove where as CS controller uses filters
-        // Pass filtered filters to createCSPayload
-        utils.createCSPayload(payloadFilter, requestData);
-
-        // Map filtered filters to individual fields
-        if (payloadFilter?.length) {
-            payloadFilter.map((ele) => { requestData[ele.field] = ele.value; })
-        }
-
-        // Add removed fields directly to requestData (not as filters)
-        if (removedFields?.length) {
-            removedFields.map((ele) => { requestData[ele.field] = ele.value; })
-        }
-
-        if (sortModel?.length) {
-            requestData.sort = sortModel[0].field;
-            requestData.dir = sortModel[0].sort;
-        }
+    if (isCSController && model.processPayload && typeof model.processPayload === 'function') {
+        model.processPayload({ requestData, model, where, sortModel });
     }
 
     const headers = {};
@@ -251,15 +180,9 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         requestData.columns = columns;
         if (isCSController) {
             requestData.exportFormat = contentTypeToFileType[contentType];
-            requestData.selectedFields = Object.keys(columns).join();
-            if (requestData.sort && !Object.keys(columns).includes(requestData.sort)) {
-                requestData.selectedFields += `,${requestData.sort}`;
+            if (model.processExportFields && typeof model.processExportFields === 'function') {
+                model.processExportFields(requestData, columns);
             }
-            requestData.cols = Object.keys(columns).map(col => {
-                return { ColumnName: columns[col].field, Header: columns[col].headerName, Width: columns[col].width }
-            });
-            delete requestData.columns;
-            delete requestData.responseType;
         }
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
         form.setAttribute("method", "POST");
@@ -312,8 +235,13 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         }
         if (response.status === HTTP_STATUS_CODES.OK || response.records) {
             // Process response data and merge combo lookups
-            const processedData = await processResponseData({ responseData: response.data || response, model, dateColumns });
-            setData({ ...processedData, ...(isCSController ? { lookups: transformComboRecords(response.combos) } : {}) });
+            let processedResponseData;
+            if (model?.processResponseData && typeof model?.processResponseData === 'function') {
+                processedResponseData = await model?.processResponseData({ responseData: response, model, dateColumns });
+            } else {
+                processedResponseData = response.data;
+            }
+            setData(processedResponseData);
         } else if (!handleCommonErrors(response, setError)) {
             setError(response.statusText || response.message);
         }
