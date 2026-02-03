@@ -143,7 +143,7 @@ const RenderColumns = ({ formElements, model, formik, data, onChange, combos, lo
                         <Grid container spacing={2} key={key} sx={{ marginTop: "1rem", marginBottom: "1rem" }} alignItems={isGridComponent ? "flex-start" : "center"}>
                             {column?.showLabel !== false ?
                                 <Grid size={{ xs: 3 }} sx={gridContainerStyle}>
-                                    <Typography sx={{ fontSize: "16px", fontWeight: "bold" }}>{column.label || field}: {column.required && <ImportantSpan>*</ImportantSpan>}</Typography>
+                                    <Typography sx={{ fontSize: "16px", fontWeight: "bold" }} className="form-label">{column.label || field}: {column.required && <ImportantSpan>*</ImportantSpan>}</Typography>
                                 </Grid>
                                 : null
                             }

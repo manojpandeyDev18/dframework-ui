@@ -4,6 +4,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import SettingsIcon from '@mui/icons-material/Settings';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import AddIcon from '@mui/icons-material/Add';
 import { Box, Button, Checkbox, FormControlLabel, Grid, List, ListItem, ListItemButton, ListItemText, Menu, MenuItem, Stack, TextField, Typography, Tooltip, ListItemIcon } from '@mui/material';
 import { DataGridPremium, GridActionsCellItem, useGridApiRef } from '@mui/x-data-grid-premium';
 import { useFormik } from 'formik';
@@ -294,6 +296,9 @@ const GridPreferences = ({ gridRef, preferenceKey, onPreferenceChange, t, tOpts 
                 }}
             >
                 <MenuItem component={ListItemButton} dense onClick={() => openDialog(DIALOG_TYPES.ADD)}>
+                    <ListItemIcon>
+                        <AddIcon />
+                    </ListItemIcon>
                     {t('Add Preference', tOpts)}
                 </MenuItem>
                 <MenuItem component={ListItemButton} dense onClick={() => openDialog(DIALOG_TYPES.MANAGE)}>
@@ -304,6 +309,9 @@ const GridPreferences = ({ gridRef, preferenceKey, onPreferenceChange, t, tOpts 
                 </MenuItem>
                 {gridRef.current?.initialGridState && (
                     <MenuItem component={ListItemButton} dense divider={preferences?.length > 0} onClick={() => applyPreference(0)}>
+                        <ListItemIcon>
+                            <RefreshIcon />
+                        </ListItemIcon>
                         {t('Reset to Default', tOpts)}
                     </MenuItem>
                 )}
