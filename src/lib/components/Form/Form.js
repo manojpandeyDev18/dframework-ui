@@ -162,7 +162,7 @@ const Form = ({
           if (model.reloadOnSave) {
             return window.location.reload();
           }
-          if (onSaveSuccess) {
+          if (typeof onSaveSuccess === consts.function) {
             onSaveSuccess();
           }
           const message = success.info ? success.info : `Record ${id === 0 ? "Added" : "Updated"} Successfully.`;
@@ -191,7 +191,7 @@ const Form = ({
   const handleDiscardChanges = () => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
-    if (onCancel) {
+    if (typeof onCancel === consts.function) {
       onCancel();
     }
     navigateBack !== false && handleNavigation();
@@ -233,7 +233,7 @@ const Form = ({
     if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
-      if (onCancel) {
+      if (typeof onCancel === consts.function) {
         onCancel();
       }
       navigateBack !== false && handleNavigation();
