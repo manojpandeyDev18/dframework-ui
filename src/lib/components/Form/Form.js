@@ -143,10 +143,6 @@ const Form = ({
     validationSchema: validationSchema,
     validateOnBlur: false,
     onSubmit: async (values, { resetForm }) => {
-      if (typeof beforeSubmit === consts.function) {
-        //perform any pre submit operations or modify the values
-        await beforeSubmit({ values, columns: model.columns });
-      }
       Object.keys(values).forEach(key => {
         if (typeof values[key] === consts.string) {
           values[key] = values[key].trim();
@@ -283,7 +279,7 @@ const Form = ({
   const handleSubmit = async function (e) {
     if (e) e.preventDefault();
     if (typeof beforeSubmit === consts.function) {
-      await beforeSubmit({ formik });
+      await beforeSubmit({ formik , columns: model.columns });
     }
     const { errors } = formik;
     formik.handleSubmit();
