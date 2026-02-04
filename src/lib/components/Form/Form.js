@@ -143,11 +143,11 @@ const Form = ({
     validationSchema: validationSchema,
     validateOnBlur: false,
     onSubmit: async (values, { resetForm }) => {
-      const formColumns = model.columns.filter(col => col.label !== null).map(col => col.field);
+      if (typeof beforeSubmit === consts.function) {
+        //perform any pre submit operations or modify the values
+        await beforeSubmit({ values, columns: model.columns });
+      }
       Object.keys(values).forEach(key => {
-        if (!formColumns.includes(key)) {
-          delete values[key];
-        }
         if (typeof values[key] === consts.string) {
           values[key] = values[key].trim();
         }

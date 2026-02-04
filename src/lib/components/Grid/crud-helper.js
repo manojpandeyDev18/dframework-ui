@@ -478,10 +478,11 @@ const saveRecord = async function ({ id, api, values, setIsLoading, setError, mo
 
             if (response.status === HTTP_STATUS_CODES.OK) {
                 const data = response.data;
-                return data.success ? data : null;
+                if (data.success) {
+                    return data;
+                }
+                setError('Save failed', data.err || data.message)
             }
-
-            throw new Error(response.body || 'Save failed');
         }
     } catch (error) {
         if (error.response && handleCommonErrors(error.response, setError)) {
