@@ -154,7 +154,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         fileName: model.overrideFileName
     };
 
-    if(model?.comboTypes){
+    if (model?.comboTypes) {
         requestData.comboTypes = model.comboTypes;
     }
 
@@ -238,7 +238,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         }));
         let response;
         if (isCSController) {
-            response = await request({  url, params:  requestData, dispatchData, disableLoader: true, dataParser: DATA_PARSERS.json });
+            response = await request({ url, params: requestData, dispatchData, disableLoader: true, dataParser: DATA_PARSERS.json });
         } else {
             response = await transport(params);
             if (response.data) {
@@ -283,7 +283,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
     } catch (error) {
         if (error.response && !handleCommonErrors(error.response, setError)) {
             setError('Could not list record', error.message || error.toString());
-        } else{
+        } else {
             setError('Network failure or server unreachable. Please try again.');
         }
     } finally {
@@ -301,22 +301,22 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     setIsLoading(true);
     if (isCSController) {
         // Fetch record using POST with action
-        const requestData = { 
-            id, 
-            action: model.formActions?.fetch || 'load', 
-            method: 'POST' 
+        const requestData = {
+            id,
+            action: model.formActions?.fetch || 'load',
+            method: 'POST'
         };
         if (model.comboTypes) {
             requestData.comboTypes = model.comboTypes;
         }
 
         try {
-            const response = await request({ 
-                url: api, 
-                params: requestData,  
+            const response = await request({
+                url: api,
+                params: requestData,
                 dispatchData,
-                disableLoader: true, 
-                dataParser: DATA_PARSERS.json 
+                disableLoader: true,
+                dataParser: DATA_PARSERS.json
             });
             if (response.error) {
                 setError(response.error);
@@ -328,7 +328,7 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
             // Apply default values if they exist
             const defaultValues = { ...model.defaultValues };
             const processedRecord = { ...defaultValues, ...record, ...parentFilters };
-            activeRecord ={
+            activeRecord = {
                 id,
                 title: title,
                 record: processedRecord,
