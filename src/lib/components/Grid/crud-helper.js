@@ -285,7 +285,7 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     try {
         const response = await request({
             url: isCSController ? api : `${url}?${searchParams.toString()}`,
-            method: isCSController ? requestData.method : 'GET',
+            additionalParams: { "method": isCSController ? requestData.method : 'GET' },
             dispatchData,
             dataParser: DATA_PARSERS.json,
             params: isCSController ? requestData : {},
@@ -304,7 +304,12 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
             }
         }
         const defaultValues = { ...model.defaultValues };
-        setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups: isCSController && model.afterLoad ? model.afterLoad(response.combos) : lookups });
+        let csLookups
+        if (typeof model.getLookup === 'function') {
+            csLookups = model.getLookup(response.combos)
+        }
+
+        setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups: isCSController ? csLookups : lookups });
     } catch (error) {
         if (error.response && handleCommonErrors(error.response, setError)) {
             setError('Could not load record', error.message || error.toString());
@@ -350,12 +355,12 @@ const deleteRecord = async function ({ id, api, setIsLoading, setError }) {
 
 const saveRecord = async function ({ id, api, values, setIsLoading, setError, model }) {
     const isCSController = model?.controllerType === 'cs';
+    const isNew = !id || id === "0";
     let requestData = {};
     try {
         setIsLoading(true);
         if (isCSController) {
             // Handle CS controller save
-            const isNew = !id || id === "0";
             const action = isNew ? model.formActions?.save || 'save' : model.formActions?.edit || 'quickSave';
             const idProperty = model.idProperty || 'id';
             const formEditParams = model.formEditParams || 'lineItems';
@@ -374,11 +379,11 @@ const saveRecord = async function ({ id, api, values, setIsLoading, setError, mo
                 }]
             };
         }
-        const url = id !== 0 ? `${api}/${id}` : api;
-        const method = id !== 0 ? 'PUT' : 'POST';
+        const url = isNew ? api : `${api}/${id}`;
+        const method = isNew ? 'POST' : 'PUT';
         const response = await request({
             url: isCSController ? api : url,
-            method: isCSController ? requestData.method : method,
+            additionalParams: { "method": isCSController ? requestData.method : method },
             dataParser: DATA_PARSERS.json,
             params: isCSController ? requestData : values,
             disableLoader: true,
