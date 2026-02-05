@@ -209,6 +209,7 @@ const GridBase = memo(({
     const backendApi = api || model.api;
      // State for single expanded detail panel row
     const [rowPanelId, setRowPanelId] = useState(null);
+    const detailPanelExpandedRowIds = useMemo(() => new Set(rowPanelId ? [rowPanelId] : []), [rowPanelId]);
 
     useEffect(() => {
         if (!apiRef.current) return;
@@ -919,6 +920,10 @@ const GridBase = memo(({
         ? [{ text: searchParams.get(searchParamKey) || pageTitle }]
         : [{ text: pageTitle }];
 
+    const handleDetailPanelExpanded = useCallback((ids) => {
+        setRowPanelId(ids.size > 0 ? [...ids].pop() : null);
+    }, []);
+
     const getDetailPanelContent = useCallback((params) => {
         if (typeof model.getDetailPanelContent === 'function') {
             return model.getDetailPanelContent({
@@ -931,7 +936,7 @@ const GridBase = memo(({
             });
         }
         return null;
-    }, [model.getDetailPanelContent, setRowPanelId, fetchData]);
+    }, [model.getDetailPanelContent, fetchData]);
 
     const localeText =
         useMemo(() => ({
@@ -1174,10 +1179,8 @@ const GridBase = memo(({
                             pinnedColumns: pinnedColumns
                         }}
                         getDetailPanelContent={getDetailPanelContent}
-                        detailPanelExpandedRowIds={new Set(rowPanelId ? [rowPanelId] : [])}
-                        onDetailPanelExpandedRowIdsChange={(ids) => {
-                            setRowPanelId(ids.size > 0 ? [...ids].pop() : null);
-                        }}
+                        detailPanelExpandedRowIds={detailPanelExpandedRowIds}
+                        onDetailPanelExpandedRowIdsChange={handleDetailPanelExpanded}
                         localeText={localeText}
                         showToolbar={true}
                         columnHeaderHeight={columnHeaderHeight}
