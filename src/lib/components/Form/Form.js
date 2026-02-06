@@ -29,7 +29,9 @@ const consts = {
   create: "Create",
   copy: "Copy",
   edit: "Edit",
-  number: "number"
+  number: "number",
+  loadIdIndex: 1,
+  editIdIndex: 0
 };
 
 const Form = ({
@@ -44,7 +46,7 @@ const Form = ({
   readOnly,
   beforeSubmit,
   deletePromptText,
-  detailPanelToggleId = null, //id of row selected in grid to show detail panel for 
+  detailPanelId = null, // Grid Row Detail Panel Id
   onCancel,
   onSaveSuccess
 }) => {
@@ -54,7 +56,7 @@ const Form = ({
   const { dispatchData, stateData, buildUrl } = useStateContext();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
-  const id = detailPanelToggleId || idWithOptions.split("-")[0];
+  const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
   const searchParams = new URLSearchParams(window.location.search);
   const baseDataFromParams = searchParams.has(consts.baseData) && searchParams.get(consts.baseData);
   const isCSController = model.controllerType === 'cs';
@@ -64,9 +66,9 @@ const Form = ({
       baseSaveData = { ...baseSaveData, ...parsedData };
     }
   }
-  const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState({});
-  const [lookups, setLookups] = useState(null);
+  const [lookups, setLookups] = useState({});
+  const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const snackbar = useSnackbar();
   const [validationSchema, setValidationSchema] = useState(null);
@@ -119,23 +121,24 @@ const Form = ({
     : { ...baseSaveData, ...model.initialValues, ...data }, [model.initialValues, data, id]);
 
   useEffect(() => {
-    if (!url) return;
+    const formApi = api || gridApi;
+    if (!formApi) return;
+    setLoading(true);
     setValidationSchema(model.getValidationSchema({ id, snackbar }));
     const options = idWithOptions.split("-");
     const params = {
-      api: api || gridApi,
+      api: formApi,
       model,
       setError: errorOnLoad
     };
     getRecord({
       ...params,
-      id: detailPanelToggleId || (options.length > 1 ? options[1] : options[0]),
-      setIsLoading,
+      id: detailPanelId || (options.length > 1 ? options[consts.loadIdIndex] : id),
       setActiveRecord,
       dispatchData
     });
 
-  }, [id, idWithOptions, model, url]);
+  }, [id, idWithOptions, model, api, gridApi, detailPanelId]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -148,14 +151,13 @@ const Form = ({
           values[key] = values[key].trim();
         }
       });
-      setIsLoading(true);
       saveRecord({
         id,
         api: gridApi,
         values: values,
-        setIsLoading,
         setError: snackbar.showError,
-        model
+        model,
+        dispatchData
       })
         .then((success) => {
           if (!success) return;
@@ -184,7 +186,6 @@ const Form = ({
             resetForm();
           }
         })
-        .finally(() => setIsLoading(false));
     }
   });
 
@@ -218,6 +219,7 @@ const Form = ({
     });
     setData(record);
     setLookups(lookups);
+    setLoading(false);
     if (linkColumn !== "") {
       breadcrumbs.push({ text: linkColumn });
     }
@@ -246,9 +248,10 @@ const Form = ({
       const response = await deleteRecord({
         id,
         api: api || model.api,
-        setIsLoading,
         setError: snackbar.showError,
-        setErrorMessage
+        setErrorMessage,
+        dispatchData,
+        model
       });
       if (response === true) {
         snackbar.showMessage("Record Deleted Successfully.");
@@ -264,13 +267,6 @@ const Form = ({
     setErrorMessage(null)
     setIsDeleting(false);
   };
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", pt: "20%", justifyContent: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
   const handleChange = function (e) {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
@@ -319,6 +315,11 @@ const Form = ({
       )}
       <ActiveStepContext.Provider value={{ activeStep, setActiveStep }}>
         <Paper sx={{ padding: 2, ...sx }}>
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
           <form>
             <Stack
               direction="row"
@@ -360,6 +361,7 @@ const Form = ({
               mode={mode}
             />
           </form>
+          )}
           {errorMessage && (
             <DialogComponent
               open={!!errorMessage}

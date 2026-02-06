@@ -5,6 +5,7 @@ const Field = ({ field, formik, orientation = "row", label, lookups, fieldConfig
     const handleChange = (event) => {
         formik.setFieldValue(field, event.target.value);
     }
+
     const options = lookups ? lookups[otherProps.column.lookup] : [];
     const theme = useTheme();
     const isError = formik.touched[field] && Boolean(formik.errors[field]);
@@ -16,7 +17,7 @@ const Field = ({ field, formik, orientation = "row", label, lookups, fieldConfig
                     row={orientation === "row"}
                     aria-label={label}
                     name={field}
-                    value={formik.values?.[field] ?? ""}
+                    value={formik.values[field] ?? ""}
                     onChange={handleChange}
                 >
                     {options?.map((option, index) => (

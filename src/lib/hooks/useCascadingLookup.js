@@ -6,7 +6,7 @@ const emptyValues = [null, undefined, ''];
 
 export default function useCascadingLookup({ column, formik, lookups, dependsOn = [], isAutoComplete = false, userSelected, model }) {
     const [options, setOptions] = useState([]);
-    const { stateData, buildUrl } = useStateContext();
+    const { buildUrl } = useStateContext();
     const api = buildUrl(model.controllerType, model.api);
     // Memoize dependency values
     const dependencyValues = useMemo(() => {
@@ -57,9 +57,9 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
         if (dependsOn.length) {
             fetchOptions();
         } else if (isAutoComplete || !userSelected.current) {
-            setOptions(initialOptions);
+            setOptions(initialOptions || []);
         }
-    }, [dependencyValues, initialOptions, api, column.lookup]);
+    }, [dependencyValues, initialOptions, lookups, api, column.lookup]);
 
     return options;
 }

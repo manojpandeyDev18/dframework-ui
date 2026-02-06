@@ -30,8 +30,8 @@ const ToolbarFilter = ({
     // Get current filter value
     // If there's an existing filter, use its value (even if it's falsy like 0, false, "")
     const filterValue = useMemo(() => {
-        if (existingFilter !== undefined) return existingFilter.value ?? '';
-    }, [existingFilter, column.toolbarFilter?.defaultOperator]);
+        return existingFilter?.value ?? '';
+    }, [existingFilter]);
 
     // Handle filter change - use functional update to avoid filterModel dependency
     const handleFilterChange = useCallback((newValue) => {

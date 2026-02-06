@@ -181,7 +181,7 @@ const request = async ({
         let data = response.data;
 
         if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: 'UPDATE_LOADER_STATE', payload: false });
+            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
         }
 
         // Handle HTTP errors here
@@ -189,6 +189,11 @@ const request = async ({
             history('/login');
             return;
         }
+
+        if (response.status === HTTP_STATUS_CODES.FORBIDDEN) {
+            return { error: true, message: data.message || 'Access Denied!' };
+        }
+
         if (response.status !== HTTP_STATUS_CODES.OK) {
             // You can return the error object or handle as needed
             return { error: true, message: data.message || 'An error occurred' };

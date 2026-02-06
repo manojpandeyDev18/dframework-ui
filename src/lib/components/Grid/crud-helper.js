@@ -3,37 +3,8 @@ import request, { transport, HTTP_STATUS_CODES, DATA_PARSERS } from "./httpReque
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
-const timeInterval = 200;
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
-
-/**
- * Handles common HTTP error responses such as session expiration and forbidden access.
- * If an error is detected, sets an appropriate error message and redirects the user after a delay.
- * Returns true if a common error was handled, otherwise false.
- * 
- * @param {Object} response - The HTTP response object containing the status code.
- * @param {Function} setError - Callback function to set the error message.
- * @returns {boolean} Returns true if a common error was handled and a redirect is triggered, otherwise false.
- */
-const handleCommonErrors = (response, setError) => {
-    if (response.status === HTTP_STATUS_CODES.SESSION_EXPIRED) {
-        setError('Session Expired!');
-        setTimeout(() => {
-            window.location.href = '/';
-        }, timeInterval);
-        return true;
-    } else if (response.status === HTTP_STATUS_CODES.FORBIDDEN) {
-        setError('Access Denied!');
-        setTimeout(() => {
-            window.location.href = '/';
-        }, timeInterval);
-        return true;
-    } else if (response.status === HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR) {
-        setError('Internal Server Error');
-    }
-    return false;
-};
 
 function shouldApplyFilter(filter) {
     const { operator, value, type } = filter;
@@ -46,7 +17,7 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport }) => {
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport }) => {
     if (!contentType) {
         if (showFullScreenLoader) {
             dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
@@ -69,11 +40,9 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
             lookupWithDeps.push({ lookup, dependsOn });
         }
     });
-    if (model?.formActions?.export && contentType) {
-        action = model.formActions.export;
-    }
 
     const where = [];
+    const standAloneFilterPayload = {};
     if (filterModel?.items?.length) {
         filterModel.items.forEach(filter => {
             if (shouldApplyFilter(filter)) {
@@ -87,6 +56,11 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
                     value = Array.isArray(value) ? value.filter(e => e) : value;
                 }
                 value = filter.filterValues || value;
+                typeof model.standAloneFilters === 'string' && (model.standAloneFilters = [model.standAloneFilters]);
+                if (model.standAloneFilters?.length && model.standAloneFilters.includes(field)) {
+                    standAloneFilterPayload[field] = value;
+                    return;
+                }
                 where.push({
                     field: filterField || field,
                     operator,
@@ -112,12 +86,9 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         where,
         isElasticExport,
         model: model.module,
-        fileName: model.overrideFileName
+        fileName: model.overrideFileName,
+        ...standAloneFilterPayload
     };
-
-    if (model.comboTypes) {
-        requestData.comboTypes = model.comboTypes;
-    }
 
     if (lookups.length) {
         requestData.lookups = lookups.join(',');
@@ -131,12 +102,8 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         requestData.limitToSurveyed = model?.limitToSurveyed;
     }
 
-    if (typeof model.beforeList === 'function') {
-        model.beforeList({ requestData, model, where, sortModel });
-    }
-
     const headers = {};
-    let url = controllerType === 'cs' ? `${api}?action=${action}&asArray=0` : `${api}/${action}`;
+    let url = `${api}/${action}`;
 
     if (template !== null) {
         url += `&template=${template}`;
@@ -148,12 +115,13 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         const form = document.createElement("form");
         requestData.responseType = contentType;
         requestData.columns = columns;
-        if (isCSController) {
-            if (typeof model.beforeExport === 'function') {
-                model.beforeExport(requestData, columns);
-            }
-        }
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
+        // for manipulating the request payload before sending the request.
+        if (typeof model.createRequestPayload === 'function') {
+            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url });
+        }
+        const exportUrl = requestData.url ?? url;
+        delete requestData.url;
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
         form.setAttribute("target", "_blank");
@@ -172,7 +140,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
                 form.append(hiddenTag);
             }
         }
-        form.setAttribute('action', url);
+        form.setAttribute('action', exportUrl);
         document.body.appendChild(form);
         form.submit();
         setTimeout(() => {
@@ -181,93 +149,66 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         return;
     }
     try {
-        setIsLoading(true);
         // Prepare request parameters based on controller type
-        const reqParams = isCSController ? {
-            dispatchData,
-            jsonPayload: false,
-            disableLoader: true,
-            dataParser: DATA_PARSERS.json,
-            params: requestData
-        } : {
+        const reqParams = {
+            url,
             additionalHeaders: {
                 "Content-Type": "application/json",
                 ...headers
             },
+            dispatchData,
             jsonPayload: true,
-            params: requestData
+            params: requestData,
         };
 
-        setData(prevData => ({
-            ...prevData,
-            records: [] // reset records to empty array before fetching new data
-        }));
+        // for manipulating the request payload before sending the request.
+        if (typeof model.createRequestPayload === 'function') {
+            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action });
+        }
+        const response = await request(reqParams);
 
-        const response = await request({
-            url,
-            ...reqParams
-        });
+        // Parse response data if needed custom processing.
+        if (model.parseResponsePayload && typeof model.parseResponsePayload === 'function') {
+            const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns });
+            setData(resData);
+            return;
+        }
 
-        // Process response data
-        let responseData = response?.data || response;
+        let responseData = response || {};
+        if (responseData.error) {
+            setError(responseData.message || 'An error occurred while fetching data');
+            return;
+        }
 
-        // Process records for non-CS controllers (CS controllers handle this differently)
-        if (!isCSController && responseData?.records) {
-            responseData.records.forEach(record => {
-                dateColumns.forEach(column => {
-                    const { field, keepLocal, keepLocalDate } = column;
-                    if (record[field]) {
-                        record[field] = new Date(record[field]);
-                        if (keepLocalDate) {
-                            const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                            record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                        }
-                        if (keepLocal && !isLocalTime(record[field])) {
-                            const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                            record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                        }
+        responseData.records.forEach(record => {
+            dateColumns.forEach(column => {
+                const { field, keepLocal, keepLocalDate } = column;
+                if (record[field]) {
+                    record[field] = new Date(record[field]);
+                    if (keepLocalDate) {
+                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
                     }
-                });
-                model.columns.forEach(({ field, displayIndex }) => {
-                    if (!displayIndex) return;
-                    record[field] = record[displayIndex];
-                });
+                    if (keepLocal && !isLocalTime(record[field])) {
+                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                    }
+                }
             });
-        }
-
-        // Apply custom list processing if available
-        if (model?.customizedList && typeof model?.customizedList === 'function') {
-            responseData = await model?.customizedList({ responseData, model, dateColumns });
-        }
+            model.columns.forEach(({ field, displayIndex }) => {
+                if (!displayIndex) return;
+                record[field] = record[displayIndex];
+            });
+        });
 
         setData(responseData);
     } catch (error) {
         setError('Network failure or server unreachable. Please try again.');
-    } finally {
-        setIsLoading(false);
-        if (!contentType && showFullScreenLoader) {
-            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
-        }
     }
 };
 
-const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parentFilters, where = {}, setError, dispatchData }) => {
-    const isCSController = model.controllerType === 'cs';
-    let requestData
+const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError, dispatchData }) => {
     api = api || model.api;
-    setIsLoading(true);
-    if (isCSController) {
-        // Fetch record using POST with action
-        requestData = {
-            id,
-            action: model.formActions?.fetch || 'load',
-            method: 'POST'
-        };
-        if (model.comboTypes) {
-            requestData.comboTypes = model.comboTypes;
-        }
-    }
-    // Handle default (node) controller type
     const searchParams = new URLSearchParams();
     const url = `${api}/${id === undefined || id === null ? '-' : id}`;
     const lookupsToFetch = [];
@@ -281,18 +222,28 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     if (where && Object.keys(where)?.length) {
         searchParams.set("where", JSON.stringify(where));
     }
+    const requestData = {
+        url: `${url}?${searchParams.toString()}`,
+        additionalParams: { method: 'GET' },
+        dispatchData,
+        jsonPayload: true
+    };
 
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { id, parentFilters, model, where, api, action: 'load' });
+    }
     try {
-        const response = await request({
-            url: isCSController ? api : `${url}?${searchParams.toString()}`,
-            additionalParams: { "method": isCSController ? requestData.method : 'GET' },
-            dispatchData,
-            dataParser: DATA_PARSERS.json,
-            params: isCSController ? requestData : {},
-            disableLoader: true,
-            jsonPayload: isCSController ? false : true,
-        });
-        const { data: record, lookups } = response;
+        const response = await request(requestData);
+        if (response.error) {
+            setError('Load failed', response.message);
+            return;
+        }
+        if (typeof model.parseResponsePayload === 'function') {
+            const resData = await model.parseResponsePayload({ responseData: response, model });
+            setActiveRecord(resData);
+            return;
+        }
+        const { data: record, lookups } = response || {};
         let title = record[model.linkColumn];
         const columnConfig = model.columns.find(a => a.field === model.linkColumn);
         if (columnConfig && columnConfig.lookup) {
@@ -304,127 +255,99 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
             }
         }
         const defaultValues = { ...model.defaultValues };
-        let csLookups
-        if (typeof model.getLookup === 'function') {
-            csLookups = model.getLookup(response.combos)
-        }
-
-        setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups: isCSController ? csLookups : lookups });
+        setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups });
     } catch (error) {
-        if (error.response && handleCommonErrors(error.response, setError)) {
-            setError('Could not load record', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
+        setError('Could not load record', error.message || error.toString());
     }
 };
 
-const deleteRecord = async function ({ id, api, setIsLoading, setError }) {
+const deleteRecord = async function ({ id, api, setError, dispatchData, model }) {
     const result = { success: false, error: '' };
     if (!id) {
         setError('Deleted failed. No active record.');
         return;
     }
-    setIsLoading(true);
+    const requestData = {
+        url: `${api}/${id}`,
+        additionalParams: { method: 'DELETE' },
+        dispatchData
+    };
+
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { id, model, api, action: 'delete' });
+    }
     try {
-        const response = await transport({
-            url: `${api}/${id}`,
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            if (response.data && !response.data.success) {
-                result.success = false;
-                setError('Delete failed', response.data.message);
-                return false;
-            }
-            result.success = true;
-            return true;
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Delete failed', response.body);
+        const response = await request(requestData);
+        if (response.error) {
+            result.success = false;
+            setError('Delete failed', response.message);
+            return false;
         }
+        result.success = true;
+        return true;
     } catch (error) {
-        if (error.response && !handleCommonErrors(error.response, setError)) {
-            setError('Could not delete record', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
+        setError('Could not delete record', error.message || error.toString());
     }
     return result;
 };
 
-const saveRecord = async function ({ id, api, values, setIsLoading, setError, model }) {
-    const isCSController = model?.controllerType === 'cs';
-    const isNew = !id || id === "0";
-    let requestData = {};
-    try {
-        setIsLoading(true);
-        if (isCSController) {
-            // Handle CS controller save
-            const action = isNew ? model.formActions?.save || 'save' : model.formActions?.edit || 'quickSave';
-            const idProperty = model.idProperty || 'id';
-            const formEditParams = model.formEditParams || 'lineItems';
+const saveRecord = async function ({ id, api, values, setError, model, dispatchData }) {
+    let url, method;
 
-            requestData = {
-                action,
-                method: 'POST',
-                ...values,
-            };
-            if (!isNew) {
-                requestData[formEditParams] = [{
-                    ...values,
-                    [idProperty]: id,
-                    isQuickSave: true, // Indicate quick save
-                    id
-                }]
-            };
-        }
-        const url = isNew ? api : `${api}/${id}`;
-        const method = isNew ? 'POST' : 'PUT';
-        const response = await request({
-            url: isCSController ? api : url,
-            additionalParams: { "method": isCSController ? requestData.method : method },
-            dataParser: DATA_PARSERS.json,
-            params: isCSController ? requestData : values,
-            disableLoader: true,
-            jsonPayload: isCSController ? false : true,
-        });
-        const data = response.data || response;
-        return data;
-
-    } catch (error) {
-        const errorMessage = error.message || error.toString() || 'Could not save record';
-        setError('Save failed', errorMessage);
-        return false;
-    } finally {
-        setIsLoading(false);
+    if (id !== 0) {
+        url = `${api}/${id}`;
+        method = 'PUT';
+    } else {
+        url = api;
+        method = 'POST';
     }
+
+    const requestData = {
+        url,
+        additionalParams: { method },
+        params: values,
+        additionalHeaders: {
+            'Content-Type': 'application/json'
+        },
+        jsonPayload: true,
+        dispatchData
+    };
+
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { id, model, values, api, action: 'save' });
+    }
+
+    try {
+        const response = await request(requestData);
+        if (response.error) {
+            setError('Save failed', response.message);
+            return;
+        }
+        return response;
+    } catch (error) {
+        setError('Could not save record', error.message || error.toString());
+    }
+
+    return false;
 };
 
-const getLookups = async ({ api, setIsLoading, setActiveRecord, model, setError, lookups, scopeId }) => {
+const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, dispatchData }) => {
     api = api || model.api;
-    setIsLoading(true);
     const searchParams = new URLSearchParams();
     const url = `${api}/lookups`;
     searchParams.set("lookups", lookups);
     searchParams.set("scopeId", scopeId);
+    const requestData = {
+        url: `${url}?${searchParams.toString()}`,
+        additionalParams: { method: 'GET' },
+        dispatchData,
+        jsonPayload: true
+    }
     try {
-        const response = await transport({
-            url: `${url}?${searchParams.toString()}`,
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            setActiveRecord(response.data);
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Could not load lookups', response.statusText);
-        }
+        const response = await request(requestData);
+        setActiveRecord(response);
     } catch (error) {
-        if (error.response && !handleCommonErrors(error.response, setError)) {
-            setError('Could not load lookups', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
+        setError('Could not load lookups', error.message || error.toString());
     }
 };
 export {
