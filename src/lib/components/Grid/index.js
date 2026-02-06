@@ -1,4 +1,3 @@
-import Button from '@mui/material/Button';
 import {
     DataGridPremium,
     getGridDateOperators,
@@ -15,8 +14,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CopyIcon from '@mui/icons-material/FileCopy';
 import ArticleIcon from '@mui/icons-material/Article';
 import EditIcon from '@mui/icons-material/Edit';
-import React, { useMemo, useEffect, memo, useRef, useState, useCallback } from 'react';
-import Typography from '@mui/material/Typography';
+import { useMemo, useEffect, memo, useRef, useState, useCallback } from 'react';
 import { useSnackbar } from '../SnackBar/index';
 import { DialogComponent } from '../Dialog/index';
 import { getList, getRecord, deleteRecord, saveRecord } from './crud-helper';
@@ -155,7 +153,6 @@ const GridBase = memo(({
 }) => {
     const [paginationModel, setPaginationModel] = useState({ pageSize: defaultPageSize, page: 0 });
     const [data, setData] = useState({ recordCount: 0, records: [], lookups: {} });
-    const [isLoading, setIsLoading] = useState(true);
     const forAssignment = !!onAssignChange;
     const rowsSelected = showRowsSelected;
     // MUI v8: rowSelectionModel uses object format with type ('include'/'exclude') and ids (Set)
@@ -413,9 +410,6 @@ const GridBase = memo(({
         }
         const actions = [];
         if (!forAssignment && !isReadOnly) {
-            if (canEdit) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="Edit"><EditIcon /></Tooltip>} data-action={actionTypes.Edit} label="Edit" color="primary" />);
-            }
             if (effectivePermissions.copy) {
                 actions.push(<GridActionsCellItem icon={<Tooltip title="Copy"><CopyIcon /> </Tooltip>} data-action={actionTypes.Copy} label="Copy" color="primary" />);
             }
@@ -425,19 +419,18 @@ const GridBase = memo(({
             if (showHistory) {
                 actions.push(<GridActionsCellItem icon={<Tooltip title="History"><HistoryIcon /> </Tooltip>} data-action={actionTypes.History} label="History" color="primary" />);
             }
-            if (customActions.length) {
-                actions.push(...Array.from({ length: customActions.length }, () => null)); // Placeholder for custom actions
-            }
         }
         if (documentField.length) {
             actions.push(<GridActionsCellItem icon={<Tooltip title="Download document"><FileDownloadIcon /> </Tooltip>} data-action={actionTypes.Download} label="Download document" color="primary" />);
         }
-        if (actions.length) {
+
+        const actionWidth = (model.actionWidth || 50) * (actions.length + customActions.length);
+        if (actions.length || customActions.length) {
             finalColumns.push({
                 field: 'actions',
                 type: 'actions',
                 label: '',
-                width: actions.length * ( model.actionWidth || 50),
+                width: actionWidth,
                 hidable: false,
                 getActions: (params) => {
                     const rowActions = [...actions];
@@ -473,7 +466,7 @@ const GridBase = memo(({
                                     color={color || "primary"}
                                 />
                             ));
-                        
+
                         rowActions.push(...filteredCustomActions);
                     }
                     return rowActions;
@@ -566,7 +559,6 @@ const GridBase = memo(({
         return getList({
             ...listParams,
             setError: snackbar.showError,
-            setIsLoading,
             setData,
             dispatchData,
             showFullScreenLoader,
@@ -576,7 +568,7 @@ const GridBase = memo(({
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
         if (setActiveRecord) {
-            getRecord({ id, api: backendApi, setIsLoading, setActiveRecord, model, parentFilters, where });
+            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where });
             return;
         }
         let path = pathname;
@@ -676,7 +668,7 @@ const GridBase = memo(({
 
     const handleDelete = async function () {
         const baseUrl =  buildUrl(model.controllerType, backendApi);
-        const result = await deleteRecord({ id: record.id, api: baseUrl, setIsLoading, setError: snackbar.showError, setErrorMessage });
+        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, dispatchData, model });
         if (result === true) {
             setIsDeleting(false);
             snackbar.showMessage('Record Deleted Successfully.');
@@ -746,8 +738,9 @@ const GridBase = memo(({
                 id: 0,
                 api: `${baseUrl}/updateMany`,
                 values: { items: selectedRecords },
-                setIsLoading,
-                setError: snackbar.showError
+                setError: snackbar.showError,
+                model,
+                dispatchData
             });
 
             if (result) {
@@ -775,7 +768,6 @@ const GridBase = memo(({
             snackbar.showError(
                 "Please select at least one record to proceed"
             );
-            setIsLoading(false);
             return;
         }
         if (typeof onAddOverride === constants.function) {
@@ -849,8 +841,9 @@ const GridBase = memo(({
             const col = lookup[field];
             columns[field] = { field, width: col.width, headerName: col.headerName || col.field, type: col.type, keepLocal: col.keepLocal === true, isParsable: col.isParsable, lookup: col.lookup };
         });
+        const action = (model?.formActions?.export || isPivotExport) ? (model?.formActions?.export || 'export') : undefined;
         fetchData(
-            isPivotExport ? 'export' : undefined,
+            action,
             undefined,
             e.target.dataset.contentType,
             columns,
@@ -1056,7 +1049,73 @@ const GridBase = memo(({
                 const key = count === 1 ? 'item selected' : 'items selected';
                 return `${count.toLocaleString()} ${tTranslate(key, tOpts)}`;
             }
-        }), [tTranslate, tOpts]);
+        }), [tTranslate, tOpts, model?.searchPlaceholder]);
+
+    const slotProps = useMemo(() => ({
+        headerFilterCell: { showClearIcon: true },
+        toolbar: {
+            model,
+            data,
+            currentPreference,
+            isReadOnly,
+            canAdd,
+            forAssignment,
+            showAddIcon,
+            onAdd,
+            selectionApi,
+            rowSelectionModel,
+            selectAll,
+            available,
+            onAssign,
+            assigned,
+            onUnassign,
+            effectivePermissions,
+            clearFilters,
+            handleExport,
+            preferenceKey,
+            apiRef,
+            gridColumns,
+            tTranslate,
+            tOpts,
+            idProperty,
+            filterModel,
+            setFilterModel,
+            onPreferenceChange,
+            toolbarItems
+        },
+        footer: {
+            pagination: true,
+            apiRef,
+            tTranslate,
+            tOpts
+        },
+        panel: {
+            placement: "bottom-end"
+        },
+        pagination: {
+            backIconButtonProps: {
+                title: tTranslate('Go to previous page', tOpts),
+                'aria-label': tTranslate('Go to previous page', tOpts),
+            },
+            nextIconButtonProps: {
+                title: tTranslate('Go to next page', tOpts),
+                'aria-label': tTranslate('Go to next page', tOpts),
+            },
+        }
+    }), [model, currentPreference, isReadOnly, canAdd, forAssignment, showAddIcon, onAdd, selectionApi, rowSelectionModel, selectAll, available, onAssign, assigned, onUnassign, effectivePermissions, clearFilters, handleExport, preferenceKey, apiRef, gridColumns, tTranslate, tOpts, idProperty, filterModel, setFilterModel, onPreferenceChange, toolbarItems]);
+
+    const initialState = useMemo(() => ({
+        columns: {
+            columnVisibilityModel: visibilityModel
+        },
+        pinnedColumns: pinnedColumns
+    }), [visibilityModel, pinnedColumns]);
+
+    const slots = useMemo(() => ({
+        headerFilterMenu: false,
+        toolbar: CustomToolbar,
+        footer: Footer
+    }), []);
 
     return (
         <>
@@ -1082,7 +1141,7 @@ const GridBase = memo(({
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
-                        loading={isLoading}
+                        loading={stateData.loaderOpen}
                         className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}
@@ -1106,63 +1165,8 @@ const GridBase = memo(({
                         filterModel={filterModel}
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
-                        slots={{
-                            headerFilterMenu: false,
-                            toolbar: CustomToolbar,
-                            footer: Footer
-                        }}
-                        slotProps={{
-                            headerFilterCell: { showClearIcon: true },
-                            toolbar: {
-                                model,
-                                data,
-                                currentPreference,
-                                isReadOnly,
-                                canAdd,
-                                forAssignment,
-                                showAddIcon,
-                                onAdd,
-                                selectionApi,
-                                rowSelectionModel,
-                                selectAll,
-                                available,
-                                onAssign,
-                                assigned,
-                                onUnassign,
-                                effectivePermissions,
-                                clearFilters,
-                                handleExport,
-                                preferenceKey,
-                                apiRef,
-                                gridColumns,
-                                tTranslate,
-                                tOpts,
-                                idProperty,
-                                filterModel,
-                                setFilterModel,
-                                onPreferenceChange,
-                                toolbarItems
-                            },
-                            footer: {
-                                pagination: true,
-                                apiRef,
-                                tTranslate,
-                                tOpts
-                            },
-                            panel: {
-                                placement: "bottom-end"
-                            },
-                            pagination: {
-                                backIconButtonProps: {
-                                    title: tTranslate('Go to previous page', tOpts),
-                                    'aria-label': tTranslate('Go to previous page', tOpts),
-                                },
-                                nextIconButtonProps: {
-                                    title: tTranslate('Go to next page', tOpts),
-                                    'aria-label': tTranslate('Go to next page', tOpts),
-                                },
-                            }
-                        }}
+                        slots={slots}
+                        slotProps={slotProps}
                         hideFooterSelectedRowCount={rowsSelected}
                         density="compact"
                         disableDensitySelector={true}
@@ -1172,12 +1176,7 @@ const GridBase = memo(({
                         disableRowSelectionOnClick={disableRowSelectionOnClick}
                         disablePivoting={disablePivoting}
                         filterDebounceMs={debounceTimeOut}
-                        initialState={{
-                            columns: {
-                                columnVisibilityModel: visibilityModel
-                            },
-                            pinnedColumns: pinnedColumns
-                        }}
+                        initialState={initialState}
                         getDetailPanelContent={getDetailPanelContent}
                         detailPanelExpandedRowIds={detailPanelExpandedRowIds}
                         onDetailPanelExpandedRowIdsChange={handleDetailPanelExpanded}
