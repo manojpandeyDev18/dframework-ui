@@ -174,7 +174,7 @@ const GridBase = memo(({
     const snackbar = useSnackbar();
     const paginationMode = model.paginationMode === constants.client ? constants.client : constants.server;
     const { t: translate, i18n } = useTranslation();
-    const tOpts = { t: translate, i18n };
+    const tOpts = useMemo(() => ({ t: translate, i18n }), [translate, i18n]);
     const [errorMessage, setErrorMessage] = useState('');
     const [sortModel, setSortModel] = useState(convertDefaultSort(defaultSort || model.defaultSort, constants, sortRegex));
     const initialFilterModel = { items: [], logicOperator: 'and', quickFilterValues: Array(0), quickFilterLogicOperator: 'and' };
@@ -197,7 +197,7 @@ const GridBase = memo(({
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
     const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl } = useStateContext();
     const { timeZone } = stateData;
-    const effectivePermissions = { ...constants.permissions, ...model.permissions, ...permissions };
+    const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
     const userData = stateData.getUserData || {};
     const documentField = model.columns.find(ele => ele.type === 'fileUpload')?.field || "";
@@ -222,10 +222,10 @@ const GridBase = memo(({
     }, [apiRef, preferenceKey]);
 
     // Callback when preferences are loaded or changed
-    const onPreferenceChange = (preferenceName) => {
+    const onPreferenceChange = useCallback((preferenceName) => {
         setCurrentPreference(preferenceName);
         setPreferencesReady(true);
-    };
+    }, []);
 
     const baseDataFromParams = searchParams.has('baseData') && searchParams.get('baseData');
     const baseSaveData = useMemo(() => {
@@ -330,14 +330,15 @@ const GridBase = memo(({
     }, []);
 
     const createAction = useCallback(
-        ({ key, title, icon, color = "primary", disabled }) => (
+        ({ key, title, icon, color = "primary", disabled, otherProps }) => (
             <GridActionsCellItem
                 key={key}
-                icon={<Tooltip title={title}>{icon}</Tooltip>}
+                icon={<Tooltip title={title}>{iconMapper[icon] || icon}</Tooltip>}
                 data-action={key}
                 label={title}
                 color={color}
                 disabled={disabled}
+                {...otherProps}
             />
         ),
         []
@@ -351,28 +352,28 @@ const GridBase = memo(({
                 {
                     key: actionTypes.Edit,
                     title: "Edit",
-                    icon: iconMapper.edit,
-                    show: canEdit,
+                    icon: 'edit',
+                    show: !!canEdit,
                     disabled: row => row.canEdit === false,
                 },
                 {
                     key: actionTypes.Copy,
                     title: "Copy",
-                    icon: iconMapper.copy,
-                    show: effectivePermissions.copy,
+                    icon: 'copy',
+                    show: !!effectivePermissions.copy,
                 },
                 {
                     key: actionTypes.Delete,
                     title: "Delete",
-                    icon: iconMapper.delete,
+                    icon: 'delete',
                     color: "error",
-                    show: canDelete,
+                    show: !!canDelete,
                 },
                 {
                     key: actionTypes.History,
                     title: "History",
-                    icon: iconMapper.history,
-                    show: showHistory,
+                    icon: 'history',
+                    show: !!showHistory,
                 },
                 ...customActions
             );
@@ -381,7 +382,7 @@ const GridBase = memo(({
         actions.push({
             key: actionTypes.Download,
             title: "Download document",
-            icon: iconMapper.download,
+            icon: 'download',
             show: documentField.length > 0,
         });
 
@@ -400,18 +401,19 @@ const GridBase = memo(({
     const getActions = useCallback(
         ({ row }) =>
             actionConfig
-                .filter(a =>
-                    typeof a.show === "function"
-                        ? a.show(row)
-                        : a.show
+                .filter(({ show }) =>
+                    typeof show === "function"
+                        ? show(row)
+                        : show !== false
                 )
-                .map(({ key, title, icon, color, disabled }) =>
+                .map(({ key, title, icon, color, disabled, ...otherProps }) =>
                     createAction({
                         key,
                         title,
                         icon,
                         color,
-                        disabled: disabled?.(row)
+                        disabled: disabled?.(row),
+                        otherProps
                     })
                 ),
         [actionConfig, createAction]
@@ -505,7 +507,7 @@ const GridBase = memo(({
             finalColumns.push({
                 field: 'actions',
                 type: 'actions',
-                width: (constants.defaultActionWidth || model.actionWidth) * actionConfig.length,
+                width: (model.actionWidth ?? constants.defaultActionWidth) * actionConfig.length,
                 hidable: false,
                 getActions
             });
@@ -817,19 +819,19 @@ const GridBase = memo(({
         if (!filterModel?.items?.length) return;
         setFilterModel({ ...constants.gridFilterModel });
     }, [filterModel]);
-    const updateAssignment = ({ unassign, assign }) => {
+    const updateAssignment = useCallback(({ unassign, assign }) => {
         const assignedValues = Array.isArray(selected) ? selected : (selected.length ? selected.split(',') : []);
         const finalValues = unassign ? assignedValues.filter(id => !unassign.includes(parseInt(id))) : [...assignedValues, ...assign];
         onAssignChange(typeof selected === constants.string ? finalValues.join(',') : finalValues);
-    };
+    }, [selected, onAssignChange]);
 
-    const onAssign = () => {
+    const onAssign = useCallback(() => {
         updateAssignment({ assign: Array.from(rowSelectionModel.ids) });
-    };
+    }, [updateAssignment, rowSelectionModel.ids]);
 
-    const onUnassign = () => {
+    const onUnassign = useCallback(() => {
         updateAssignment({ unassign: Array.from(rowSelectionModel.ids) });
-    };
+    }, [updateAssignment, rowSelectionModel.ids]);
 
     const selectAll = useCallback(() => {
         const records = data.records || [];
@@ -1139,7 +1141,7 @@ const GridBase = memo(({
                 'aria-label': tTranslate('Go to next page', tOpts),
             },
         }
-    }), [model, currentPreference, isReadOnly, canAdd, forAssignment, showAddIcon, onAdd, selectionApi, rowSelectionModel, selectAll, available, onAssign, assigned, onUnassign, effectivePermissions, clearFilters, handleExport, preferenceKey, apiRef, gridColumns, tTranslate, tOpts, idProperty, filterModel, setFilterModel, onPreferenceChange, toolbarItems]);
+    }), [model, data, currentPreference, isReadOnly, canAdd, forAssignment, showAddIcon, onAdd, selectionApi, rowSelectionModel, selectAll, available, onAssign, assigned, onUnassign, effectivePermissions, clearFilters, handleExport, preferenceKey, apiRef, gridColumns, tTranslate, tOpts, idProperty, filterModel, setFilterModel, onPreferenceChange, toolbarItems]);
 
     const initialState = useMemo(() => ({
         columns: {

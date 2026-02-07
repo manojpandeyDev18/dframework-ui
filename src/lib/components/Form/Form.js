@@ -136,7 +136,7 @@ const Form = ({
       dispatchData
     });
 
-  }, [id, idWithOptions, model, api, gridApi, detailPanelId]);
+  }, [id, idWithOptions, model, api, gridApi, detailPanelId, dispatchData]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -149,6 +149,7 @@ const Form = ({
           values[key] = values[key].trim();
         }
       });
+      setIsLoading(true);
       saveRecord({
         id,
         api: gridApi,

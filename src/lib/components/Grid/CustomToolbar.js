@@ -68,6 +68,7 @@ const CustomToolbar = function (props) {
     // Get columns that should have toolbar filters
     const toolbarFilterColumns = gridColumns?.filter(col => col.toolbarFilter) || [];
     const lookupData = data?.lookups || {};
+    const records = data?.records || [];
 
     return (
         <>
@@ -83,13 +84,13 @@ const CustomToolbar = function (props) {
                     {currentPreference && model.showPreferenceInHeader && <Typography className="preference-name-text" variant="h6" component="h6" textAlign="center" sx={{ ml: 1 }} >{tTranslate('Applied Preference', tOpts)}: {currentPreference}</Typography>}
                     {(isReadOnly || (!canAdd && !forAssignment)) && <Typography variant="h6" component="h3" textAlign="center" sx={{ ml: 1 }} > {!canAdd || isReadOnly ? "" : model.title}</Typography>}
                     {!forAssignment && canAdd && !isReadOnly && <ButtonWithMargin startIcon={!showAddIcon ? null : <AddIcon />} onClick={onAdd} size="medium" variant="contained" >{tTranslate(addText, tOpts)}</ButtonWithMargin>}
-                    {(selectionApi.length && data.records.length) ? (
+                    {(selectionApi.length && records.length) ? (
                         <ButtonWithMargin
                             onClick={selectAll}
                             size="medium"
                             variant="contained"
                         >
-                            {rowSelectionModel.ids.size === data.records.length ? tTranslate("Deselect All", tOpts) : tTranslate("Select All", tOpts)}
+                            {rowSelectionModel.ids.size === records.length ? tTranslate("Deselect All", tOpts) : tTranslate("Select All", tOpts)}
                         </ButtonWithMargin>) :
                         <></>
                     }
