@@ -1,5 +1,5 @@
 import actionsStateProvider from "../useRouter/actions";
-import request, { transport, HTTP_STATUS_CODES, DATA_PARSERS } from "./httpRequest";
+import request, { DATA_PARSERS } from "./httpRequest";
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
@@ -55,8 +55,11 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
                     value = Array.isArray(value) ? value.filter(e => e) : value;
                 }
                 value = filter.filterValues || value;
-                typeof model.standAloneFilters === 'string' && (model.standAloneFilters = [model.standAloneFilters]);
-                if (model.standAloneFilters?.length && model.standAloneFilters.includes(field)) {
+                let standAloneFilters = model.standAloneFilters || [];
+                if(typeof standAloneFilters === 'string') {
+                    standAloneFilters = [standAloneFilters];
+                }
+                if (standAloneFilters.length && standAloneFilters.includes(field)) {
                     standAloneFilterPayload[field] = value;
                     return;
                 }

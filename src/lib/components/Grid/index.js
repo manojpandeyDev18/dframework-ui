@@ -214,7 +214,7 @@ const GridBase = memo(({
     // State for single expanded detail panel row
     const [rowPanelId, setRowPanelId] = useState(null);
     const detailPanelExpandedRowIds = useMemo(() => new Set(rowPanelId ? [rowPanelId] : []), [rowPanelId]);
-    const enableRowDetailPanel = typeof getDetailPanelContent === 'function';
+    const enableRowDetailPanel = typeof model.getDetailPanelContent === 'function';
 
     useEffect(() => {
         if (!apiRef.current) return;
@@ -402,10 +402,10 @@ const GridBase = memo(({
     const getActions = useCallback(
         ({ row }) =>
             actionConfig
-                .map(({ key, title, icon, color, disabled, ...otherProps }) =>
+                .map(({ key, title, icon, color, disabled, show, action, ...otherProps }) =>
                     createAction({
                         key,
-                        title,
+                        title: title || action, // Fallback to 'action' for backward compatibility if 'title' is not provided
                         icon,
                         color,
                         disabled: disabled?.(row),

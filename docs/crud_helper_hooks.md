@@ -120,7 +120,7 @@ The function must return the data in the shape expected by the consumer:
 
 | Action | Expected Return Shape |
 |--------|----------------------|
-| **list** (`getList`) | `{ records: Array, totalCount: Number, lookups: Object }` |
+| **list** (`getList`) | `{ records: Array, recordCount: Number, lookups: Object }` |
 | **load** (`getRecord`) | `{ id, title, record: Object, lookups: Object }` |
 | **lookups** (`getLookups`) | The lookups object to pass to `setActiveRecord`. |
 
@@ -147,7 +147,7 @@ const productModel = new UiModel({
 
         return {
             records,
-            totalCount: responseData.total,
+            recordCount: responseData.recordCount,
             lookups: responseData.lookups || {}
         };
     }
@@ -211,7 +211,7 @@ const model = new UiModel({
 
         return {
             records,
-            totalCount: responseData.totalCount,
+            recordCount: responseData.recordCount,
             lookups: responseData.lookups
         };
     }
