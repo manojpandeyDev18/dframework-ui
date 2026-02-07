@@ -155,11 +155,12 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             dispatchData,
             jsonPayload: true,
             params: requestData,
+            dataParser: DATA_PARSERS.json
         };
 
         // for manipulating the request payload before sending the request.
         if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action });
+            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action, dataParsers: DATA_PARSERS });
         }
         const response = await request(reqParams);
 

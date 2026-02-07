@@ -75,7 +75,7 @@ const constants = {
     actions: 'actions',
     function: 'function',
     pageSizeOptions: [5, 10, 20, 50, 100],
-    defaultActionWidth: 20
+    defaultActionWidth: 50
 };
 const auditColumnMappings = [
     { key: 'addCreatedOnColumn', field: 'CreatedOn', type: 'dateTime', header: 'Created On' },
@@ -214,6 +214,7 @@ const GridBase = memo(({
     // State for single expanded detail panel row
     const [rowPanelId, setRowPanelId] = useState(null);
     const detailPanelExpandedRowIds = useMemo(() => new Set(rowPanelId ? [rowPanelId] : []), [rowPanelId]);
+    const enableRowDetailPanel = typeof getDetailPanelContent === 'function';
 
     useEffect(() => {
         if (!apiRef.current) return;
@@ -386,7 +387,7 @@ const GridBase = memo(({
             show: documentField.length > 0,
         });
 
-        return actions;
+        return actions.filter(({ show }) => show);
     }, [
         forAssignment,
         isReadOnly,
@@ -401,11 +402,6 @@ const GridBase = memo(({
     const getActions = useCallback(
         ({ row }) =>
             actionConfig
-                .filter(({ show }) =>
-                    typeof show === "function"
-                        ? show(row)
-                        : show !== false
-                )
                 .map(({ key, title, icon, color, disabled, ...otherProps }) =>
                     createAction({
                         key,
@@ -1216,9 +1212,11 @@ const GridBase = memo(({
                         disablePivoting={disablePivoting}
                         filterDebounceMs={debounceTimeOut}
                         initialState={initialState}
-                        getDetailPanelContent={getDetailPanelContent}
-                        detailPanelExpandedRowIds={detailPanelExpandedRowIds}
-                        onDetailPanelExpandedRowIdsChange={handleDetailPanelExpanded}
+                        {...(enableRowDetailPanel && {
+                             getDetailPanelContent,
+                             detailPanelExpandedRowIds,
+                             onDetailPanelExpandedRowIdsChange: handleDetailPanelExpanded
+                        })}
                         localeText={localeText}
                         showToolbar={true}
                         columnHeaderHeight={columnHeaderHeight}
