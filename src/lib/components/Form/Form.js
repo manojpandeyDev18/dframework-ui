@@ -185,6 +185,9 @@ const Form = ({
             resetForm();
           }
         })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   });
 
