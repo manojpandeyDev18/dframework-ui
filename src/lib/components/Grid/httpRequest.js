@@ -171,7 +171,7 @@ const request = async ({
         ...additionalParams
     };
 
-    if (Object.keys(params).length > 0) {
+    if (params && Object.keys(params).length > 0) {
         reqParams.data = jsonPayload ? params : getFormData(params);
     }
 
