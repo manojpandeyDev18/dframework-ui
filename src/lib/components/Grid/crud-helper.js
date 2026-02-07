@@ -27,7 +27,6 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     const lookups = [];
     const lookupWithDeps = []; // for backward compatibility having two lookups arrays
     const dateColumns = [];
-    const isCSController = controllerType === 'cs';
     gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true, dependsOn }) => {
         if (dateDataTypes.includes(type)) {
             dateColumns.push({ field, keepLocal, keepLocalDate });
@@ -103,7 +102,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     }
 
     const headers = {};
-    let url = `${api}/${action}`;
+    let url = controllerType === 'cs' ? `${api}?action=${action}&asArray=0` : `${api}/${action}`;
 
     if (template !== null) {
         url += `&template=${template}`;
@@ -120,8 +119,6 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         if (typeof model.createRequestPayload === 'function') {
             await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url });
         }
-        const exportUrl = requestData.url ?? url;
-        delete requestData.url;
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
         form.setAttribute("target", "_blank");
@@ -140,7 +137,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
                 form.append(hiddenTag);
             }
         }
-        form.setAttribute('action', exportUrl);
+        form.setAttribute('action', url);
         document.body.appendChild(form);
         form.submit();
         setTimeout(() => {
@@ -149,7 +146,6 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         return;
     }
     try {
-        // Prepare request parameters based on controller type
         const reqParams = {
             url,
             additionalHeaders: {
@@ -167,6 +163,11 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         }
         const response = await request(reqParams);
 
+        if (response?.error === true || response?.success === false) {
+            setError(response.message || 'An error occurred while fetching data');
+            return;
+        }
+
         // Parse response data if needed custom processing.
         if (model.parseResponsePayload && typeof model.parseResponsePayload === 'function') {
             const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns });
@@ -174,13 +175,8 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             return;
         }
 
-        let responseData = response || {};
-        if (responseData.error || responseData.success === false) {
-            setError(responseData.message || 'An error occurred while fetching data');
-            return;
-        }
 
-        responseData.records.forEach(record => {
+        response.records.forEach(record => {
             dateColumns.forEach(column => {
                 const { field, keepLocal, keepLocalDate } = column;
                 if (record[field]) {
@@ -201,7 +197,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             });
         });
 
-        setData(responseData);
+        setData(response);
     } catch (error) {
         setError('Network failure or server unreachable. Please try again.');
     }
@@ -234,7 +230,7 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     }
     try {
         const response = await request(requestData);
-        if (response.error || response.success === false) {
+        if (response?.error === true || response?.success === false) {
             setError('Load failed', response.message);
             return;
         }
@@ -278,7 +274,7 @@ const deleteRecord = async function ({ id, api, setError, dispatchData, model })
     }
     try {
         const response = await request(requestData);
-        if (response.error || response.success === false) {
+        if (response?.error  === true|| response?.success === false) {
             result.success = false;
             setError('Delete failed', response.message);
             return false;
@@ -319,9 +315,9 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
 
     try {
         const response = await request(requestData);
-        if (response.error || response.success === false) {
+        if (response?.error === true || response?.success === false) {
             setError('Save failed', response.message);
-            return;
+            return false;
         }
         return response;
     } catch (error) {
@@ -344,9 +340,18 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
         jsonPayload: true
     }
     try {
+        if(typeof model.createRequestPayload === 'function') {
+            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData})
+        }
         const response = await request(requestData);
-        if (response.error || response.success === false) {
+        if (response?.error === true || response?.success === false) {
             setError('Could not load lookups', response.message);
+            return false;
+        }
+
+        if(typeof model.parseResponsePayload === 'function') {
+            const resData = await model.parseResponsePayload({ responseData: response, model });
+            setActiveRecord(resData);
             return;
         }
         setActiveRecord(response);
