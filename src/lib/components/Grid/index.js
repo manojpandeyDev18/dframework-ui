@@ -48,8 +48,14 @@ const actionTypes = {
     Download: "Download"
 };
 const iconMapper = {
-    'article': <ArticleIcon />
+    'article': <ArticleIcon />,
+    'edit': <EditIcon />,
+    'copy': <CopyIcon />,
+    'delete': <DeleteIcon />,
+    'history': <HistoryIcon />,
+    'download': <FileDownloadIcon />,
 };
+
 const constants = {
     gridFilterModel: { items: [], logicOperator: 'and', quickFilterValues: Array(0), quickFilterLogicOperator: 'and' },
     permissions: { edit: true, add: true, export: true, delete: true, showColumnsOrder: true, filter: true },
@@ -152,7 +158,7 @@ const GridBase = memo(({
     ...props
 }) => {
     const [paginationModel, setPaginationModel] = useState({ pageSize: defaultPageSize, page: 0 });
-    const [data, setData] = useState({ recordCount: 0, records: [], lookups: {} });
+    const [data, setData] = useState({ recordCount: 0, records: null, lookups: {} });
     const forAssignment = !!onAssignChange;
     const rowsSelected = showRowsSelected;
     // MUI v8: rowSelectionModel uses object format with type ('include'/'exclude') and ids (Set)
@@ -204,13 +210,13 @@ const GridBase = memo(({
     const [currentPreference, setCurrentPreference] = useState(null);
     const [preferencesReady, setPreferencesReady] = useState(!preferenceKey);
     const backendApi = api || model.api;
-     // State for single expanded detail panel row
+    // State for single expanded detail panel row
     const [rowPanelId, setRowPanelId] = useState(null);
     const detailPanelExpandedRowIds = useMemo(() => new Set(rowPanelId ? [rowPanelId] : []), [rowPanelId]);
 
     useEffect(() => {
         if (!apiRef.current) return;
-        
+
         // Store preferenceKey on apiRef for GridPreferences to access
         apiRef.current.prefKey = preferenceKey;
     }, [apiRef, preferenceKey]);
@@ -322,7 +328,94 @@ const GridBase = memo(({
             }
         });
     }, []);
+
+    const createAction = useCallback(
+        ({ key, title, icon, color = "primary", disabled }) => (
+            <GridActionsCellItem
+                key={key}
+                icon={<Tooltip title={title}>{icon}</Tooltip>}
+                data-action={key}
+                label={title}
+                color={color}
+                disabled={disabled}
+            />
+        ),
+        []
+    );
     const { customActions = [] } = model;
+    const actionConfig = useMemo(() => {
+        const actions = [];
+
+        if (!forAssignment && !isReadOnly) {
+            actions.push(
+                {
+                    key: actionTypes.Edit,
+                    title: "Edit",
+                    icon: iconMapper.edit,
+                    show: canEdit,
+                    disabled: row => row.canEdit === false,
+                },
+                {
+                    key: actionTypes.Copy,
+                    title: "Copy",
+                    icon: iconMapper.copy,
+                    show: effectivePermissions.copy,
+                },
+                {
+                    key: actionTypes.Delete,
+                    title: "Delete",
+                    icon: iconMapper.delete,
+                    color: "error",
+                    show: canDelete,
+                },
+                {
+                    key: actionTypes.History,
+                    title: "History",
+                    icon: iconMapper.history,
+                    show: showHistory,
+                },
+                ...customActions
+            );
+        }
+
+        actions.push({
+            key: actionTypes.Download,
+            title: "Download document",
+            icon: iconMapper.download,
+            show: documentField.length > 0,
+        });
+
+        return actions;
+    }, [
+        forAssignment,
+        isReadOnly,
+        canEdit,
+        canDelete,
+        showHistory,
+        effectivePermissions.copy,
+        documentField.length,
+        customActions
+    ]);
+
+    const getActions = useCallback(
+        ({ row }) =>
+            actionConfig
+                .filter(a =>
+                    typeof a.show === "function"
+                        ? a.show(row)
+                        : a.show
+                )
+                .map(({ key, title, icon, color, disabled }) =>
+                    createAction({
+                        key,
+                        title,
+                        icon,
+                        color,
+                        disabled: disabled?.(row)
+                    })
+                ),
+        [actionConfig, createAction]
+    );
     const { gridColumns, pinnedColumns, lookupMap } = useMemo(() => {
         let baseColumnList = columns || model.gridColumns || model.columns;
         if (dynamicColumns) {
@@ -385,7 +478,7 @@ const GridBase = memo(({
                 overrides.cellClassName = 'mui-grid-linkColumn';
             }
             const headerName = tTranslate(column.gridLabel || column.label, tOpts);
-            finalColumns.push({ ...column, ...overrides,  headerName, description: headerName });
+            finalColumns.push({ ...column, ...overrides, headerName, description: headerName });
             if (column.pinned) {
                 pinnedColumns[column.pinned === constants.right ? constants.right : constants.left].push(column.field);
             }
@@ -408,72 +501,17 @@ const GridBase = memo(({
                 }
             });
         }
-        const actions = [];
-        if (!forAssignment && !isReadOnly) {
-            if (effectivePermissions.copy) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="Copy"><CopyIcon /> </Tooltip>} data-action={actionTypes.Copy} label="Copy" color="primary" />);
-            }
-            if (canDelete) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="Delete"><DeleteIcon /> </Tooltip>} data-action={actionTypes.Delete} label="Delete" color="error" />);
-            }
-            if (showHistory) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="History"><HistoryIcon /> </Tooltip>} data-action={actionTypes.History} label="History" color="primary" />);
-            }
-        }
-        if (documentField.length) {
-            actions.push(<GridActionsCellItem icon={<Tooltip title="Download document"><FileDownloadIcon /> </Tooltip>} data-action={actionTypes.Download} label="Download document" color="primary" />);
-        }
-
-        const actionWidth = (model.actionWidth || 50) * (actions.length + customActions.length);
-        if (actions.length || customActions.length) {
+        if (actionConfig.length) {
             finalColumns.push({
                 field: 'actions',
                 type: 'actions',
-                label: '',
-                width: actionWidth,
+                width: 20 * actionConfig.length,
                 hidable: false,
-                getActions: (params) => {
-                    const rowActions = [...actions];
-                    if (canEdit && !isReadOnly) {
-                        const isDisabled = params.row.canEdit === false;
-                        rowActions[0] = (
-                            <GridActionsCellItem
-                                icon={
-                                    <Tooltip title="Edit">
-                                        <EditIcon />
-                                    </Tooltip>
-                                }
-                                data-action={actionTypes.Edit}
-                                label="Edit"
-                                color="primary"
-                                disabled={isDisabled}
-                            />
-                        );
-                    }
-                    // Add custom actions with showCondition evaluation
-                    if (customActions.length) {
-                        const filteredCustomActions = customActions
-                            .filter(({ showCondition }) => typeof showCondition !== 'function' || showCondition(params.row))
-                            .map(({ icon, action, color }) => (
-                                <GridActionsCellItem
-                                    icon={<Tooltip title={action}>{
-                                        typeof icon === 'string' ? (iconMapper[icon] || <span style={{ fontSize: "medium" }}>{icon}</span>) :
-                                            typeof icon === 'function' ? icon({ tTranslate, tOpts }) :
-                                                <CopyIcon />
-                                    }</Tooltip>}
-                                    data-action={action}
-                                    label={action}
-                                    color={color || "primary"}
-                                />
-                            ));
-
-                        rowActions.push(...filteredCustomActions);
-                    }
-                    return rowActions;
-                }
+                getActions
             });
+
+            pinnedColumns.right.push('actions');
         }
-        pinnedColumns.right.push('actions');
         return { gridColumns: finalColumns, pinnedColumns, lookupMap };
     }, [columns, model, parent, permissions, forAssignment, dynamicColumns, translate]);
 
@@ -482,12 +520,12 @@ const GridBase = memo(({
     useEffect(() => {
         // Only run once on initial mount
         if (hasInitializedRef.current) return;
-        
+
         const toolbarFilterColumns = gridColumns?.filter(col => col.toolbarFilter?.defaultFilterValue !== undefined) || [];
         if (toolbarFilterColumns.length === 0) return;
 
         // Check if any toolbar filters already exist in filterModel
-        const hasExistingToolbarFilters = filterModel.items.some(item => 
+        const hasExistingToolbarFilters = filterModel.items.some(item =>
             toolbarFilterColumns.some(col => col.field === item.field)
         );
         if (hasExistingToolbarFilters) {
@@ -506,7 +544,7 @@ const GridBase = memo(({
             ...prev,
             items: [...prev.items, ...toolbarFilters]
         }));
-        
+
         hasInitializedRef.current = true;
     }, [gridColumns]);
 
@@ -514,7 +552,7 @@ const GridBase = memo(({
     const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
         const { pageSize, page } = paginationModel;
 
-        const baseUrl =  buildUrl(model.controllerType, isPivotExport ? model.pivotApi : backendApi);
+        const baseUrl = buildUrl(model.controllerType, isPivotExport ? model.pivotApi : backendApi);
 
         if (assigned || available) {
             extraParams[assigned ? "include" : "exclude"] = Array.isArray(selected) ? selected.join(",") : selected;
@@ -667,7 +705,7 @@ const GridBase = memo(({
     }, [isReadOnly, onCellClick, lookupMap, model, idProperty, documentField, navigate, toLink, customActions, tableName, searchParamKey, searchParams, gridTitle, getApiEndpoint, handleDownload, openForm]);
 
     const handleDelete = async function () {
-        const baseUrl =  buildUrl(model.controllerType, backendApi);
+        const baseUrl = buildUrl(model.controllerType, backendApi);
         const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, dispatchData, model });
         if (result === true) {
             setIsDeleting(false);
@@ -722,7 +760,7 @@ const GridBase = memo(({
         }
 
         const selectedIds = Array.from(rowSelectionModel.ids);
-        const recordMap = new Map(data.records.map(record => [record[idProperty], record]));
+        const recordMap = new Map((data.records || []).map(record => [record[idProperty], record]));
         let selectedRecords = selectedIds.map(id => ({ ...baseSaveData, ...recordMap.get(id) }));
 
         // If selectionUpdateKeys is defined, filter each record to only those keys
@@ -732,7 +770,7 @@ const GridBase = memo(({
             );
         }
 
-        const baseUrl =  buildUrl(model.controllerType, selectionApi || backendApi);
+        const baseUrl = buildUrl(model.controllerType, selectionApi || backendApi);
         try {
             const result = await saveRecord({
                 id: 0,
@@ -796,8 +834,9 @@ const GridBase = memo(({
     };
 
     const selectAll = useCallback(() => {
+        const records = data.records || [];
         const currentCount = rowSelectionModel.ids.size;
-        if (currentCount === data.records.length) {
+        if (currentCount === records.length) {
             // If all records are selected, deselect all
             setRowSelectionModel({
                 type: 'include',
@@ -805,7 +844,7 @@ const GridBase = memo(({
             });
         } else {
             // Select all records
-            const allIds = data.records.map(record => record[idProperty]);
+            const allIds = records.map(record => record[idProperty]);
             setRowSelectionModel({
                 type: 'include',
                 ids: new Set(allIds)
@@ -1141,7 +1180,7 @@ const GridBase = memo(({
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
-                        loading={stateData.loaderOpen}
+                        loading={!data.records || stateData.loaderOpen}
                         className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}
@@ -1151,7 +1190,7 @@ const GridBase = memo(({
                         onPaginationModelChange={setPaginationModel}
                         pagination
                         rowCount={data.recordCount}
-                        rows={data.records}
+                        rows={data.records || []}
                         sortModel={sortModel}
                         paginationMode={paginationMode}
                         sortingMode={paginationMode}

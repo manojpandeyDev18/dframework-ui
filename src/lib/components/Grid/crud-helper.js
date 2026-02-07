@@ -175,7 +175,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         }
 
         let responseData = response || {};
-        if (responseData.error) {
+        if (responseData.error || responseData.success === false) {
             setError(responseData.message || 'An error occurred while fetching data');
             return;
         }
@@ -234,7 +234,7 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     }
     try {
         const response = await request(requestData);
-        if (response.error) {
+        if (response.error || response.success === false) {
             setError('Load failed', response.message);
             return;
         }
@@ -278,7 +278,7 @@ const deleteRecord = async function ({ id, api, setError, dispatchData, model })
     }
     try {
         const response = await request(requestData);
-        if (response.error) {
+        if (response.error || response.success === false) {
             result.success = false;
             setError('Delete failed', response.message);
             return false;
@@ -319,7 +319,7 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
 
     try {
         const response = await request(requestData);
-        if (response.error) {
+        if (response.error || response.success === false) {
             setError('Save failed', response.message);
             return;
         }
@@ -345,6 +345,10 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
     }
     try {
         const response = await request(requestData);
+        if (response.error || response.success === false) {
+            setError('Could not load lookups', response.message);
+            return;
+        }
         setActiveRecord(response);
     } catch (error) {
         setError('Could not load lookups', error.message || error.toString());

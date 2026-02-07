@@ -59,16 +59,15 @@ const Form = ({
   const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
   const searchParams = new URLSearchParams(window.location.search);
   const baseDataFromParams = searchParams.has(consts.baseData) && searchParams.get(consts.baseData);
-  const isCSController = model.controllerType === 'cs';
   if (baseDataFromParams) {
     const parsedData = JSON.parse(baseDataFromParams);
     if (typeof parsedData === consts.object && parsedData !== null) {
       baseSaveData = { ...baseSaveData, ...parsedData };
     }
   }
+  const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState({});
   const [lookups, setLookups] = useState({});
-  const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const snackbar = useSnackbar();
   const [validationSchema, setValidationSchema] = useState(null);
@@ -76,7 +75,6 @@ const Form = ({
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const url = stateData?.gridSettings?.permissions?.Url || '';
   const fieldConfigs = typeof model.applyFieldConfig === consts.function
     ? model.applyFieldConfig({ data, lookups })
     : defaultFieldConfigs;
@@ -123,7 +121,7 @@ const Form = ({
   useEffect(() => {
     const formApi = api || gridApi;
     if (!formApi) return;
-    setLoading(true);
+    setIsLoading(true);
     setValidationSchema(model.getValidationSchema({ id, snackbar }));
     const options = idWithOptions.split("-");
     const params = {
@@ -219,7 +217,7 @@ const Form = ({
     });
     setData(record);
     setLookups(lookups);
-    setLoading(false);
+    setIsLoading(false);
     if (linkColumn !== "") {
       breadcrumbs.push({ text: linkColumn });
     }
@@ -315,7 +313,7 @@ const Form = ({
       )}
       <ActiveStepContext.Provider value={{ activeStep, setActiveStep }}>
         <Paper sx={{ padding: 2, ...sx }}>
-          {loading ? (
+          {isLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
               <CircularProgress />
             </Box>
