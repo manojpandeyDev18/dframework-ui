@@ -74,7 +74,8 @@ const constants = {
     dateTime: 'dateTime',
     actions: 'actions',
     function: 'function',
-    pageSizeOptions: [5, 10, 20, 50, 100]
+    pageSizeOptions: [5, 10, 20, 50, 100],
+    defaultActionWidth: 20
 };
 const auditColumnMappings = [
     { key: 'addCreatedOnColumn', field: 'CreatedOn', type: 'dateTime', header: 'Created On' },
@@ -216,7 +217,6 @@ const GridBase = memo(({
 
     useEffect(() => {
         if (!apiRef.current) return;
-
         // Store preferenceKey on apiRef for GridPreferences to access
         apiRef.current.prefKey = preferenceKey;
     }, [apiRef, preferenceKey]);
@@ -505,7 +505,7 @@ const GridBase = memo(({
             finalColumns.push({
                 field: 'actions',
                 type: 'actions',
-                width: 20 * actionConfig.length,
+                width: (constants.defaultActionWidth || model.actionWidth) * actionConfig.length,
                 hidable: false,
                 getActions
             });
@@ -520,12 +520,11 @@ const GridBase = memo(({
     useEffect(() => {
         // Only run once on initial mount
         if (hasInitializedRef.current) return;
-
         const toolbarFilterColumns = gridColumns?.filter(col => col.toolbarFilter?.defaultFilterValue !== undefined) || [];
         if (toolbarFilterColumns.length === 0) return;
 
         // Check if any toolbar filters already exist in filterModel
-        const hasExistingToolbarFilters = filterModel.items.some(item =>
+        const hasExistingToolbarFilters = filterModel.items.some(item => 
             toolbarFilterColumns.some(col => col.field === item.field)
         );
         if (hasExistingToolbarFilters) {
@@ -544,7 +543,6 @@ const GridBase = memo(({
             ...prev,
             items: [...prev.items, ...toolbarFilters]
         }));
-
         hasInitializedRef.current = true;
     }, [gridColumns]);
 
@@ -552,7 +550,7 @@ const GridBase = memo(({
     const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
         const { pageSize, page } = paginationModel;
 
-        const baseUrl = buildUrl(model.controllerType, isPivotExport ? model.pivotApi : backendApi);
+        const baseUrl =  buildUrl(model.controllerType, isPivotExport ? model.pivotApi : backendApi);
 
         if (assigned || available) {
             extraParams[assigned ? "include" : "exclude"] = Array.isArray(selected) ? selected.join(",") : selected;
@@ -770,7 +768,7 @@ const GridBase = memo(({
             );
         }
 
-        const baseUrl = buildUrl(model.controllerType, selectionApi || backendApi);
+        const baseUrl =  buildUrl(model.controllerType, selectionApi || backendApi);
         try {
             const result = await saveRecord({
                 id: 0,
