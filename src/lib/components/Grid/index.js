@@ -387,7 +387,7 @@ const GridBase = memo(({
             show: documentField.length > 0,
         });
 
-        return actions.filter(({ show }) => show);
+        return actions.filter(({ show }) => show !== false);
     }, [
         forAssignment,
         isReadOnly,

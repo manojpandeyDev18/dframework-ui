@@ -120,7 +120,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
         // for manipulating the request payload before sending the request.
         if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url });
+            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url, dataParsers: DATA_PARSERS });
         }
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
@@ -230,7 +230,7 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     };
 
     if (typeof model.createRequestPayload === 'function') {
-        await model.createRequestPayload(requestData, { id, parentFilters, model, where, api, action: 'load' });
+        await model.createRequestPayload(requestData, { id, parentFilters, model, where, api, action: 'load', dataParsers: DATA_PARSERS });
     }
     try {
         const response = await request(requestData);
@@ -274,7 +274,7 @@ const deleteRecord = async function ({ id, api, setError, dispatchData, model })
     };
 
     if (typeof model.createRequestPayload === 'function') {
-        await model.createRequestPayload(requestData, { id, model, api, action: 'delete' });
+        await model.createRequestPayload(requestData, { id, model, api, action: 'delete', dataParsers: DATA_PARSERS });
     }
     try {
         const response = await request(requestData);
@@ -314,7 +314,7 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
     };
 
     if (typeof model.createRequestPayload === 'function') {
-        await model.createRequestPayload(requestData, { id, model, values, api, action: 'save' });
+        await model.createRequestPayload(requestData, { id, model, values, api, action: 'save', dataParsers: DATA_PARSERS });
     }
 
     try {
@@ -345,7 +345,7 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
     }
     try {
         if(typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData})
+            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData, dataParsers: DATA_PARSERS });
         }
         const response = await request(requestData);
         if (response?.error === true || response?.success === false) {
