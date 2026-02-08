@@ -74,7 +74,7 @@ const transport = async (config) => {
  * Default data parsers for different response types
  * Use these to normalize API responses to a consistent type
  */
-const DATA_PARSERS = {
+const DATA_PARSERS = Object.freeze({
     /**
      * Parse JSON string or return object as-is
      * Automatically handles string JSON responses
@@ -93,7 +93,7 @@ const DATA_PARSERS = {
      * Return data as-is without parsing
      */
     raw: (data) => data
-};
+});
 
 /**
  * Enhanced HTTP request handler with automatic data parsing
