@@ -38,11 +38,13 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
         return value;
     }, [formik.values[field], options, column.multiSelect, field]);
 
-    // Memoize event handlers to prevent unnecessary re-renders of child components
     const handleChange = useCallback((event) => {
+        if (typeof column.onChange === 'function') {
+            column.onChange({ formik, value: inputValue, options, event });
+        }
         formik.handleChange(event);
         userSelected.current = true;
-    }, [formik]);
+    }, [formik.values[field], column.onChange, inputValue, options]);
 
     return (
         <FormControl
