@@ -201,6 +201,7 @@ const Form = ({
   };
 
   const errorOnLoad = function (title, error) {
+    setIsLoading(false);
     snackbar.showError(title, error);
     handleNavigation();
   };

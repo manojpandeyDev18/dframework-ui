@@ -40,11 +40,11 @@ const SelectField = React.memo(({ column, field, formik, lookups, dependsOn = []
 
     const handleChange = useCallback((event) => {
         if (typeof column.onChange === 'function') {
-            column.onChange({ formik, value: inputValue, options, event });
+            column.onChange({ formik, value: event.target.value, options, event });
         }
         formik.handleChange(event);
         userSelected.current = true;
-    }, [formik.values[field], column.onChange, inputValue, options]);
+    }, [formik.values[field], column.onChange, options]);
 
     return (
         <FormControl
