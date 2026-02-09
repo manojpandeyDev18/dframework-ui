@@ -17,7 +17,7 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport }) => {
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
     if (!contentType) {
         if (showFullScreenLoader) {
             dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
@@ -148,7 +148,8 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             dispatchData,
             jsonPayload: true,
             params: requestData,
-            dataParser: DATA_PARSERS.json
+            dataParser: DATA_PARSERS.json,
+            history
         };
 
         // for manipulating the request payload before sending the request.
@@ -332,7 +333,7 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
         additionalParams: { method: 'GET' },
         dispatchData,
         jsonPayload: true
-    }
+    };
     try {
         if(typeof model.createRequestPayload === 'function') {
             await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData, dataParsers: DATA_PARSERS, action: 'lookups' });

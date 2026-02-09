@@ -602,7 +602,7 @@ const GridBase = memo(({
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
         if (setActiveRecord) {
-            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where });
+            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError });
             return;
         }
         let path = pathname;
