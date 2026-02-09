@@ -219,7 +219,7 @@ const request = async ({
     } catch (ex) {
         pendingRequests--;
         if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: 'UPDATE_LOADER_STATE', payload: false });
+            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
         }
         // Only network errors will be caught here
         return { error: true, message: ex.message || 'Network error' };
