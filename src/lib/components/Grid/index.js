@@ -422,6 +422,7 @@ const GridBase = memo(({
         const pinnedColumns = { left: [GRID_CHECKBOX_SELECTION_COL_DEF.field], right: [] };
         const finalColumns = [];
         const lookupMap = {};
+        const updatedColumnType = { ...gridColumnTypes, ...model.gridColumnTypes };
         for (const column of baseColumnList) {
             if (column.gridLabel === null || (parent && column.lookup === parent) || (column.type === constants.oneToMany && column.countInList === false)) continue;
             const overrides = {};
@@ -429,7 +430,7 @@ const GridBase = memo(({
                 overrides.type = 'number';
                 overrides.field = column.field.replace(/s$/, 'Count');
             }
-            const updatedColumnType = { ...gridColumnTypes, ...model.gridColumnTypes };
+ 
             if (updatedColumnType[column.type]) {
                 Object.assign(overrides, updatedColumnType[column.type]);
             }
