@@ -107,13 +107,19 @@ class UiModel {
 
 				case 'radio':
 				case 'dayRadio':
-					config = yup.mixed().label(formLabel).required(`Select at least one option for ${formLabel}`);
+					config = yup.mixed().label(formLabel);
+					if (required) {
+						config = config.required(`Select at least one option for ${formLabel}`);
+					}
 					break;
 				case 'date':
 					config = yup.date().nullable().transform((value, originalValue) => {
 						if (originalValue === '' || originalValue === null) return null;
 						return value;
-					}).label(formLabel).required(`${formLabel} is required`);
+					}).label(formLabel);
+					if (required) {
+						config = config.required(`${formLabel} is required`);
+					}
 					break;
 				case 'dateTime':
 					config = yup
@@ -125,6 +131,9 @@ class UiModel {
 							return value;
 						})
 						.label(formLabel); // Set a label for better error messages
+					if (required) {
+						config = config.required(`${formLabel} is required`);
+					}
 					break;
 				case 'select':
 				case 'autocomplete':
