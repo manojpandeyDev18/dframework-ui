@@ -65,9 +65,9 @@ const GridPreferences = ({ gridRef, preferenceKey, onPreferenceChange, t, tOpts 
         [preferences]
     );
 
-    const validationSchema = useMemo(() => 
+    const validationSchema = useMemo(() =>
         yup.object({
-            prefName: yup.string().trim(true).required(t('Preference Name is Required')).max(20, t('Maximum Length is ', tOpts) + '20'),
+            prefName: yup.string().trim(true).required(t('Preference Name is Required', tOpts)).max(20, t('Maximum Length is ', tOpts) + '20'),
             prefDesc: yup.string().max(100, t('Maximum Length is ', tOpts) + '100')
         }), [t, tOpts]);
 
