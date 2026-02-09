@@ -218,30 +218,5 @@ const model = new UiModel({
 });
 ```
 
----
-
-## `standAloneFilters`
-
-Filters listed in `model.standAloneFilters` are excluded from the `where` array and instead spread as top-level keys in the request payload. This is useful when the backend expects certain filter values as dedicated parameters rather than inside the `where` clause.
-
-### Usage
-
-```jsx
-const model = new UiModel({
-    title: "Reports",
-    api: "/api/reports",
-    standAloneFilters: ["region", "year"],  // Can also be a single string: "region"
-    columns: [
-        { field: "region", type: "string", headerName: "Region" },
-        { field: "year", type: "number", headerName: "Year" },
-        { field: "revenue", type: "number", headerName: "Revenue" }
-    ]
-});
-
-// When the user filters by region="US" and year=2025, the request payload becomes:
-// { start: 0, limit: 25, where: [...other filters], region: "US", year: 2025 }
-// instead of:
-// { start: 0, limit: 25, where: [{ field: "region", value: "US" }, { field: "year", value: 2025 }] }
-```
 
 ---

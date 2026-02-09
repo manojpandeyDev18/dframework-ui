@@ -41,7 +41,6 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     });
 
     const where = [];
-    const standAloneFilterPayload = {};
     if (filterModel?.items?.length) {
         filterModel.items.forEach(filter => {
             if (shouldApplyFilter(filter)) {
@@ -55,14 +54,6 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
                     value = Array.isArray(value) ? value.filter(e => e) : value;
                 }
                 value = filter.filterValues || value;
-                let standAloneFilters = model.standAloneFilters || [];
-                if(typeof standAloneFilters === 'string') {
-                    standAloneFilters = [standAloneFilters];
-                }
-                if (standAloneFilters.length && standAloneFilters.includes(field)) {
-                    standAloneFilterPayload[field] = value;
-                    return;
-                }
                 where.push({
                     field: filterField || field,
                     operator,
@@ -88,8 +79,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         where,
         isElasticExport,
         model: model.module,
-        fileName: model.overrideFileName,
-        ...standAloneFilterPayload
+        fileName: model.overrideFileName
     };
 
     if (lookups.length) {
@@ -120,7 +110,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
         // for manipulating the request payload before sending the request.
         if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url, dataParsers: DATA_PARSERS });
+            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url, dataParsers: DATA_PARSERS, model });
         }
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
@@ -163,7 +153,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
 
         // for manipulating the request payload before sending the request.
         if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action, dataParsers: DATA_PARSERS });
+            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action, dataParsers: DATA_PARSERS, model });
         }
         const response = await request(reqParams);
 
@@ -174,7 +164,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
 
         // Parse response data if needed custom processing.
         if (model.parseResponsePayload && typeof model.parseResponsePayload === 'function') {
-            const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns });
+            const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns, action });
             setData(resData);
             return;
         }
@@ -239,7 +229,7 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
             return;
         }
         if (typeof model.parseResponsePayload === 'function') {
-            const resData = await model.parseResponsePayload({ responseData: response, model });
+            const resData = await model.parseResponsePayload({ responseData: response, model, action: 'load' });
             setActiveRecord(resData);
             return;
         }
@@ -345,7 +335,7 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
     }
     try {
         if(typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData, dataParsers: DATA_PARSERS });
+            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData, dataParsers: DATA_PARSERS, action: 'lookups' });
         }
         const response = await request(requestData);
         if (response?.error === true || response?.success === false) {
@@ -354,7 +344,7 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
         }
 
         if(typeof model.parseResponsePayload === 'function') {
-            const resData = await model.parseResponsePayload({ responseData: response, model });
+            const resData = await model.parseResponsePayload({ responseData: response, model, action: 'lookups' });
             setActiveRecord(resData);
             return;
         }
