@@ -256,7 +256,7 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     }
 };
 
-const deleteRecord = async function ({ id, api, setError, dispatchData, model }) {
+const deleteRecord = async function ({ id, api, setError, model }) {
     const result = { success: false, error: '' };
     if (!id) {
         setError('Deleted failed. No active record.');
@@ -264,8 +264,7 @@ const deleteRecord = async function ({ id, api, setError, dispatchData, model })
     }
     const requestData = {
         url: `${api}/${id}`,
-        additionalParams: { method: 'DELETE' },
-        dispatchData
+        additionalParams: { method: 'DELETE' }
     };
 
     if (typeof model.createRequestPayload === 'function') {

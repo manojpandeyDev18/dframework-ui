@@ -142,7 +142,7 @@ Example:
 const parameterSetModel = new UiModel({
     title: "ParameterSets",
     api: "/api/parametersets",
-    customiseActions: ['lookups'],
+    parseResponseActions: ['lookups'],
 
     parseResponsePayload: async ({ responseData, action }) => {
         if (action !== 'lookups') return responseData;
