@@ -163,6 +163,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         if (response?.error || response?.success === false) {
             const errorMessage = getErrorMessage(response);
             setError('An error occurred while fetching data', errorMessage);
+            setData((prevData) => ({ ...prevData, records: [], recordCount: 0 }));
             return;
         }
 
