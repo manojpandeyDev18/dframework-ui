@@ -355,7 +355,7 @@ const GridBase = memo(({
                     title: "Edit",
                     icon: 'edit',
                     show: !!canEdit,
-                    disabled: row => row.canEdit === false,
+                    disabled: row => row.canEdit === false
                 },
                 {
                     key: actionTypes.Copy,
@@ -506,7 +506,8 @@ const GridBase = memo(({
                 type: 'actions',
                 width: (model.actionWidth ?? constants.defaultActionWidth) * actionConfig.length,
                 hidable: false,
-                getActions
+                getActions,
+                headerName: tTranslate('Actions', tOpts),
             });
 
             pinnedColumns.right.push('actions');
@@ -701,9 +702,9 @@ const GridBase = memo(({
         navigate(historyObject);
     }, [isReadOnly, onCellClick, lookupMap, model, idProperty, documentField, navigate, toLink, customActions, tableName, searchParamKey, searchParams, gridTitle, getApiEndpoint, handleDownload, openForm]);
 
-    const handleDelete = async function () {
+    const handleDelete = useCallback(async () => {
         const baseUrl = buildUrl(model.controllerType, backendApi);
-        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, dispatchData, model });
+        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
         if (result === true) {
             setIsDeleting(false);
             snackbar.showMessage('Record Deleted Successfully.');
@@ -711,20 +712,21 @@ const GridBase = memo(({
         } else {
             setIsDeleting(false);
         }
-    };
-    const clearError = () => {
+    }, [model.controllerType, backendApi, record?.id, snackbar, setErrorMessage, model, fetchData]);
+
+    const clearError = useCallback(() => {
         setErrorMessage(null);
         setIsDeleting(false);
-    };
+    }, []);
 
-    const processRowUpdate = (updatedRow) => {
+    const processRowUpdate = useCallback((updatedRow) => {
         if (typeof props.processRowUpdate === "function") {
             props.processRowUpdate(updatedRow, data);
         }
         return updatedRow;
-    };
+    }, [props.processRowUpdate, data]);
 
-    const onCellDoubleClick = (event) => {
+    const onCellDoubleClick = useCallback((event) => {
         if (event.row.canEdit === false) {
             return;
         }
@@ -748,9 +750,9 @@ const GridBase = memo(({
         if (typeof onRowDoubleClick === constants.function) {
             onRowDoubleClick(event);
         }
-    };
+    }, [onCellDoubleClickOverride, isReadOnly, isDoubleClicked, disableCellRedirect, openForm, idProperty, model.rowRedirectLink, model.addRecordToState, navigate, onRowDoubleClick, template]);
 
-    const handleAddRecords = async () => {
+    const handleAddRecords = useCallback(async () => {
         if (rowSelectionModel.ids.size < 1) {
             snackbar.showError("Please select at least one record to proceed");
             return;
@@ -792,7 +794,7 @@ const GridBase = memo(({
             });
             setShowAddConfirmation(false);
         }
-    };
+    }, [rowSelectionModel.ids, snackbar, data.records, idProperty, baseSaveData, model.selectionUpdateKeys, model.controllerType, selectionApi, backendApi, model, dispatchData, fetchData]);
 
     const onAdd = useCallback(() => {
         if (selectionApi.length > 0) {
@@ -849,9 +851,7 @@ const GridBase = memo(({
         }
     }, [rowSelectionModel, data.records, idProperty]);
 
-    const getGridRowId = (row) => {
-        return row[idProperty];
-    };
+    const getGridRowId = useCallback((row) => row[idProperty], [idProperty]);
     const handleExport = useCallback((e) => {
         if (data?.recordCount > recordCounts) {
             snackbar.showMessage('Cannot export more than 60k records, please apply filters or reduce your results using filters');

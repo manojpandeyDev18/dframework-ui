@@ -1,6 +1,6 @@
 import React from "react";
 import { useFormik } from "formik";
-import { useState, useEffect, createContext, useMemo } from "react";
+import { useState, useEffect, createContext, useMemo, useCallback } from "react";
 import {
   getRecord,
   saveRecord,
@@ -94,8 +94,9 @@ const Form = ({
     userDefinedPermissions
   });
   const { hideBreadcrumb = false, navigateBack } = model;
+  const recordEditable = !("canEdit" in data) || data.canEdit;
 
-  const handleNavigation = () => {
+  const handleNavigation = useCallback(() => {
     let navigatePath;
     switch (typeof navigateBack) {
       case consts.function:
@@ -110,7 +111,7 @@ const Form = ({
         break;
     }
     navigate(navigatePath);
-  };
+  }, [navigateBack, navigate, params, searchParams, data, pathname]);
 
   const isNew = useMemo(() => utils.emptyIdValues.includes(id), [id]);
 
@@ -191,20 +192,20 @@ const Form = ({
     }
   });
 
-  const handleDiscardChanges = () => {
+  const handleDiscardChanges = useCallback(() => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
     if (typeof onCancel === consts.function) {
       onCancel();
     }
     navigateBack !== false && handleNavigation();
-  };
+  }, [formik, onCancel, navigateBack, handleNavigation]);
 
-  const errorOnLoad = function (title, error) {
+  const errorOnLoad = useCallback((title, error) => {
     setIsLoading(false);
     snackbar.showError(title, error);
     handleNavigation();
-  };
+  }, [snackbar, handleNavigation]);
 
   const setActiveRecord = function ({ id, title, record, lookups }) {
     const isCopy = idWithOptions.indexOf("-") > -1;
@@ -234,7 +235,7 @@ const Form = ({
       }
     });
   };
-  const handleFormCancel = function (event) {
+  const handleFormCancel = useCallback((event) => {
     if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
@@ -244,8 +245,8 @@ const Form = ({
       navigateBack !== false && handleNavigation();
     }
     event.preventDefault();
-  };
-  const handleDelete = async function () {
+  }, [formik.dirty, recordEditable, onCancel, navigateBack, handleNavigation]);
+  const handleDelete = useCallback(async () => {
     try {
       setIsDeleting(true);
       const response = await deleteRecord({
@@ -253,7 +254,6 @@ const Form = ({
         api: api || model.api,
         setError: snackbar.showError,
         setErrorMessage,
-        dispatchData,
         model
       });
       if (response === true) {
@@ -265,20 +265,20 @@ const Form = ({
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [id, api, model.api, snackbar, setErrorMessage, model, navigateBack, handleNavigation]);
   const clearError = () => {
     setErrorMessage(null)
     setIsDeleting(false);
   };
-  const handleChange = function (e) {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
-  };
+  }, [data]);
 
-  const handleSubmit = async function (e) {
+  const handleSubmit = useCallback(async (e) => {
     if (e) e.preventDefault();
     if (typeof beforeSubmit === consts.function) {
-      await beforeSubmit({ formik , columns: model.columns });
+      await beforeSubmit({ formik , model });
     }
     const { errors } = formik;
     formik.handleSubmit();
@@ -293,7 +293,7 @@ const Form = ({
     if (fieldConfig.tab) {
       setActiveStep(Object.keys(model.tabs).indexOf(fieldConfig.tab));
     }
-  };
+  }, [beforeSubmit, formik, model, snackbar, setActiveStep]);
 
   const breadcrumbs = [
     { text: formTitle },
@@ -301,7 +301,6 @@ const Form = ({
   ];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  const recordEditable = !("canEdit" in data) || data.canEdit;
   const readOnlyRelations = !recordEditable || data.readOnlyRelations;
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
   const { showPageTitle = true } = model;

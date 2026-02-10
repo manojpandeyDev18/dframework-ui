@@ -6,6 +6,8 @@ const lookupDataTypes = ['singleSelect'];
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
 
+const getErrorMessage = (response) => response?.message || response?.info || response?.error;
+
 function shouldApplyFilter(filter) {
     const { operator, value, type } = filter;
 
@@ -130,7 +132,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
                 form.append(hiddenTag);
             }
         }
-        form.setAttribute('action', url);
+        form.setAttribute('action', requestData.url || url);
         document.body.appendChild(form);
         form.submit();
         setTimeout(() => {
@@ -158,13 +160,14 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         }
         const response = await request(reqParams);
 
-        if (response?.error === true || response?.success === false) {
-            setError(response.message || 'An error occurred while fetching data');
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('An error occurred while fetching data', errorMessage);
             return;
         }
 
         // Parse response data if needed custom processing.
-        if (model.parseResponsePayload && typeof model.parseResponsePayload === 'function') {
+        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes(action)) {
             const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns, action });
             setData(resData);
             return;
@@ -225,11 +228,12 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     }
     try {
         const response = await request(requestData);
-        if (response?.error === true || response?.success === false) {
-            setError('Load failed', response.message);
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('Load failed', errorMessage);
             return;
         }
-        if (typeof model.parseResponsePayload === 'function') {
+        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('load')) {
             const resData = await model.parseResponsePayload({ responseData: response, model, action: 'load' });
             setActiveRecord(resData);
             return;
@@ -269,9 +273,10 @@ const deleteRecord = async function ({ id, api, setError, dispatchData, model })
     }
     try {
         const response = await request(requestData);
-        if (response?.error  === true|| response?.success === false) {
+        if (response?.error || response?.success === false) {
             result.success = false;
-            setError('Delete failed', response.message);
+            const errorMessage = getErrorMessage(response);
+            setError('Delete failed', errorMessage);
             return false;
         }
         result.success = true;
@@ -310,8 +315,9 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
 
     try {
         const response = await request(requestData);
-        if (response?.error === true || response?.success === false) {
-            setError('Save failed', response.message);
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('Save failed', errorMessage);
             return false;
         }
         return response;
@@ -322,7 +328,7 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
     return false;
 };
 
-const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, dispatchData }) => {
+const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, dispatchData, reqData }) => {
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/lookups`;
@@ -332,19 +338,21 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
         url: `${url}?${searchParams.toString()}`,
         additionalParams: { method: 'GET' },
         dispatchData,
-        jsonPayload: true
+        jsonPayload: true,
+        ...reqData
     };
     try {
         if(typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData, dataParsers: DATA_PARSERS, action: 'lookups' });
+            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData, dataParsers: DATA_PARSERS, action: 'lookups', api });
         }
         const response = await request(requestData);
-        if (response?.error === true || response?.success === false) {
-            setError('Could not load lookups', response.message);
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('Could not load lookups', errorMessage);
             return false;
         }
 
-        if(typeof model.parseResponsePayload === 'function') {
+        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('lookups')) {
             const resData = await model.parseResponsePayload({ responseData: response, model, action: 'lookups' });
             setActiveRecord(resData);
             return;

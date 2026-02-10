@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import request from "../components/Grid/httpRequest";
 import { useStateContext } from "../components/useRouter/StateProvider";
+import { getLookups } from "../components/Grid/crud-helper.js";
+import { useSnackbar } from "../components/SnackBar/index.js";
 
 const emptyValues = [null, undefined, ''];
 
 export default function useCascadingLookup({ column, formik, lookups, dependsOn = [], isAutoComplete = false, userSelected, model }) {
     const [options, setOptions] = useState([]);
     const { buildUrl } = useStateContext();
+    const snackbar = useSnackbar();
     const api = buildUrl(model.controllerType, model.api);
     // Memoize dependency values
     const dependencyValues = useMemo(() => {
@@ -34,22 +36,16 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
             setOptions([]);
             return;
         }
-        let newOptions = [];
-        const requestBody = {
-            lookups: [{ lookup: column.lookup, where: dependencyValues }]
-        };
-        try {
-            const response = await request({ url: `${api}/combo`, params: requestBody, disableLoader: true, jsonPayload: true });
-            if (response && response.success && response.lookups) {
-                newOptions = response.lookups[column.lookup] || [];
-            } else {
-                newOptions = [];
+        getLookups({
+            api,
+            setActiveRecord: setOptions,
+            model,
+            setError: snackbar.showError,
+            lookups,
+            reqData: {
+                params: { lookups: [{ lookup: column.lookup, where: dependencyValues }] }
             }
-        } catch {
-            newOptions = [];
-        } finally {
-            setOptions(newOptions);
-        }
+        });
     };
 
     // Fetch cascading options

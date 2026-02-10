@@ -103,7 +103,7 @@ An **async** function defined on the model that is called after the HTTP respons
 ### Signature
 
 ```js
-async parseResponsePayload({ responseData, model, dateColumns })
+async parseResponsePayload({ responseData, model, dateColumns, action })
 ```
 
 ### Parameters
@@ -113,6 +113,7 @@ async parseResponsePayload({ responseData, model, dateColumns })
 | `responseData` | `Object` | The raw response from the server. |
 | `model` | `Object` | The current UiModel instance. |
 | `dateColumns` | `Array` | *(list only)* Array of `{ field, keepLocal, keepLocalDate }` objects for date columns. Not provided for `load` or `lookups`. |
+| `action` | `String` | The current action name (e.g. `list`, `load`, `lookups`). |
 
 ### Return Value
 
@@ -123,6 +124,33 @@ The function must return the data in the shape expected by the consumer:
 | **list** (`getList`) | `{ records: Array, recordCount: Number, lookups: Object }` |
 | **load** (`getRecord`) | `{ id, title, record: Object, lookups: Object }` |
 | **lookups** (`getLookups`) | The lookups object to pass to `setActiveRecord`. |
+
+### Limiting `parseResponsePayload` to Specific Actions
+
+If you only want custom response handling for certain actions, add a `parseResponseActions` array on the model. When this array is present, `parseResponsePayload` is invoked **only** for actions listed here. This prevents list or form flows from breaking when your handler only supports `lookups`.
+
+Valid action names:
+
+- `list`
+- `load`
+- `lookups`
+- Any custom action you pass into `getList` via the `action` parameter.
+
+Example:
+
+```jsx
+const parameterSetModel = new UiModel({
+    title: "ParameterSets",
+    api: "/api/parametersets",
+    customiseActions: ['lookups'],
+
+    parseResponsePayload: async ({ responseData, action }) => {
+        if (action !== 'lookups') return responseData;
+        // Custom lookup parsing here
+        return responseData;
+    }
+});
+```
 
 ### Example Usage
 
