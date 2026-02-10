@@ -328,7 +328,7 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
     return false;
 };
 
-const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, dispatchData, reqData }) => {
+const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, reqData }) => {
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/lookups`;
@@ -337,13 +337,12 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
     const requestData = {
         url: `${url}?${searchParams.toString()}`,
         additionalParams: { method: 'GET' },
-        dispatchData,
         jsonPayload: true,
         ...reqData
     };
     try {
         if(typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { model, lookups, scopeId, dispatchData, dataParsers: DATA_PARSERS, action: 'lookups', api });
+            await model.createRequestPayload(requestData, { model, lookups, scopeId, dataParsers: DATA_PARSERS, action: 'lookups', api });
         }
         const response = await request(requestData);
         if (response?.error || response?.success === false) {
