@@ -48,26 +48,32 @@ const FrameworkProvider = ({ children }) => {
     }
   }, []);
 
-  const contextValue = useMemo(() => ({
-    // Loader state and controls
-    isLoading,
-    showLoader,
-    hideLoader,
-    // dayjs utilities
-    dayjs,
-    // i18n utilities
-    t,
-    i18n,
-    // Snackbar utilities
-    showMessage: snackbar?.showMessage,
-    showError: snackbar?.showError
-  }), [isLoading, showLoader, hideLoader, t, i18n, snackbar]);
+  const contextValue = useMemo(() => {
+    const value = {
+      // Loader state and controls
+      isLoading,
+      showLoader,
+      hideLoader,
+      // dayjs utilities
+      dayjs,
+      // i18n utilities
+      t,
+      i18n,
+      // Snackbar utilities - ensure they're functions or undefined
+      showMessage: snackbar?.showMessage || (() => console.warn('SnackbarProvider not found. Wrap FrameworkProvider with SnackbarProvider.')),
+      showError: snackbar?.showError || (() => console.warn('SnackbarProvider not found. Wrap FrameworkProvider with SnackbarProvider.'))
+    };
+    
+    // Store instance for non-React functions
+    setFrameworkInstance(value);
+    
+    return value;
+  }, [isLoading, showLoader, hideLoader, t, i18n, snackbar]);
 
-  // Store instance for non-React functions
+  // Cleanup on unmount
   useEffect(() => {
-    setFrameworkInstance(contextValue);
     return () => setFrameworkInstance(null);
-  }, [contextValue]);
+  }, []);
 
   return (
     <FrameworkContext.Provider value={contextValue}>
