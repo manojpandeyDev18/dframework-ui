@@ -1,20 +1,20 @@
 # Breaking changes
 
-## Version 1.0.7 - StateProvider Consolidation & useState Refactor
+## Version 2.0.0 - Major Version Breaking Changes
 
-### Major Architectural Changes
+### Removed Backward Compatibility
 
-The framework has been restructured to consolidate all functionality into `StateProvider` and simplified to use `useState` instead of `useReducer`.
+The framework has removed all backward compatibility aliases and features. This is a major version release with breaking changes.
 
 #### Breaking Changes:
 
-1. **FrameworkProvider merged into StateProvider**
-   - `FrameworkProvider` is now an alias for `StateProvider`
-   - Single provider pattern - no need for nested providers
-   - `SnackbarProvider` must wrap `StateProvider`
+1. **Removed FrameworkProvider and useFramework aliases**
+   - `FrameworkProvider` alias removed - use `StateProvider` directly
+   - `useFramework` alias removed - use `useStateContext` directly
+   - Single provider pattern required
 
    ```js
-   // New setup (recommended)
+   // Required setup
    import { SnackbarProvider, StateProvider } from "@durlabh/dframework-ui";
    
    <SnackbarProvider>
@@ -22,16 +22,35 @@ The framework has been restructured to consolidate all functionality into `State
        {/* Your app */}
      </StateProvider>
    </SnackbarProvider>
-   
-   // Backward compatible (also works)
-   <SnackbarProvider>
-     <FrameworkProvider apiEndpoints={{ default: 'http://localhost:3000/api' }}>
-       {/* Your app */}
-     </FrameworkProvider>
-   </SnackbarProvider>
    ```
 
-2. **StateProvider State Restructured**
+2. **Removed dispatchData**
+   - `dispatchData` function removed from StateProvider
+   - All components must use direct setter methods
+   - No more Redux-style action dispatch
+
+   **Migration:**
+   ```js
+   // Old (no longer works)
+   const { dispatchData } = useStateContext();
+   dispatchData({ type: 'PAGE_TITLE_DETAILS', payload: { title: 'My Page' } });
+   dispatchData({ type: 'USER_DATA', payload: userData });
+   dispatchData({ type: 'OPEN_MODAL', payload: { status: true } });
+   
+   // New (required)
+   const { setPageTitle, setUserData, setModal } = useStateContext();
+   setPageTitle({ title: 'My Page' });
+   setUserData(userData);
+   setModal({ status: true });
+   ```
+
+3. **Removed action aliases**
+   - `OPEN_MODAL` action alias removed
+   - `PAGE_TITLE_DETAILS` action alias removed  
+   - `USER_DATA` action alias removed
+   - Only new action names supported: `SET_MODAL`, `SET_PAGE_TITLE`, `SET_USER_DATA`
+
+4. **StateProvider State Restructured**
    - **Removed component-specific state** (now local to components):
      - `dataForm` (form mode) - now determined from URL pattern
      - `gridSettings` - managed locally in Grid
@@ -44,21 +63,8 @@ The framework has been restructured to consolidate all functionality into `State
      - `pageTitleDetails` → `pageTitle`
      - `getUserData` → `userData`
 
-3. **Actions Replaced with Meaningful Method Names**
-   - **Removed actions**:
-     - `UPDATE_FORM_MODE` - form mode from URL
-     - `UPDATE_DATE_TIME` → use `setDateTimeFormat()`
-     - `UPDATE_LOCALIZATION` → use `setLocale()`
-     - `PAGE_TITLE_DETAILS` → use `setPageTitle()`
-     - `OPEN_MODAL` → use `setModal()`
-     - `USER_DATA` → use `setUserData()`
-     - `SET_GRID_SETTINGS` - managed locally
-     - `UDPATE_PREFERENCES` - managed locally
-     - `TOTAL_PREFERENCES` - managed locally
-     - `SET_CURRENT_PREFERENCE_NAME` - managed locally
-     - `PASS_FILTERS_TO_HEADER` - managed locally
-   
-   - **New methods**:
+5. **Meaningful Method Names** (No more dispatch actions)
+   - **New direct setter methods**:
      - `setLocale(locale)` - Set application locale
      - `setDateTimeFormat(format)` - Set date/time format
      - `setPageTitle(title)` - Set page title
@@ -67,28 +73,26 @@ The framework has been restructured to consolidate all functionality into `State
      - `setUserData(userData)` - Set user data
      - `setTimeZone(timeZone)` - Set timezone
 
-4. **Form Mode Detection**
+6. **Form Mode Detection**
    - Form mode no longer uses global state
    - Copy mode detected from URL pattern: `/path/0-{sourceId}`
    - Normal edit mode: `/path/{id}`
 
-5. **Loader Management**
+7. **Loader Management**
    - Loader is now managed by CRUD helper functions (getList, getRecord, saveRecord, deleteRecord, getLookups)
    - Each CRUD function manages its own loader lifecycle using try/finally blocks
    - httpRequest is now a pure HTTP transport layer without loader management
-   - No need to pass `showLoader`, `hideLoader`, or `dispatchData` to CRUD functions
 
-6. **State Management**
-   - Replaced useReducer with individual useState calls for simplicity
-   - actions.js, stateReducer.js, and initialState.js files are retained for backward compatibility
-   - dispatchData is provided for legacy code but new code should use setter methods (setPageTitle, setUserData, etc.)
+8. **State Management**
+   - Uses individual useState calls for simplicity (no useReducer)
+   - Direct setter methods only - no dispatch pattern
 
 #### Migration Guide:
 
 **Step 1: Update Provider Setup**
 
 ```js
-// Before
+// Old
 <SnackbarProvider>
   <FrameworkProvider>
     <StateProvider apiEndpoints={...}>
@@ -97,7 +101,7 @@ The framework has been restructured to consolidate all functionality into `State
   </FrameworkProvider>
 </SnackbarProvider>
 
-// After
+// New (required)
 <SnackbarProvider>
   <StateProvider apiEndpoints={...}>
     <App />
@@ -108,13 +112,13 @@ The framework has been restructured to consolidate all functionality into `State
 **Step 2: Update State Access**
 
 ```js
-// Before
+// Old
 const { stateData } = useStateContext();
 const locale = stateData.dataLocalization;
 const userData = stateData.getUserData;
 const pageTitle = stateData.pageTitleDetails;
 
-// After
+// New (required)
 const { stateData } = useStateContext();
 const locale = stateData.locale;
 const userData = stateData.userData;
@@ -124,28 +128,31 @@ const pageTitle = stateData.pageTitle;
 **Step 3: Replace Dispatch Actions with Methods**
 
 ```js
-// Before
+// Old (no longer works)
+const { dispatchData } = useStateContext();
 dispatchData({ type: 'PAGE_TITLE_DETAILS', payload: { title: 'My Page' } });
 dispatchData({ type: 'USER_DATA', payload: userData });
+dispatchData({ type: 'OPEN_MODAL', payload: { status: true } });
 dispatchData({ type: 'UPDATE_LOCALIZATION', payload: 'es' });
 dispatchData({ type: 'SET_TIMEZONE', payload: 'America/New_York' });
 
-// After
-const { setPageTitle, setUserData, setLocale, setTimeZone } = useStateContext();
+// New (required)
+const { setPageTitle, setUserData, setModal, setLocale, setTimeZone } = useStateContext();
 setPageTitle({ title: 'My Page' });
 setUserData(userData);
+setModal({ status: true });
 setLocale('es');
 setTimeZone('America/New_York');
 ```
 
-**Step 4: Update Hook Imports (Optional)**
+**Step 4: Update Hook Imports**
 
 ```js
-// Old (still works via alias)
+// Old (no longer works)
 import { useFramework } from "@durlabh/dframework-ui";
 const { showLoader } = useFramework();
 
-// New (recommended)
+// New (required)
 import { useStateContext } from "@durlabh/dframework-ui";
 const { showLoader } = useStateContext();
 ```

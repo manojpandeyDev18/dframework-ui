@@ -5,12 +5,11 @@ import {
 } from '@mui/material';
 import { Replay, Close } from '@mui/icons-material';
 import { useStateContext } from '../useRouter/StateProvider';
-import actionsStateProvider from '../useRouter/actions';
 
 const HelpModal = () => {
     const [height, setHeight] = useState();
     const [loading, setLoading] = useState(false);
-    const { stateData, dispatchData } = useStateContext()
+    const { stateData, setModal } = useStateContext()
     const openModal = stateData.modal; //useSelector(state => state.appReducer.modal);
     const ratio = 16 / 9;
     let zoom = ((window.outerWidth - 10) / window.innerWidth) * 100;
@@ -50,9 +49,7 @@ const HelpModal = () => {
         <div>
             {openModal?.status &&
                 <Dialog fullWidth={true} maxWidth={"lg"} open={openModal.status} onClose={() => {
-                    dispatchData({
-                        type: actionsStateProvider.OPEN_MODAL, payload: { status: false, data: {}, }
-                    })
+                    setModal({ status: false, data: {} })
                 }} >
                     <DialogTitle className='pt-2 pb-0'>
                         <Grid container spacing={1}>
@@ -63,9 +60,7 @@ const HelpModal = () => {
                             <Grid className="text-right" size={1} >
                                 <Replay className='cursor_pointer mt-2 mr-2' onClick={resetIframe} />
                                 <Close className='cursor_pointer mt-2' onClick={() => {
-                                    dispatchData({
-                                        type: actionsStateProvider.OPEN_MODAL, payload: { status: false, data: {} }
-                                    })
+                                    setModal({ status: false, data: {} })
                                 }} />
                             </Grid>
                         </Grid>

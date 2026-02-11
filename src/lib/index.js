@@ -20,11 +20,6 @@ import useMobile from './components/useMobile';
 import httpRequest from './components/Grid/httpRequest';
 import crudHelper from './components/Grid/crud-helper';
 
-// Note: FrameworkProvider is now merged into StateProvider
-// For backward compatibility, export useStateContext as useFramework alias
-const useFramework = useStateContext;
-const FrameworkProvider = StateProvider;
-
 export { 
   SnackbarProvider, 
   SnackbarContext, 
@@ -50,8 +45,5 @@ export {
   useMobile, 
   useRouter, 
   httpRequest, 
-  crudHelper,
-  // Backward compatibility exports
-  FrameworkProvider,
-  useFramework
+  crudHelper
 };

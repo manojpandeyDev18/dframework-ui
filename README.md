@@ -873,8 +873,6 @@ This will add a custom action button with an Article icon to each row. When clic
 - App-level state (page title, user data, timezone, etc.)
 - API endpoint configuration
 
-**Note:** `FrameworkProvider` and `useFramework` are aliases for backward compatibility. They point to `StateProvider` and `useStateContext`.
-
 ## Setup
 
 Wrap your application with the required providers:
@@ -896,7 +894,6 @@ export default function App() {
 
 **Important:** 
 - `SnackbarProvider` must wrap `StateProvider` (StateProvider depends on snackbar utilities)
-- For backward compatibility, `FrameworkProvider` can be used as an alias for `StateProvider`
 
 ## Using StateProvider
 
@@ -1005,7 +1002,6 @@ Access the configured dayjs instance with UTC and timezone plugins:
 
 ```js
 import { useStateContext } from "@durlabh/dframework-ui";
-// or use the alias: import { useFramework } from "@durlabh/dframework-ui";
 
 function MyComponent() {
   const { dayjs } = useStateContext();
@@ -1023,7 +1019,6 @@ Access translation utilities directly:
 
 ```js
 import { useStateContext } from "@durlabh/dframework-ui";
-// or use the alias: import { useFramework } from "@durlabh/dframework-ui";
 
 function MyComponent() {
   const { t, i18n } = useStateContext();
@@ -1045,8 +1040,6 @@ function MyComponent() {
 |----------|------|-------------|
 | `apiEndpoints` | `object` | API endpoint configuration (e.g., `{ default: 'http://api.example.com' }`) |
 | `children` | `ReactNode` | Child components |
-
-**Note:** `FrameworkProvider` is an alias for `StateProvider` for backward compatibility.
 
 ### useStateContext() Hook
 
@@ -1074,7 +1067,6 @@ Returns an object with the following properties:
 | Property | Type | Description |
 |----------|------|-------------|
 | `stateData` | `object` | Application state (pageTitle, userData, locale, timeZone, etc.) |
-| `dispatchData` | `function` | Dispatch state actions (for advanced use) |
 | `setPageTitle` | `function` | Set page title |
 | `setUserData` | `function` | Set user data |
 | `setLocale` | `function` | Set application locale |
@@ -1092,57 +1084,40 @@ Returns an object with the following properties:
 | `formatDate` | `function` | Format dates with timezone support |
 | `systemDateTimeFormat` | `function` | Get system date/time format |
 
-**Note:** `useFramework()` is an alias for `useStateContext()` for backward compatibility.
+## State Management
 
-## Migration from dispatch/dispatchData
+StateProvider uses individual setter methods for clean, type-safe state management:
 
-If you're upgrading from a previous version that used dispatch actions:
-
-**Before:**
+**Setting App-Level State:**
 ```js
-const { dispatchData } = useStateContext();
-dispatchData({ type: 'UPDATE_LOADER_STATE', payload: true });
-dispatchData({ type: 'PAGE_TITLE_DETAILS', payload: { title: 'My Page' } });
-dispatchData({ type: 'USER_DATA', payload: userData });
-```
+const { setPageTitle, setUserData, setLocale, setTimeZone } = useStateContext();
 
-**After:**
-```js
-const { showLoader, hideLoader, setPageTitle, setUserData } = useStateContext();
-showLoader(); // Loader now automatic with httpRequest
 setPageTitle({ title: 'My Page' });
 setUserData(userData);
+setLocale('es');
+setTimeZone('America/New_York');
 ```
 
 ### Grid and Form Components
 
-Grid and Form components now automatically use `FrameworkProvider` for loader management. No changes are needed in your component code that uses these components.
+Grid and Form components automatically use StateProvider for loader management. No changes are needed in your component code that uses these components.
 
 ### Custom HTTP Requests
 
-When using `httpRequest` directly, loader management is now automatic:
+When using `httpRequest` directly, loader management is automatic via CRUD functions:
 
-**Before:**
-```js
-import request from '@durlabh/dframework-ui/httpRequest';
-const { dispatchData } = useStateContext();
-
-await request({
-  url: '/api/data',
-  params: { id: 1 },
-  dispatchData
-});
-```
-
-**After:**
 ```js
 import request from '@durlabh/dframework-ui/httpRequest';
 
-// Loader is automatically managed!
+// httpRequest is a pure transport layer - no loader management
 await request({
   url: '/api/data',
   params: { id: 1 }
 });
+
+// Loader is managed by CRUD functions
+import { getList } from '@durlabh/dframework-ui/crud-helper';
+getList({ ... }); // Shows/hides loader automatically
 ```
 
 ## Benefits
