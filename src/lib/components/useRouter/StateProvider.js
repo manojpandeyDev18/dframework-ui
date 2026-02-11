@@ -185,6 +185,42 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     setModalState(newModal);
   }, []);
 
+  /**
+   * dispatchData - Backward compatibility for legacy code
+   * Maps old dispatch actions to new setter methods
+   */
+  const dispatchData = useCallback((action) => {
+    const { type, payload } = action;
+    switch (type) {
+      case 'SET_LOCALE':
+        setLocale(payload);
+        break;
+      case 'SET_DATETIME_FORMAT':
+        setDateTimeFormat(payload);
+        break;
+      case 'SET_PAGE_TITLE':
+      case 'PAGE_TITLE_DETAILS': // Old action name
+        setPageTitle(payload);
+        break;
+      case 'SET_MODAL':
+      case 'OPEN_MODAL': // Old action name
+        setModal(payload);
+        break;
+      case 'SET_PAGE_BACK_BUTTON':
+        setPageBackButton(payload);
+        break;
+      case 'SET_USER_DATA':
+      case 'USER_DATA': // Old action name
+        setUserData(payload);
+        break;
+      case 'SET_TIMEZONE':
+        setTimeZone(payload);
+        break;
+      default:
+        console.warn(`Unknown action type: ${type}`);
+    }
+  }, [setLocale, setDateTimeFormat, setPageTitle, setModal, setPageBackButton, setUserData, setTimeZone]);
+
   // Create stateData object for backward compatibility
   const stateData = useMemo(() => ({
     locale,
@@ -199,6 +235,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   const contextValue = useMemo(() => ({
     // State data (for backward compatibility)
     stateData,
+    dispatchData, // Add dispatchData for backward compatibility
     
     // Loader management
     isLoading,
@@ -232,7 +269,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     setTimeZone,
     setDateTimeFormat,
     setModal
-  }), [stateData, isLoading, showLoader, hideLoader, t, i18n, snackbar, 
+  }), [stateData, dispatchData, isLoading, showLoader, hideLoader, t, i18n, snackbar, 
        setLocale, setPageTitle, setPageBackButton, setUserData, setTimeZone, setDateTimeFormat, setModal]);
 
   // Store instance for non-React functions

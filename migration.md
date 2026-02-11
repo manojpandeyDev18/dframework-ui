@@ -72,9 +72,16 @@ The framework has been restructured to consolidate all functionality into `State
    - Copy mode detected from URL pattern: `/path/0-{sourceId}`
    - Normal edit mode: `/path/{id}`
 
-5. **httpRequest API - No Changes**
-   - Loader is automatically managed by `httpRequest`
-   - No need to pass `showLoader`, `hideLoader`, or `dispatchData`
+5. **Loader Management**
+   - Loader is now managed by CRUD helper functions (getList, getRecord, saveRecord, deleteRecord, getLookups)
+   - Each CRUD function manages its own loader lifecycle using try/finally blocks
+   - httpRequest is now a pure HTTP transport layer without loader management
+   - No need to pass `showLoader`, `hideLoader`, or `dispatchData` to CRUD functions
+
+6. **State Management**
+   - Replaced useReducer with individual useState calls for simplicity
+   - actions.js, stateReducer.js, and initialState.js files are retained for backward compatibility
+   - dispatchData is provided for legacy code but new code should use setter methods (setPageTitle, setUserData, etc.)
 
 #### Migration Guide:
 

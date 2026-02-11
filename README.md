@@ -902,10 +902,10 @@ export default function App() {
 
 ### Automatic Loader Management
 
-The loader is automatically managed by `httpRequest` when making API calls. You don't need to manually call `showLoader()` or `hideLoader()`:
+The loader is automatically managed by **CRUD helper functions** (getList, getRecord, saveRecord, deleteRecord, getLookups) when making API calls. The Grid and Form components display the loader state automatically:
 
 ```js
-import request from "@durlabh/dframework-ui/httpRequest";
+import { getList } from "@durlabh/dframework-ui/crud-helper";
 
 function MyComponent() {
   const fetchData = async () => {
