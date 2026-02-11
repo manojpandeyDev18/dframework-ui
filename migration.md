@@ -1,26 +1,28 @@
 # Breaking changes
 
-## Version 1.0.6 - FrameworkProvider Introduction
+## Version 1.0.6 - FrameworkProvider Introduction (Updated)
 
 ### Loader Management Refactoring
 
-The loader management system has been completely refactored from a dispatch-based approach to a context-based approach using `FrameworkProvider`.
+The loader management system has been completely refactored to use automatic loader management at the point of API calls.
 
 #### Breaking Changes:
 
 1. **FrameworkProvider is now required**
    - Applications must wrap their components with `FrameworkProvider` to use Grid, Form, or loader functionality
-   - Place `FrameworkProvider` as the outermost provider
+   - `SnackbarProvider` must wrap `FrameworkProvider`
 
    ```js
    // Required setup
-   import { FrameworkProvider, StateProvider } from "@durlabh/dframework-ui";
+   import { SnackbarProvider, FrameworkProvider, StateProvider } from "@durlabh/dframework-ui";
    
-   <FrameworkProvider>
-     <StateProvider>
-       {/* Your app */}
-     </StateProvider>
-   </FrameworkProvider>
+   <SnackbarProvider>
+     <FrameworkProvider>
+       <StateProvider>
+         {/* Your app */}
+       </StateProvider>
+     </FrameworkProvider>
+   </SnackbarProvider>
    ```
 
 2. **StateProvider Changes**
@@ -28,23 +30,24 @@ The loader management system has been completely refactored from a dispatch-base
    - Removed `UPDATE_LOADER_STATE` action
    - Loader state is now managed by `FrameworkProvider`
 
-3. **httpRequest API Changes**
-   - `dispatchData` parameter is replaced with `showLoader` and `hideLoader`
-   - If you're calling `httpRequest` directly, update your code:
+3. **httpRequest API Changes - Automatic Loader Management**
+   - Loader is now automatically managed by `httpRequest`
+   - No need to pass `showLoader`, `hideLoader`, or `dispatchData`
+   - Loader shows before request and hides in finally block
    
    ```js
    // Before
    const { dispatchData } = useStateContext();
    await request({ url, params, dispatchData });
    
-   // After
-   const { showLoader, hideLoader } = useFramework();
-   await request({ url, params, showLoader, hideLoader });
+   // After - No parameters needed!
+   await request({ url, params });
    ```
 
 4. **crud-helper API Changes**
-   - All CRUD functions (`getList`, `getRecord`, `saveRecord`) now accept `showLoader` and `hideLoader` instead of `dispatchData`
-   - Grid and Form components handle this internally, so no changes needed for typical usage
+   - All CRUD functions no longer require `showLoader`, `hideLoader`, or `dispatchData` parameters
+   - Loader is managed automatically by `httpRequest`
+   - Grid and Form components simplified - no parameter passing needed
 
 5. **getErrorMessage Utility**
    - Moved from `crud-helper.js` to `httpRequest.js`
@@ -60,25 +63,27 @@ The loader management system has been completely refactored from a dispatch-base
 
 #### Migration Guide:
 
-**Step 1: Add FrameworkProvider**
+**Step 1: Add FrameworkProvider with SnackbarProvider**
 
-Wrap your app with `FrameworkProvider`:
+Wrap your app with providers in the correct order:
 
 ```js
-import { FrameworkProvider } from "@durlabh/dframework-ui";
+import { SnackbarProvider, FrameworkProvider } from "@durlabh/dframework-ui";
 
 function App() {
   return (
-    <FrameworkProvider>
-      {/* Existing providers and components */}
-    </FrameworkProvider>
+    <SnackbarProvider>
+      <FrameworkProvider>
+        {/* Existing providers and components */}
+      </FrameworkProvider>
+    </SnackbarProvider>
   );
 }
 ```
 
-**Step 2: Update Custom HTTP Requests**
+**Step 2: Remove showLoader/hideLoader from HTTP Requests**
 
-If you're using `httpRequest` directly:
+If you're using `httpRequest` directly, remove the loader parameters:
 
 ```js
 // Before
@@ -88,12 +93,10 @@ import { useStateContext } from '@durlabh/dframework-ui';
 const { dispatchData } = useStateContext();
 await request({ url, params, dispatchData });
 
-// After
+// After - Loader is automatic!
 import request from '@durlabh/dframework-ui/httpRequest';
-import { useFramework } from '@durlabh/dframework-ui';
 
-const { showLoader, hideLoader } = useFramework();
-await request({ url, params, showLoader, hideLoader });
+await request({ url, params });
 ```
 
 **Step 3: Update Custom Loader Logic**

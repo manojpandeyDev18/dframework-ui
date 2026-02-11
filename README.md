@@ -870,7 +870,7 @@ This will add a custom action button with an Article icon to each row. When clic
 
 ## Setup
 
-Wrap your application with both `FrameworkProvider` and `StateProvider`:
+Wrap your application with the required providers in the correct order:
 
 ```js
 import React from "react";
@@ -878,24 +878,48 @@ import { FrameworkProvider, StateProvider, SnackbarProvider } from "@durlabh/dfr
 
 export default function App() {
   return (
-    <FrameworkProvider>
-      <StateProvider apiEndpoints={{ default: 'http://localhost:3000/api' }}>
-        <SnackbarProvider>
+    <SnackbarProvider>
+      <FrameworkProvider>
+        <StateProvider apiEndpoints={{ default: 'http://localhost:3000/api' }}>
           {/* Your app components */}
-        </SnackbarProvider>
-      </StateProvider>
-    </FrameworkProvider>
+        </StateProvider>
+      </FrameworkProvider>
+    </SnackbarProvider>
   );
 }
 ```
 
-**Important:** Place `FrameworkProvider` as the outermost provider to ensure all components have access to framework utilities.
+**Important:** 
+- `SnackbarProvider` must be the outermost provider (FrameworkProvider depends on it)
+- `FrameworkProvider` should wrap `StateProvider` to ensure all components have access to framework utilities
 
 ## Using FrameworkProvider
 
-### Accessing Loader State
+### Automatic Loader Management
 
-Use the `useFramework()` hook to access loader controls:
+The loader is automatically managed by `httpRequest` when making API calls. You don't need to manually call `showLoader()` or `hideLoader()`:
+
+```js
+import request from "@durlabh/dframework-ui/httpRequest";
+
+function MyComponent() {
+  const fetchData = async () => {
+    // Loader is automatically shown before the request
+    // and hidden after completion (in finally block)
+    const data = await request({ 
+      url: '/api/data',
+      params: { id: 1 }
+    });
+    // Process data
+  };
+  
+  return <button onClick={fetchData}>Fetch Data</button>;
+}
+```
+
+### Manual Loader Control (If Needed)
+
+For non-API operations, you can manually control the loader:
 
 ```js
 import { useFramework } from "@durlabh/dframework-ui";
@@ -903,12 +927,11 @@ import { useFramework } from "@durlabh/dframework-ui";
 function MyComponent() {
   const { isLoading, showLoader, hideLoader } = useFramework();
   
-  const fetchData = async () => {
+  const processData = async () => {
     showLoader();
     try {
-      const response = await fetch('/api/data');
-      const data = await response.json();
-      // Process data
+      // Heavy processing...
+      await someHeavyOperation();
     } finally {
       hideLoader();
     }
@@ -916,10 +939,30 @@ function MyComponent() {
   
   return (
     <div>
-      {isLoading && <p>Loading...</p>}
-      <button onClick={fetchData}>Fetch Data</button>
+      {isLoading && <p>Processing...</p>}
+      <button onClick={processData}>Process</button>
     </div>
   );
+}
+```
+
+### Accessing Snackbar
+
+Access snackbar for showing messages and errors:
+
+```js
+import { useFramework } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { showMessage, showError } = useFramework();
+  
+  const handleAction = () => {
+    showMessage('Success!', 'Operation completed');
+    // or
+    showError('Error!', 'Something went wrong');
+  };
+  
+  return <button onClick={handleAction}>Perform Action</button>;
 }
 ```
 
@@ -972,11 +1015,13 @@ Returns an object with the following properties:
 | Property | Type | Description |
 |----------|------|-------------|
 | `isLoading` | `boolean` | Current loading state |
-| `showLoader` | `() => void` | Function to show the loader |
-| `hideLoader` | `() => void` | Function to hide the loader |
+| `showLoader` | `() => void` | Function to manually show the loader |
+| `hideLoader` | `() => void` | Function to manually hide the loader |
 | `dayjs` | `object` | dayjs instance with UTC and timezone plugins |
 | `t` | `function` | Translation function from i18next |
 | `i18n` | `object` | i18n instance from react-i18next |
+| `showMessage` | `function` | Show a snackbar message |
+| `showError` | `function` | Show an error snackbar |
 
 ## Migration from dispatch/dispatchData
 
@@ -990,7 +1035,9 @@ dispatchData({ type: 'UPDATE_LOADER_STATE', payload: true });
 
 **After:**
 ```js
-const { showLoader } = useFramework();
+// No action needed! Loader is now automatic with httpRequest
+// For manual control:
+const { showLoader, hideLoader } = useFramework();
 showLoader();
 ```
 
@@ -1000,7 +1047,7 @@ Grid and Form components now automatically use `FrameworkProvider` for loader ma
 
 ### Custom HTTP Requests
 
-When using `httpRequest` or `crudHelper` directly, pass `showLoader` and `hideLoader` instead of `dispatchData`:
+When using `httpRequest` directly, loader management is now automatic:
 
 **Before:**
 ```js
@@ -1017,20 +1064,19 @@ await request({
 **After:**
 ```js
 import request from '@durlabh/dframework-ui/httpRequest';
-const { showLoader, hideLoader } = useFramework();
 
+// Loader is automatically managed!
 await request({
   url: '/api/data',
-  params: { id: 1 },
-  showLoader,
-  hideLoader
+  params: { id: 1 }
 });
 ```
 
 ## Benefits
 
-1. **Simplified Loader Management**: No more counter-based logic or manual dispatch calls
-2. **Centralized Utilities**: dayjs and i18n are available from a single context
+1. **Automatic Loader Management**: Loader shows/hides automatically at the point of API call
+2. **Centralized Utilities**: dayjs, i18n, and snackbar available from a single context
+3. **Cleaner Code**: No need to pass showLoader/hideLoader as parameters
 3. **Better Performance**: Eliminates unnecessary re-renders from global state updates
 4. **Cleaner API**: More intuitive `showLoader()`/`hideLoader()` instead of dispatch actions
 5. **Type Safety**: Better TypeScript support with explicit function signatures
