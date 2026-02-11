@@ -1,4 +1,4 @@
-import { getStateProviderInstance } from '../useRouter/StateProvider';
+// Removed getStateProviderInstance import - loader management moved to calling components
 
 const HTTP_STATUS_CODES = {
     OK: 200,
@@ -101,10 +101,10 @@ const DATA_PARSERS = Object.freeze({
 });
 
 /**
- * Enhanced HTTP request handler with automatic data parsing and loader management
+ * Enhanced HTTP request handler with automatic data parsing
  * 
- * Automatically manages loader state using FrameworkContext.
- * Loader is shown before the request and hidden after completion or error.
+ * Note: Loader management is the responsibility of the calling component.
+ * This allows components to control when and how to show loading states.
  * 
  * @param {Object} config - Request configuration
  * @param {string} config.url - API endpoint URL
@@ -113,25 +113,16 @@ const DATA_PARSERS = Object.freeze({
  * @param {boolean} config.jsonPayload - Whether to send JSON payload instead of FormData
  * @param {Object} config.additionalParams - Additional fetch parameters
  * @param {Object} config.additionalHeaders - Additional request headers
- * @param {boolean} config.disableLoader - Whether to disable the loading indicator
  * @param {Function} config.dataParser - Parser function to normalize response data (default: DATA_PARSERS.raw)
  * @param {Function} config.onParseError - Custom error handler for parse failures
  * 
  * @returns {Promise<any>} Parsed response data or error object
  * 
  * @example
- * // Basic usage - loader is managed automatically
+ * // Basic usage
  * const data = await request({ 
  *   url: '/api/data', 
  *   params: { id: 1 }
- * });
- * 
- * @example
- * // Disable loader for background requests
- * const data = await request({ 
- *   url: '/api/data',
- *   params: { id: 1 },
- *   disableLoader: true
  * });
  * 
  * @example
@@ -153,20 +144,11 @@ const request = async ({
     jsonPayload = false, 
     additionalParams = {}, 
     additionalHeaders = {}, 
-    disableLoader = false, 
     dataParser = DATA_PARSERS.raw,
     onParseError
 }) => {
     if (params.exportData) {
         return exportRequest(url, params);
-    }
-    
-    // Get framework instance for loader management
-    const framework = getStateProviderInstance();
-    const shouldShowLoader = !disableLoader && framework?.showLoader && framework?.hideLoader;
-    
-    if (shouldShowLoader) {
-        framework.showLoader();
     }
 
     const reqParams = {
@@ -184,10 +166,6 @@ const request = async ({
     try {
         const response = await transport(reqParams);
         let data = response.data;
-
-        if (shouldShowLoader) {
-            framework.hideLoader();
-        }
 
         // Handle HTTP errors here
         if (response.status === HTTP_STATUS_CODES.SESSION_EXPIRED && history) {
@@ -222,9 +200,6 @@ const request = async ({
 
         return data;
     } catch (ex) {
-        if (shouldShowLoader) {
-            framework.hideLoader();
-        }
         // Only network errors will be caught here
         return { error: true, message: ex.message || 'Network error' };
     }

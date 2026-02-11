@@ -18,6 +18,15 @@ function shouldApplyFilter(filter) {
 }
 
 const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, baseFilters, action = 'list', setError, extraParams = {}, contentType, columns, model, api }) => {
+    // Get framework instance for loader management
+    const framework = getStateProviderInstance();
+    const shouldShowLoader = framework?.showLoader && framework?.hideLoader;
+    
+    // Show loader at start
+    if (shouldShowLoader) {
+        framework.showLoader();
+    }
+    
     // Derive API and controllerType from model
     const finalApi = api || model.api;
     const controllerType = model.controllerType || 'node';
@@ -130,6 +139,11 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         setTimeout(() => {
             document.getElementById("exportForm").remove();
         }, 3000);
+        
+        // Hide loader after form export
+        if (shouldShowLoader) {
+            framework.hideLoader();
+        }
         return;
     }
     try {
@@ -154,6 +168,11 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             const errorMessage = getErrorMessage(response);
             setError('An error occurred while fetching data', errorMessage);
             setData((prevData) => ({ ...prevData, records: [], recordCount: 0 }));
+            
+            // Hide loader on error
+            if (shouldShowLoader) {
+                framework.hideLoader();
+            }
             return;
         }
 
@@ -161,6 +180,11 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes(action)) {
             const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns, action });
             setData(resData);
+            
+            // Hide loader after setting data
+            if (shouldShowLoader) {
+                framework.hideLoader();
+            }
             return;
         }
 
@@ -187,12 +211,31 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         });
 
         setData(response);
+        
+        // Hide loader after successful data load
+        if (shouldShowLoader) {
+            framework.hideLoader();
+        }
     } catch (error) {
         setError('Network failure or server unreachable. Please try again.');
+        
+        // Hide loader on exception
+        if (shouldShowLoader) {
+            framework.hideLoader();
+        }
     }
 };
 
 const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError }) => {
+    // Get framework instance for loader management
+    const framework = getStateProviderInstance();
+    const shouldShowLoader = framework?.showLoader && framework?.hideLoader;
+    
+    // Show loader at start
+    if (shouldShowLoader) {
+        framework.showLoader();
+    }
+    
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/${id === undefined || id === null ? '-' : id}`;
@@ -221,11 +264,21 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
         if (response?.error || response?.success === false) {
             const errorMessage = getErrorMessage(response);
             setError('Load failed', errorMessage);
+            
+            // Hide loader on error
+            if (shouldShowLoader) {
+                framework.hideLoader();
+            }
             return;
         }
         if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('load')) {
             const resData = await model.parseResponsePayload({ responseData: response, model, action: 'load' });
             setActiveRecord(resData);
+            
+            // Hide loader after setting data
+            if (shouldShowLoader) {
+                framework.hideLoader();
+            }
             return;
         }
         const { data: record, lookups } = response || {};
@@ -241,8 +294,18 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
         }
         const defaultValues = { ...model.defaultValues };
         setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups });
+        
+        // Hide loader after successful load
+        if (shouldShowLoader) {
+            framework.hideLoader();
+        }
     } catch (error) {
         setError('Could not load record', error.message || error.toString());
+        
+        // Hide loader on exception
+        if (shouldShowLoader) {
+            framework.hideLoader();
+        }
     }
 };
 
@@ -317,6 +380,15 @@ const saveRecord = async function ({ id, api, values, setError, model }) {
 };
 
 const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, reqData }) => {
+    // Get framework instance for loader management
+    const framework = getStateProviderInstance();
+    const shouldShowLoader = framework?.showLoader && framework?.hideLoader;
+    
+    // Show loader at start
+    if (shouldShowLoader) {
+        framework.showLoader();
+    }
+    
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/lookups`;
@@ -336,17 +408,37 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
         if (response?.error || response?.success === false) {
             const errorMessage = getErrorMessage(response);
             setError('Could not load lookups', errorMessage);
+            
+            // Hide loader on error
+            if (shouldShowLoader) {
+                framework.hideLoader();
+            }
             return false;
         }
 
         if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('lookups')) {
             const resData = await model.parseResponsePayload({ responseData: response, model, action: 'lookups' });
             setActiveRecord(resData);
+            
+            // Hide loader after setting data
+            if (shouldShowLoader) {
+                framework.hideLoader();
+            }
             return;
         }
         setActiveRecord(response);
+        
+        // Hide loader after successful load
+        if (shouldShowLoader) {
+            framework.hideLoader();
+        }
     } catch (error) {
         setError('Could not load lookups', error.message || error.toString());
+        
+        // Hide loader on exception
+        if (shouldShowLoader) {
+            framework.hideLoader();
+        }
     }
 };
 export {
