@@ -53,7 +53,7 @@ const FrameworkProvider = ({ children }) => {
     // i18n utilities
     t,
     i18n
-  }), [isLoading]);
+  }), [isLoading, showLoader, hideLoader, t, i18n]);
 
   return (
     <FrameworkContext.Provider value={contextValue}>
