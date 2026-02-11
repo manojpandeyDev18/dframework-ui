@@ -25,7 +25,6 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import PageTitle from '../PageTitle';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
-import { useFramework } from '../FrameworkProvider';
 import LocalizedDatePicker from './LocalizedDatePicker';
 import actionsStateProvider from '../useRouter/actions';
 import CustomDropdownMenu from './CustomDropdownMenu';
@@ -196,12 +195,11 @@ const GridBase = memo(({
     const dataRef = useRef(data);
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
-    const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl } = useStateContext();
-    const { isLoading } = useFramework();
+    const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl, isLoading, setPageTitle } = useStateContext();
     const { timeZone } = stateData;
     const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
-    const userData = stateData.getUserData || {};
+    const userData = stateData.userData || {};
     const documentField = model.columns.find(ele => ele.type === 'fileUpload')?.field || "";
     const userDefinedPermissions = { add: effectivePermissions.add, edit: effectivePermissions.edit, delete: effectivePermissions.delete };
     const { canAdd, canEdit, canDelete } = getPermissions({ userData, model, userDefinedPermissions });
@@ -614,11 +612,8 @@ const GridBase = memo(({
         }
         if (mode === "copy") {
             path += "0-" + id;
-            dispatchData({ type: 'UPDATE_FORM_MODE', payload: 'copy' });
-
         } else {
             path += id;
-            dispatchData({ type: 'UPDATE_FORM_MODE', payload: '' });
         }
         if (addUrlParamKey) {
             searchParams.set(addUrlParamKey, record[addUrlParamKey]);
@@ -897,13 +892,11 @@ const GridBase = memo(({
         if (props.isChildGrid || forAssignment || !updatePageTitle) {
             return;
         }
-        dispatchData({ type: actionsStateProvider.PAGE_TITLE_DETAILS, payload: { icon: "", titleHeading: model.pageTitle || model.title, title: model.title } });
+        setPageTitle({ icon: "", titleHeading: model.pageTitle || model.title, title: model.title });
         return () => {
-            dispatchData({
-                type: actionsStateProvider.PAGE_TITLE_DETAILS, payload: null
-            });
+            setPageTitle(null);
         };
-    }, []);
+    }, [setPageTitle, model.pageTitle, model.title]);
 
     const updateFilters = useCallback((e) => {
         const { items } = e;

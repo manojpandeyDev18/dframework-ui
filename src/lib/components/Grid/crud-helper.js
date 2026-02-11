@@ -1,5 +1,5 @@
 import request, { DATA_PARSERS, getErrorMessage } from "./httpRequest";
-import { getFrameworkInstance } from "../FrameworkProvider";
+import { getStateProviderInstance } from "../useRouter/StateProvider";
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
@@ -18,11 +18,11 @@ function shouldApplyFilter(filter) {
 }
 
 const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
-    const framework = getFrameworkInstance();
+    const state = getStateProviderInstance();
     
     if (!contentType) {
         if (showFullScreenLoader && framework?.showLoader) {
-            framework.showLoader();
+            state.showLoader();
         }
     }
 

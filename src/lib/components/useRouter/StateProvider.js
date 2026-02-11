@@ -1,10 +1,12 @@
-import React, { createContext, useReducer, useContext, useRef } from 'react';
+import React, { createContext, useReducer, useContext, useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import stateReducer from './stateReducer';
 import initialState from './initialState';
 import { locales } from '../mui/locale/localization';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { useTranslation } from 'react-i18next';
+import { useSnackbar } from '../SnackBar';
 
 // Extend dayjs with the plugins
 dayjs.extend(utc);
@@ -13,9 +15,22 @@ dayjs.extend(timezone);
 const StateContext = createContext();
 const RouterContext = createContext(null);
 
+// Fallback functions for missing SnackbarProvider
+const snackbarWarning = () => console.warn('SnackbarProvider not found. Wrap StateProvider with SnackbarProvider.');
+
 const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => {
 
   const [stateData, dispatchData] = useReducer(stateReducer, initialState);
+  
+  // Framework functionality - loader management
+  const [isLoading, setIsLoading] = useState(false);
+  const loadingCountRef = useRef(0);
+  
+  // Framework functionality - i18n
+  const { t, i18n } = useTranslation();
+  
+  // Framework functionality - snackbar
+  const snackbar = useSnackbar();
 
   // Initialize with provided endpoints or empty object
   const apiEndpoints = useRef(initialApiEndpoints);
@@ -32,6 +47,24 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     const baseUrl = apiEndpoints.current[controllerType || "default"] || '';
     return `${baseUrl}${url}`;
   }
+
+  /**
+   * Show loader - increments counter for concurrent requests
+   */
+  const showLoader = useCallback(() => {
+    loadingCountRef.current += 1;
+    setIsLoading(true);
+  }, []);
+
+  /**
+   * Hide loader - decrements counter, hides when all requests complete
+   */
+  const hideLoader = useCallback(() => {
+    loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
+    if (loadingCountRef.current === 0) {
+      setIsLoading(false);
+    }
+  }, []);
 
   /**
    * Returns the system date and/or time format string based on user preferences and options.
@@ -90,7 +123,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
    * @returns {Object} An object with a getLocalizedString function.
    */
   function useLocalization() {
-    const currentLocaleData = stateData.dataLocalization;
+    const currentLocaleData = stateData.locale;
     const localeData = locales[currentLocaleData];
     function getLocalizedString(key) {
       return currentLocaleData === 'pt-PT' || currentLocaleData === 'ptPT' ? localeData.components.MuiDataGrid.defaultProps.localeText[key] || key : localeData[key] || key;
@@ -98,8 +131,103 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     return { getLocalizedString };
   }
 
+  /**
+   * Set the application locale
+   */
+  const setLocale = useCallback((locale) => {
+    dispatchData({ type: 'SET_LOCALE', payload: locale });
+  }, []);
+
+  /**
+   * Set page title details
+   */
+  const setPageTitle = useCallback((title) => {
+    dispatchData({ type: 'SET_PAGE_TITLE', payload: title });
+  }, []);
+
+  /**
+   * Set page back button configuration
+   */
+  const setPageBackButton = useCallback((backButton) => {
+    dispatchData({ type: 'SET_PAGE_BACK_BUTTON', payload: backButton });
+  }, []);
+
+  /**
+   * Set user data
+   */
+  const setUserData = useCallback((userData) => {
+    dispatchData({ type: 'SET_USER_DATA', payload: userData });
+  }, []);
+
+  /**
+   * Set timezone
+   */
+  const setTimeZone = useCallback((timeZone) => {
+    dispatchData({ type: 'SET_TIMEZONE', payload: timeZone });
+  }, []);
+
+  /**
+   * Set date/time format
+   */
+  const setDateTimeFormat = useCallback((format) => {
+    dispatchData({ type: 'SET_DATETIME_FORMAT', payload: format });
+  }, []);
+
+  /**
+   * Open/close modal
+   */
+  const setModal = useCallback((modal) => {
+    dispatchData({ type: 'SET_MODAL', payload: modal });
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    // State data and dispatch
+    stateData,
+    dispatchData,
+    
+    // Loader management
+    isLoading,
+    showLoader,
+    hideLoader,
+    
+    // Snackbar utilities
+    showMessage: snackbar?.showMessage || snackbarWarning,
+    showError: snackbar?.showError || snackbarWarning,
+    
+    // i18n utilities
+    dayjs,
+    t,
+    i18n,
+    
+    // Date/time utilities
+    systemDateTimeFormat,
+    formatDate,
+    useLocalization,
+    
+    // API utilities
+    getApiEndpoint,
+    setApiEndpoint,
+    buildUrl,
+    
+    // App-level state setters with meaningful names
+    setLocale,
+    setPageTitle,
+    setPageBackButton,
+    setUserData,
+    setTimeZone,
+    setDateTimeFormat,
+    setModal
+  }), [stateData, isLoading, showLoader, hideLoader, t, i18n, snackbar, 
+       setLocale, setPageTitle, setPageBackButton, setUserData, setTimeZone, setDateTimeFormat, setModal]);
+
+  // Store instance for non-React functions
+  useEffect(() => {
+    setStateProviderInstance(contextValue);
+    return () => setStateProviderInstance(null);
+  }, [contextValue]);
+
   return (
-    <StateContext.Provider value={{ stateData, dispatchData, systemDateTimeFormat, formatDate, useLocalization, getApiEndpoint, setApiEndpoint, buildUrl }}>
+    <StateContext.Provider value={contextValue}>
       {children}
     </StateContext.Provider>
   );
@@ -117,6 +245,25 @@ const useStateContext = () => {
     throw new Error('useStateContext must be used within a StateProvider');
   }
   return context;
+};
+
+// Store state provider instance for use in non-React functions
+let stateProviderInstance = null;
+
+/**
+ * Internal function to set state provider instance
+ * Called automatically by StateProvider
+ */
+export const setStateProviderInstance = (instance) => {
+  stateProviderInstance = instance;
+};
+
+/**
+ * Get state provider instance for use in non-React functions
+ * This allows httpRequest and other utility functions to access framework features
+ */
+export const getStateProviderInstance = () => {
+  return stateProviderInstance;
 };
 
 export { StateProvider, useStateContext, useRouter, RouterProvider };

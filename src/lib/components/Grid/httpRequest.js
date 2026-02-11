@@ -1,4 +1,4 @@
-import { getFrameworkInstance } from '../FrameworkProvider';
+import { getStateProviderInstance } from '../useRouter/StateProvider';
 
 const HTTP_STATUS_CODES = {
     OK: 200,
@@ -162,7 +162,7 @@ const request = async ({
     }
     
     // Get framework instance for loader management
-    const framework = getFrameworkInstance();
+    const framework = getStateProviderInstance();
     const shouldShowLoader = !disableLoader && framework?.showLoader && framework?.hideLoader;
     
     if (shouldShowLoader) {

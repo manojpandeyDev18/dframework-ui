@@ -15,7 +15,6 @@ import FormLayout from "./field-mapper";
 import { useSnackbar } from "../SnackBar";
 import { DialogComponent } from "../Dialog";
 import { useStateContext, useRouter } from "../useRouter/StateProvider";
-import { useFramework } from "../FrameworkProvider";
 import actionsStateProvider from "../useRouter/actions";
 import PageTitle from "../PageTitle";
 import utils, { getPermissions } from "../utils";
@@ -80,8 +79,9 @@ const Form = ({
     ? model.applyFieldConfig({ data, lookups })
     : defaultFieldConfigs;
   const gridApi = buildUrl(model.controllerType, model.api);
-  const { mode } = stateData.dataForm;
-  const userData = stateData.getUserData || {};
+  // Determine mode from URL pattern: "0-{id}" indicates copy mode
+  const mode = idWithOptions.includes('-') && idWithOptions.split('-')[0] === '0' ? 'copy' : '';
+  const userData = stateData.userData || {};
   const userDefinedPermissions = {
     add: true,
     edit: true,
@@ -227,7 +227,7 @@ const Form = ({
       breadcrumbs.push({ text: linkColumn });
     }
     dispatchData({
-      type: actionsStateProvider.PAGE_TITLE_DETAILS,
+      type: actionsStateProvider.SET_PAGE_TITLE,
       payload: {
         showBreadcrumbs: true,
         breadcrumbs: breadcrumbs
