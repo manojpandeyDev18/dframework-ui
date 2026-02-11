@@ -11,6 +11,9 @@ dayjs.extend(timezone);
 
 const FrameworkContext = createContext(null);
 
+// Fallback functions for missing SnackbarProvider (created outside component for stability)
+const snackbarWarning = () => console.warn('SnackbarProvider not found. Wrap FrameworkProvider with SnackbarProvider.');
+
 /**
  * FrameworkProvider - Centralized context for framework-wide utilities
  * 
@@ -48,32 +51,26 @@ const FrameworkProvider = ({ children }) => {
     }
   }, []);
 
-  const contextValue = useMemo(() => {
-    const value = {
-      // Loader state and controls
-      isLoading,
-      showLoader,
-      hideLoader,
-      // dayjs utilities
-      dayjs,
-      // i18n utilities
-      t,
-      i18n,
-      // Snackbar utilities - ensure they're functions or undefined
-      showMessage: snackbar?.showMessage || (() => console.warn('SnackbarProvider not found. Wrap FrameworkProvider with SnackbarProvider.')),
-      showError: snackbar?.showError || (() => console.warn('SnackbarProvider not found. Wrap FrameworkProvider with SnackbarProvider.'))
-    };
-    
-    // Store instance for non-React functions
-    setFrameworkInstance(value);
-    
-    return value;
-  }, [isLoading, showLoader, hideLoader, t, i18n, snackbar]);
+  const contextValue = useMemo(() => ({
+    // Loader state and controls
+    isLoading,
+    showLoader,
+    hideLoader,
+    // dayjs utilities
+    dayjs,
+    // i18n utilities
+    t,
+    i18n,
+    // Snackbar utilities - provide fallback or actual functions
+    showMessage: snackbar?.showMessage || snackbarWarning,
+    showError: snackbar?.showError || snackbarWarning
+  }), [isLoading, showLoader, hideLoader, t, i18n, snackbar]);
 
-  // Cleanup on unmount
+  // Store instance for non-React functions - runs after render
   useEffect(() => {
+    setFrameworkInstance(contextValue);
     return () => setFrameworkInstance(null);
-  }, []);
+  }, [contextValue]);
 
   return (
     <FrameworkContext.Provider value={contextValue}>
