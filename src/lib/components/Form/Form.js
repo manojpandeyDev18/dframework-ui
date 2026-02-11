@@ -140,7 +140,7 @@ const Form = ({
       hideLoader
     });
 
-  }, [id, idWithOptions, model, api, gridApi, detailPanelId, showLoader, hideLoader]);
+  }, [id, idWithOptions, model, api, gridApi, detailPanelId]);
 
   const formik = useFormik({
     enableReinitialize: true,
