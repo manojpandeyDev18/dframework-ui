@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const FrameworkContext = createContext(undefined);
+const FrameworkContext = createContext(null);
 
 /**
  * FrameworkProvider - Centralized context for framework-wide utilities
@@ -77,7 +77,7 @@ const FrameworkProvider = ({ children }) => {
  */
 const useFramework = () => {
   const context = useContext(FrameworkContext);
-  if (context === undefined) {
+  if (context === null || context === undefined) {
     throw new Error('useFramework must be used within a FrameworkProvider');
   }
   return context;
