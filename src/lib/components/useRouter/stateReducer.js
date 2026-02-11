@@ -25,8 +25,6 @@ const stateReducer = (state, action) => {
             return { ...state, currentPreference: action.payload };
         case actionsStateProvider.TOTAL_PREFERENCES:
             return { ...state, totalPreferences: action.payload };
-        case actionsStateProvider.UPDATE_LOADER_STATE:
-            return { ...state, loaderOpen: action.payload };
         case actionsStateProvider.PASS_FILTERS_TO_HEADER:
             return { ...state, filtersInHeader: action.payload };
         case actionsStateProvider.SET_TIMEZONE:
