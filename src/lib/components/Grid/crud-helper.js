@@ -1,12 +1,9 @@
-import actionsStateProvider from "../useRouter/actions";
-import request, { DATA_PARSERS } from "./httpRequest";
+import request, { DATA_PARSERS, getErrorMessage } from "./httpRequest";
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
-
-const getErrorMessage = (response) => response?.message || response?.info || response?.error;
 
 function shouldApplyFilter(filter) {
     const { operator, value, type } = filter;
@@ -19,10 +16,10 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, showLoader, hideLoader, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
     if (!contentType) {
-        if (showFullScreenLoader) {
-            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
+        if (showFullScreenLoader && typeof showLoader === 'function') {
+            showLoader();
         }
     }
 
@@ -147,7 +144,8 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
                 "Content-Type": "application/json",
                 ...headers
             },
-            dispatchData,
+            showLoader,
+            hideLoader,
             jsonPayload: true,
             params: requestData,
             dataParser: DATA_PARSERS.json,
@@ -202,7 +200,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     }
 };
 
-const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError, dispatchData }) => {
+const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError, showLoader, hideLoader }) => {
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/${id === undefined || id === null ? '-' : id}`;
@@ -220,7 +218,8 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     const requestData = {
         url: `${url}?${searchParams.toString()}`,
         additionalParams: { method: 'GET' },
-        dispatchData,
+        showLoader,
+        hideLoader,
         jsonPayload: true
     };
 
@@ -287,7 +286,7 @@ const deleteRecord = async function ({ id, api, setError, model }) {
     return result;
 };
 
-const saveRecord = async function ({ id, api, values, setError, model, dispatchData }) {
+const saveRecord = async function ({ id, api, values, setError, model, showLoader, hideLoader }) {
     let url, method;
 
     if (id !== 0) {
@@ -306,7 +305,8 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
             'Content-Type': 'application/json'
         },
         jsonPayload: true,
-        dispatchData
+        showLoader,
+        hideLoader
     };
 
     if (typeof model.createRequestPayload === 'function') {

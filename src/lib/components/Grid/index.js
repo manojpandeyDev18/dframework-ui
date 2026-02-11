@@ -25,6 +25,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import PageTitle from '../PageTitle';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
+import { useFramework } from '../FrameworkProvider';
 import LocalizedDatePicker from './LocalizedDatePicker';
 import actionsStateProvider from '../useRouter/actions';
 import CustomDropdownMenu from './CustomDropdownMenu';
@@ -196,6 +197,7 @@ const GridBase = memo(({
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
     const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl } = useStateContext();
+    const { showLoader, hideLoader, isLoading } = useFramework();
     const { timeZone } = stateData;
     const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
@@ -596,7 +598,8 @@ const GridBase = memo(({
             ...listParams,
             setError: snackbar.showError,
             setData,
-            dispatchData,
+            showLoader,
+            hideLoader,
             showFullScreenLoader,
             history: navigate,
         });
@@ -604,7 +607,7 @@ const GridBase = memo(({
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
         if (setActiveRecord) {
-            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError });
+            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError, showLoader, hideLoader });
             return;
         }
         let path = pathname;
@@ -777,7 +780,8 @@ const GridBase = memo(({
                 values: { items: selectedRecords },
                 setError: snackbar.showError,
                 model,
-                dispatchData
+                showLoader,
+                hideLoader
             });
 
             if (result) {
@@ -1177,7 +1181,7 @@ const GridBase = memo(({
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
-                        loading={!data.records || stateData.loaderOpen}
+                        loading={!data.records || isLoading}
                         className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}

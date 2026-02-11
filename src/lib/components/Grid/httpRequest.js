@@ -1,6 +1,3 @@
-import actionsStateProvider from '../useRouter/actions';
-let pendingRequests = 0;
-
 const HTTP_STATUS_CODES = {
     OK: 200,
     SESSION_EXPIRED: 401,
@@ -71,6 +68,12 @@ const transport = async (config) => {
 };
 
 /**
+ * Extract error message from response
+ * Utility to normalize error messages across different response formats
+ */
+const getErrorMessage = (response) => response?.message || response?.info || response?.error;
+
+/**
  * Default data parsers for different response types
  * Use these to normalize API responses to a consistent type
  */
@@ -106,7 +109,8 @@ const DATA_PARSERS = Object.freeze({
  * @param {Object} config.additionalParams - Additional fetch parameters
  * @param {Object} config.additionalHeaders - Additional request headers
  * @param {boolean} config.disableLoader - Whether to disable the loading indicator
- * @param {Function} config.dispatchData - Redux dispatch function
+ * @param {Function} config.showLoader - Function to show loader (from FrameworkContext)
+ * @param {Function} config.hideLoader - Function to hide loader (from FrameworkContext)
  * @param {Function} config.dataParser - Parser function to normalize response data (default: DATA_PARSERS.raw)
  * @param {Function} config.onParseError - Custom error handler for parse failures
  * 
@@ -114,10 +118,12 @@ const DATA_PARSERS = Object.freeze({
  * 
  * @example
  * // Basic usage with automatic JSON parsing
+ * const { showLoader, hideLoader } = useFramework();
  * const data = await request({ 
  *   url: '/api/data', 
  *   params: { id: 1 },
- *   dispatchData 
+ *   showLoader,
+ *   hideLoader
  * });
  * 
  * @example
@@ -125,7 +131,8 @@ const DATA_PARSERS = Object.freeze({
  * const data = await request({ 
  *   url: '/api/data',
  *   params: { id: 1 },
- *   dispatchData,
+ *   showLoader,
+ *   hideLoader,
  *   onParseError: (error, rawData) => {
  *     console.error('Parse failed:', error);
  *     return { error: true, message: 'Custom error message' };
@@ -137,7 +144,8 @@ const DATA_PARSERS = Object.freeze({
  * const text = await request({ 
  *   url: '/api/text', 
  *   params: {},
- *   dispatchData,
+ *   showLoader,
+ *   hideLoader,
  *   dataParser: DATA_PARSERS.text
  * });
  */
@@ -150,18 +158,20 @@ const request = async ({
     additionalParams = {}, 
     additionalHeaders = {}, 
     disableLoader = false, 
-    dispatchData,
+    showLoader,
+    hideLoader,
     dataParser = DATA_PARSERS.raw,
     onParseError
 }) => {
     if (params.exportData) {
         return exportRequest(url, params);
     }
-    disableLoader = disableLoader || typeof dispatchData !== 'function';
-    if (!disableLoader) {
-        dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
+    
+    const shouldShowLoader = !disableLoader && typeof showLoader === 'function' && typeof hideLoader === 'function';
+    
+    if (shouldShowLoader) {
+        showLoader();
     }
-    pendingRequests++;
 
     const reqParams = {
         method: 'POST',
@@ -177,11 +187,10 @@ const request = async ({
 
     try {
         const response = await transport(reqParams);
-        pendingRequests--;
         let data = response.data;
 
-        if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
+        if (shouldShowLoader) {
+            hideLoader();
         }
 
         // Handle HTTP errors here
@@ -217,9 +226,8 @@ const request = async ({
 
         return data;
     } catch (ex) {
-        pendingRequests--;
-        if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
+        if (shouldShowLoader) {
+            hideLoader();
         }
         // Only network errors will be caught here
         return { error: true, message: ex.message || 'Network error' };
@@ -229,7 +237,8 @@ const request = async ({
 export {
     HTTP_STATUS_CODES,
     transport,
-    DATA_PARSERS
+    DATA_PARSERS,
+    getErrorMessage
 };
 
 export default request;

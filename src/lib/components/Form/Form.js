@@ -15,6 +15,7 @@ import FormLayout from "./field-mapper";
 import { useSnackbar } from "../SnackBar";
 import { DialogComponent } from "../Dialog";
 import { useStateContext, useRouter } from "../useRouter/StateProvider";
+import { useFramework } from "../FrameworkProvider";
 import actionsStateProvider from "../useRouter/actions";
 import PageTitle from "../PageTitle";
 import utils, { getPermissions } from "../utils";
@@ -54,6 +55,7 @@ const Form = ({
   const { navigate, getParams, useParams, pathname } = useRouter();
   const { relations = [] } = model;
   const { dispatchData, stateData, buildUrl } = useStateContext();
+  const { showLoader, hideLoader } = useFramework();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
   const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
@@ -134,10 +136,11 @@ const Form = ({
       ...params,
       id: detailPanelId || (options.length > 1 ? options[consts.loadIdIndex] : id),
       setActiveRecord,
-      dispatchData
+      showLoader,
+      hideLoader
     });
 
-  }, [id, idWithOptions, model, api, gridApi, detailPanelId, dispatchData]);
+  }, [id, idWithOptions, model, api, gridApi, detailPanelId, showLoader, hideLoader]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -157,7 +160,8 @@ const Form = ({
         values: values,
         setError: snackbar.showError,
         model,
-        dispatchData
+        showLoader,
+        hideLoader
       })
         .then((success) => {
           if (!success) return;
