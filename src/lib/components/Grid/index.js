@@ -562,17 +562,20 @@ const GridBase = memo(({
             filters.items = [...(filters.items || []), ...additionalFilters];
         }
         
-        // Merge baseFilters, template, configFileName, and other custom params into extraParams
+        // Merge parentFilters and baseFilters into one parameter
+        const mergedBaseFilters = [];
+        if (Array.isArray(finalBaseFilters)) {
+            mergedBaseFilters.push(...finalBaseFilters);
+        }
+        if (Array.isArray(parentFilters)) {
+            mergedBaseFilters.push(...parentFilters);
+        }
+        
+        // Prepare extraParams with template and configFileName for pivot exports
         const mergedExtraParams = {
             ...extraParams,
             ...props.extraParams, // Merge any custom params passed via component props
-            api: baseUrl, // API endpoint
         };
-        
-        // Add baseFilters to extraParams if present
-        if (finalBaseFilters && finalBaseFilters.length > 0) {
-            mergedExtraParams.baseFilters = finalBaseFilters;
-        }
         
         // Add template and configFileName for pivot exports
         if (isPivotExport) {
@@ -582,11 +585,6 @@ const GridBase = memo(({
             if (model.configFileName) {
                 mergedExtraParams.configFileName = model.configFileName;
             }
-        }
-        
-        // Add isElasticExport to extraParams or model
-        if (isElasticExport) {
-            mergedExtraParams.isElasticExport = isElasticExport;
         }
         
         const isValidFilters = !filters.items.length || filters.items.every(item => "value" in item && item.value !== undefined);
@@ -600,7 +598,8 @@ const GridBase = memo(({
             filterModel: filters,
             gridColumns,
             model,
-            parentFilters,
+            baseFilters: mergedBaseFilters,
+            api: baseUrl, // Pass api separately, not in extraParams
             extraParams: mergedExtraParams,
             contentType,
             columns

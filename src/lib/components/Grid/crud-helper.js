@@ -17,14 +17,13 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, parentFilters, action = 'list', setError, extraParams = {}, contentType, columns, model }) => {
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, baseFilters, action = 'list', setError, extraParams = {}, contentType, columns, model, api }) => {
     // Derive API and controllerType from model
-    const api = extraParams.api || model.api;
+    const finalApi = api || model.api;
     const controllerType = model.controllerType || 'node';
-    const isElasticExport = model.isElasticExport || extraParams.isElasticExport;
     
-    // Extract template, configFileName, and baseFilters from extraParams
-    const { template, configFileName, baseFilters, ...restExtraParams } = extraParams;
+    // isElasticExport is true only if action is 'export' AND model.isElasticExport is true
+    const isElasticExport = action === 'export' && model.isElasticExport === true;
 
     const lookups = [];
     const lookupWithDeps = []; // for backward compatibility having two lookups arrays
@@ -65,11 +64,8 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             }
         });
     }
-    if (parentFilters) {
-        where.push(...parentFilters);
-    }
     
-    // Add baseFilters from extraParams if present
+    // Add baseFilters if present (already includes parentFilters merged in Grid component)
     if (baseFilters && Array.isArray(baseFilters)) {
         where.push(...baseFilters);
     }
@@ -77,7 +73,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     const requestData = {
         start: page * pageSize,
         limit: isElasticExport ? (model.exportSize || 1000000) : pageSize,
-        ...restExtraParams,
+        ...extraParams,
         logicalOperator: filterModel.logicOperator,
         sort: sortModel.map(sort => (sort.filterField || sort.field) + ' ' + sort.sort).join(','),
         where,
@@ -99,14 +95,8 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     }
 
     const headers = {};
-    let url = controllerType === 'cs' ? `${api}?action=${action}&asArray=0` : `${api}/${action}`;
+    let url = controllerType === 'cs' ? `${finalApi}?action=${action}&asArray=0` : `${finalApi}/${action}`;
 
-    if (template !== undefined && template !== null) {
-        url += `&template=${template}`;
-    }
-    if (configFileName !== undefined && configFileName !== null) {
-        url += `&configFileName=${configFileName}`;
-    }
     if (contentType) {
         const form = document.createElement("form");
         requestData.responseType = contentType;
@@ -114,12 +104,12 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
         // for manipulating the request payload before sending the request.
         if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url, dataParsers: DATA_PARSERS, model });
+            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, baseFilters, action, url, dataParsers: DATA_PARSERS, model });
         }
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
         form.setAttribute("target", "_blank");
-        if (template === undefined || template === null) {
+        if (!extraParams.template) {
             for (const key in requestData) {
                 let v = requestData[key];
                 if (v === undefined || v === null) {
@@ -156,7 +146,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
 
         // for manipulating the request payload before sending the request.
         if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action, dataParsers: DATA_PARSERS, model });
+            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, baseFilters, action, dataParsers: DATA_PARSERS, model });
         }
         const response = await request(reqParams);
 
