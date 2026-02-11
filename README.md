@@ -862,38 +862,43 @@ This will add a custom action button with an Article icon to each row. When clic
 
 ---
 
-# FrameworkProvider
+# StateProvider (Framework & State Management)
 
 ## Overview
 
-`FrameworkProvider` is a centralized context provider that manages framework-wide utilities like loader state, dayjs, and i18n. It handles concurrent requests automatically by tracking the number of active operations, ensuring the loader stays visible until all operations complete.
+`StateProvider` is the centralized provider that manages both framework utilities and application state. It includes:
+- Loader management with concurrent request tracking
+- dayjs, i18n utilities  
+- Snackbar integration
+- App-level state (page title, user data, timezone, etc.)
+- API endpoint configuration
+
+**Note:** `FrameworkProvider` and `useFramework` are aliases for backward compatibility. They point to `StateProvider` and `useStateContext`.
 
 ## Setup
 
-Wrap your application with the required providers in the correct order:
+Wrap your application with the required providers:
 
 ```js
 import React from "react";
-import { FrameworkProvider, StateProvider, SnackbarProvider } from "@durlabh/dframework-ui";
+import { StateProvider, SnackbarProvider } from "@durlabh/dframework-ui";
 
 export default function App() {
   return (
     <SnackbarProvider>
-      <FrameworkProvider>
-        <StateProvider apiEndpoints={{ default: 'http://localhost:3000/api' }}>
-          {/* Your app components */}
-        </StateProvider>
-      </FrameworkProvider>
+      <StateProvider apiEndpoints={{ default: 'http://localhost:3000/api' }}>
+        {/* Your app components */}
+      </StateProvider>
     </SnackbarProvider>
   );
 }
 ```
 
 **Important:** 
-- `SnackbarProvider` must be the outermost provider (FrameworkProvider depends on it)
-- `FrameworkProvider` should wrap `StateProvider` to ensure all components have access to framework utilities
+- `SnackbarProvider` must wrap `StateProvider` (StateProvider depends on snackbar utilities)
+- For backward compatibility, `FrameworkProvider` can be used as an alias for `StateProvider`
 
-## Using FrameworkProvider
+## Using StateProvider
 
 ### Automatic Loader Management
 
@@ -922,10 +927,10 @@ function MyComponent() {
 For non-API operations, you can manually control the loader:
 
 ```js
-import { useFramework } from "@durlabh/dframework-ui";
+import { useStateContext } from "@durlabh/dframework-ui";
 
 function MyComponent() {
-  const { isLoading, showLoader, hideLoader } = useFramework();
+  const { isLoading, showLoader, hideLoader } = useStateContext();
   
   const processData = async () => {
     showLoader();
@@ -951,10 +956,10 @@ function MyComponent() {
 Access snackbar for showing messages and errors:
 
 ```js
-import { useFramework } from "@durlabh/dframework-ui";
+import { useStateContext } from "@durlabh/dframework-ui";
 
 function MyComponent() {
-  const { showMessage, showError } = useFramework();
+  const { showMessage, showError } = useStateContext();
   
   const handleAction = () => {
     showMessage('Success!', 'Operation completed');
@@ -966,15 +971,44 @@ function MyComponent() {
 }
 ```
 
+### App-Level State Management
+
+Use the provided setter methods for app-level state:
+
+```js
+import { useStateContext } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { 
+    setPageTitle, 
+    setUserData, 
+    setTimeZone, 
+    stateData 
+  } = useStateContext();
+  
+  useEffect(() => {
+    setPageTitle({ 
+      titleHeading: 'Dashboard', 
+      title: 'My Dashboard' 
+    });
+    setUserData({ name: 'John Doe', role: 'Admin' });
+    setTimeZone('America/New_York');
+  }, []);
+  
+  return <div>Welcome {stateData.userData?.name}</div>;
+}
+```
+
 ### Accessing dayjs
 
 Access the configured dayjs instance with UTC and timezone plugins:
 
 ```js
-import { useFramework } from "@durlabh/dframework-ui";
+import { useStateContext } from "@durlabh/dframework-ui";
+// or use the alias: import { useFramework } from "@durlabh/dframework-ui";
 
 function MyComponent() {
-  const { dayjs } = useFramework();
+  const { dayjs } = useStateContext();
   
   const formattedDate = dayjs().format('YYYY-MM-DD');
   const utcDate = dayjs().utc().format();
@@ -988,10 +1022,11 @@ function MyComponent() {
 Access translation utilities directly:
 
 ```js
-import { useFramework } from "@durlabh/dframework-ui";
+import { useStateContext } from "@durlabh/dframework-ui";
+// or use the alias: import { useFramework } from "@durlabh/dframework-ui";
 
 function MyComponent() {
-  const { t, i18n } = useFramework();
+  const { t, i18n } = useStateContext();
   
   return (
     <div>
@@ -1004,41 +1039,79 @@ function MyComponent() {
 
 ## API Reference
 
-### FrameworkProvider Props
+### StateProvider Props
 
-The `FrameworkProvider` component does not accept any props besides `children`.
+| Property | Type | Description |
+|----------|------|-------------|
+| `apiEndpoints` | `object` | API endpoint configuration (e.g., `{ default: 'http://api.example.com' }`) |
+| `children` | `ReactNode` | Child components |
 
-### useFramework() Hook
+**Note:** `FrameworkProvider` is an alias for `StateProvider` for backward compatibility.
+
+### useStateContext() Hook
 
 Returns an object with the following properties:
 
+Returns an object with the following properties:
+
+**Loader Management:**
 | Property | Type | Description |
 |----------|------|-------------|
 | `isLoading` | `boolean` | Current loading state |
 | `showLoader` | `() => void` | Function to manually show the loader |
 | `hideLoader` | `() => void` | Function to manually hide the loader |
+
+**Framework Utilities:**
+| Property | Type | Description |
+|----------|------|-------------|
 | `dayjs` | `object` | dayjs instance with UTC and timezone plugins |
 | `t` | `function` | Translation function from i18next |
 | `i18n` | `object` | i18n instance from react-i18next |
 | `showMessage` | `function` | Show a snackbar message |
 | `showError` | `function` | Show an error snackbar |
 
+**App-Level State:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `stateData` | `object` | Application state (pageTitle, userData, locale, timeZone, etc.) |
+| `dispatchData` | `function` | Dispatch state actions (for advanced use) |
+| `setPageTitle` | `function` | Set page title |
+| `setUserData` | `function` | Set user data |
+| `setLocale` | `function` | Set application locale |
+| `setTimeZone` | `function` | Set timezone |
+| `setDateTimeFormat` | `function` | Set date/time format |
+| `setModal` | `function` | Set modal state |
+| `setPageBackButton` | `function` | Set page back button |
+
+**API Utilities:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `buildUrl` | `function` | Build API URLs |
+| `getApiEndpoint` | `function` | Get API endpoint by key |
+| `setApiEndpoint` | `function` | Set API endpoint |
+| `formatDate` | `function` | Format dates with timezone support |
+| `systemDateTimeFormat` | `function` | Get system date/time format |
+
+**Note:** `useFramework()` is an alias for `useStateContext()` for backward compatibility.
+
 ## Migration from dispatch/dispatchData
 
-If you're upgrading from a previous version that used `dispatchData` for loader management:
+If you're upgrading from a previous version that used dispatch actions:
 
 **Before:**
 ```js
 const { dispatchData } = useStateContext();
 dispatchData({ type: 'UPDATE_LOADER_STATE', payload: true });
+dispatchData({ type: 'PAGE_TITLE_DETAILS', payload: { title: 'My Page' } });
+dispatchData({ type: 'USER_DATA', payload: userData });
 ```
 
 **After:**
 ```js
-// No action needed! Loader is now automatic with httpRequest
-// For manual control:
-const { showLoader, hideLoader } = useFramework();
-showLoader();
+const { showLoader, hideLoader, setPageTitle, setUserData } = useStateContext();
+showLoader(); // Loader now automatic with httpRequest
+setPageTitle({ title: 'My Page' });
+setUserData(userData);
 ```
 
 ### Grid and Form Components
