@@ -79,9 +79,29 @@ The framework has removed all backward compatibility aliases and features. This 
    - Normal edit mode: `/path/{id}`
 
 7. **Loader Management**
-   - Loader is now managed by CRUD helper functions (getList, getRecord, saveRecord, deleteRecord, getLookups)
-   - Each CRUD function manages its own loader lifecycle using try/finally blocks
-   - httpRequest is now a pure HTTP transport layer without loader management
+   - **Simplified loader management** - no counter, simple on/off
+   - Loader managed by CRUD helper functions (getList, getRecord, saveRecord, deleteRecord, getLookups)
+   - Each CRUD function wraps operations in try/finally blocks to guarantee loader is hidden
+   - httpRequest is a pure HTTP transport layer without loader management
+   - **For custom operations**: Use showLoader() before async operations, hideLoader() in finally block
+   
+   ```js
+   // CRUD functions handle loader automatically
+   await getList({ model, gridColumns, setData, page, pageSize });
+   
+   // Custom operations - use try/finally pattern
+   const { showLoader, hideLoader } = useStateContext();
+   
+   const myOperation = async () => {
+     showLoader();
+     try {
+       await asyncOperation1();
+       await asyncOperation2();
+     } finally {
+       hideLoader(); // Always hidden, even on errors
+     }
+   };
+   ```
 
 8. **State Management**
    - Uses individual useState calls for simplicity (no useReducer)

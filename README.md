@@ -867,7 +867,7 @@ This will add a custom action button with an Article icon to each row. When clic
 ## Overview
 
 `StateProvider` is the centralized provider that manages both framework utilities and application state. It includes:
-- Loader management with concurrent request tracking
+- Loader management (simple on/off - calling methods control via try/finally blocks)
 - dayjs, i18n utilities  
 - Snackbar integration
 - App-level state (page title, user data, timezone, etc.)
@@ -897,26 +897,43 @@ export default function App() {
 
 ## Using StateProvider
 
-### Automatic Loader Management
+### Loader Management
 
-The loader is automatically managed by **CRUD helper functions** (getList, getRecord, saveRecord, deleteRecord, getLookups) when making API calls. The Grid and Form components display the loader state automatically:
+The loader is **automatically managed by CRUD helper functions** (getList, getRecord, saveRecord, deleteRecord, getLookups). Each CRUD function:
+1. Shows the loader at the start
+2. Wraps all async operations in a try/finally block
+3. Hides the loader in the finally block (guaranteed to run)
 
+The Grid and Form components display the loader state automatically.
+
+**CRUD functions handle loader lifecycle:**
 ```js
 import { getList } from "@durlabh/dframework-ui/crud-helper";
 
-function MyComponent() {
-  const fetchData = async () => {
-    // Loader is automatically shown before the request
-    // and hidden after completion (in finally block)
-    const data = await request({ 
-      url: '/api/data',
-      params: { id: 1 }
-    });
-    // Process data
-  };
-  
-  return <button onClick={fetchData}>Fetch Data</button>;
-}
+// CRUD functions automatically show/hide loader
+await getList({ 
+  model, 
+  gridColumns, 
+  setData, 
+  page, 
+  pageSize 
+});
+// Loader shown before request, hidden after (even on errors)
+```
+
+**For custom operations, use try/finally:**
+```js
+const { showLoader, hideLoader } = useStateContext();
+
+const myCustomOperation = async () => {
+  showLoader();
+  try {
+    await someAsyncOperation();
+    await anotherAsyncOperation();
+  } finally {
+    hideLoader(); // Always hidden, even on exceptions
+  }
+};
 ```
 
 ### Manual Loader Control (If Needed)

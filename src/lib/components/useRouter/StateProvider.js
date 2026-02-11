@@ -27,9 +27,8 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   const [userData, setUserDataState] = useState(null);
   const [timeZone, setTimeZoneState] = useState('');
   
-  // Framework functionality - loader management
+  // Framework functionality - loader management (simple on/off, no counter)
   const [isLoading, setIsLoading] = useState(false);
-  const loadingCountRef = useRef(0);
   
   // Framework functionality - i18n
   const { t, i18n } = useTranslation();
@@ -54,21 +53,19 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   }
 
   /**
-   * Show loader - increments counter for concurrent requests
+   * Show loader - simple boolean toggle
+   * Calling methods should wrap all async operations in try/finally blocks
    */
   const showLoader = useCallback(() => {
-    loadingCountRef.current += 1;
     setIsLoading(true);
   }, []);
 
   /**
-   * Hide loader - decrements counter, hides when all requests complete
+   * Hide loader - simple boolean toggle
+   * Should be called in finally blocks to ensure loader is always hidden
    */
   const hideLoader = useCallback(() => {
-    loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
-    if (loadingCountRef.current === 0) {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   }, []);
 
   /**
