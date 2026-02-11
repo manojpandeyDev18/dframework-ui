@@ -1,3 +1,5 @@
+import { getFrameworkInstance } from '../FrameworkProvider';
+
 const HTTP_STATUS_CODES = {
     OK: 200,
     SESSION_EXPIRED: 401,
@@ -99,7 +101,10 @@ const DATA_PARSERS = Object.freeze({
 });
 
 /**
- * Enhanced HTTP request handler with automatic data parsing
+ * Enhanced HTTP request handler with automatic data parsing and loader management
+ * 
+ * Automatically manages loader state using FrameworkContext.
+ * Loader is shown before the request and hidden after completion or error.
  * 
  * @param {Object} config - Request configuration
  * @param {string} config.url - API endpoint URL
@@ -109,21 +114,24 @@ const DATA_PARSERS = Object.freeze({
  * @param {Object} config.additionalParams - Additional fetch parameters
  * @param {Object} config.additionalHeaders - Additional request headers
  * @param {boolean} config.disableLoader - Whether to disable the loading indicator
- * @param {Function} config.showLoader - Function to show loader (from FrameworkContext)
- * @param {Function} config.hideLoader - Function to hide loader (from FrameworkContext)
  * @param {Function} config.dataParser - Parser function to normalize response data (default: DATA_PARSERS.raw)
  * @param {Function} config.onParseError - Custom error handler for parse failures
  * 
  * @returns {Promise<any>} Parsed response data or error object
  * 
  * @example
- * // Basic usage with automatic JSON parsing
- * const { showLoader, hideLoader } = useFramework();
+ * // Basic usage - loader is managed automatically
  * const data = await request({ 
  *   url: '/api/data', 
+ *   params: { id: 1 }
+ * });
+ * 
+ * @example
+ * // Disable loader for background requests
+ * const data = await request({ 
+ *   url: '/api/data',
  *   params: { id: 1 },
- *   showLoader,
- *   hideLoader
+ *   disableLoader: true
  * });
  * 
  * @example
@@ -131,22 +139,10 @@ const DATA_PARSERS = Object.freeze({
  * const data = await request({ 
  *   url: '/api/data',
  *   params: { id: 1 },
- *   showLoader,
- *   hideLoader,
  *   onParseError: (error, rawData) => {
  *     console.error('Parse failed:', error);
  *     return { error: true, message: 'Custom error message' };
  *   }
- * });
- * 
- * @example
- * // Using text parser
- * const text = await request({ 
- *   url: '/api/text', 
- *   params: {},
- *   showLoader,
- *   hideLoader,
- *   dataParser: DATA_PARSERS.text
  * });
  */
 
@@ -158,8 +154,6 @@ const request = async ({
     additionalParams = {}, 
     additionalHeaders = {}, 
     disableLoader = false, 
-    showLoader,
-    hideLoader,
     dataParser = DATA_PARSERS.raw,
     onParseError
 }) => {
@@ -167,10 +161,12 @@ const request = async ({
         return exportRequest(url, params);
     }
     
-    const shouldShowLoader = !disableLoader && typeof showLoader === 'function' && typeof hideLoader === 'function';
+    // Get framework instance for loader management
+    const framework = getFrameworkInstance();
+    const shouldShowLoader = !disableLoader && framework?.showLoader && framework?.hideLoader;
     
     if (shouldShowLoader) {
-        showLoader();
+        framework.showLoader();
     }
 
     const reqParams = {
@@ -190,7 +186,7 @@ const request = async ({
         let data = response.data;
 
         if (shouldShowLoader) {
-            hideLoader();
+            framework.hideLoader();
         }
 
         // Handle HTTP errors here
@@ -227,7 +223,7 @@ const request = async ({
         return data;
     } catch (ex) {
         if (shouldShowLoader) {
-            hideLoader();
+            framework.hideLoader();
         }
         // Only network errors will be caught here
         return { error: true, message: ex.message || 'Network error' };

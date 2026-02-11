@@ -1,4 +1,5 @@
 import request, { DATA_PARSERS, getErrorMessage } from "./httpRequest";
+import { getFrameworkInstance } from "../FrameworkProvider";
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
@@ -16,10 +17,12 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, showLoader, hideLoader, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
+    const framework = getFrameworkInstance();
+    
     if (!contentType) {
-        if (showFullScreenLoader && typeof showLoader === 'function') {
-            showLoader();
+        if (showFullScreenLoader && framework?.showLoader) {
+            framework.showLoader();
         }
     }
 
@@ -144,8 +147,6 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
                 "Content-Type": "application/json",
                 ...headers
             },
-            showLoader,
-            hideLoader,
             jsonPayload: true,
             params: requestData,
             dataParser: DATA_PARSERS.json,
@@ -200,7 +201,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     }
 };
 
-const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError, showLoader, hideLoader }) => {
+const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError }) => {
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/${id === undefined || id === null ? '-' : id}`;
@@ -218,8 +219,6 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     const requestData = {
         url: `${url}?${searchParams.toString()}`,
         additionalParams: { method: 'GET' },
-        showLoader,
-        hideLoader,
         jsonPayload: true
     };
 
@@ -286,7 +285,7 @@ const deleteRecord = async function ({ id, api, setError, model }) {
     return result;
 };
 
-const saveRecord = async function ({ id, api, values, setError, model, showLoader, hideLoader }) {
+const saveRecord = async function ({ id, api, values, setError, model }) {
     let url, method;
 
     if (id !== 0) {
@@ -304,9 +303,7 @@ const saveRecord = async function ({ id, api, values, setError, model, showLoade
         additionalHeaders: {
             'Content-Type': 'application/json'
         },
-        jsonPayload: true,
-        showLoader,
-        hideLoader
+        jsonPayload: true
     };
 
     if (typeof model.createRequestPayload === 'function') {

@@ -197,7 +197,7 @@ const GridBase = memo(({
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
     const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl } = useStateContext();
-    const { showLoader, hideLoader, isLoading } = useFramework();
+    const { isLoading } = useFramework();
     const { timeZone } = stateData;
     const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
@@ -598,8 +598,6 @@ const GridBase = memo(({
             ...listParams,
             setError: snackbar.showError,
             setData,
-            showLoader,
-            hideLoader,
             showFullScreenLoader,
             history: navigate,
         });
@@ -607,7 +605,7 @@ const GridBase = memo(({
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
         if (setActiveRecord) {
-            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError, showLoader, hideLoader });
+            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError });
             return;
         }
         let path = pathname;
@@ -779,9 +777,7 @@ const GridBase = memo(({
                 api: `${baseUrl}/updateMany`,
                 values: { items: selectedRecords },
                 setError: snackbar.showError,
-                model,
-                showLoader,
-                hideLoader
+                model
             });
 
             if (result) {

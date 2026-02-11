@@ -55,7 +55,6 @@ const Form = ({
   const { navigate, getParams, useParams, pathname } = useRouter();
   const { relations = [] } = model;
   const { dispatchData, stateData, buildUrl } = useStateContext();
-  const { showLoader, hideLoader } = useFramework();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
   const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
@@ -135,12 +134,10 @@ const Form = ({
     getRecord({
       ...params,
       id: detailPanelId || (options.length > 1 ? options[consts.loadIdIndex] : id),
-      setActiveRecord,
-      showLoader,
-      hideLoader
+      setActiveRecord
     });
 
-  }, [id, idWithOptions, model, api, gridApi, detailPanelId, showLoader, hideLoader]);
+  }, [id, idWithOptions, model, api, gridApi, detailPanelId]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -159,9 +156,7 @@ const Form = ({
         api: gridApi,
         values: values,
         setError: snackbar.showError,
-        model,
-        showLoader,
-        hideLoader
+        model
       })
         .then((success) => {
           if (!success) return;
