@@ -15,7 +15,6 @@ import FormLayout from "./field-mapper";
 import { useSnackbar } from "../SnackBar";
 import { DialogComponent } from "../Dialog";
 import { useStateContext, useRouter } from "../useRouter/StateProvider";
-import actionsStateProvider from "../useRouter/actions";
 import PageTitle from "../PageTitle";
 import utils, { getPermissions } from "../utils";
 import Relations from "./relations";
@@ -53,7 +52,7 @@ const Form = ({
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
   const { relations = [] } = model;
-  const { dispatchData, stateData, buildUrl } = useStateContext();
+  const { stateData, buildUrl, setPageTitle: setPageTitleContext } = useStateContext();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
   const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
@@ -226,12 +225,9 @@ const Form = ({
     if (linkColumn !== "") {
       breadcrumbs.push({ text: linkColumn });
     }
-    dispatchData({
-      type: actionsStateProvider.SET_PAGE_TITLE,
-      payload: {
-        showBreadcrumbs: true,
-        breadcrumbs: breadcrumbs
-      }
+    setPageTitleContext({
+      showBreadcrumbs: true,
+      breadcrumbs: breadcrumbs
     });
   };
   const handleFormCancel = useCallback((event) => {

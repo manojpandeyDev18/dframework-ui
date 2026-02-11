@@ -26,7 +26,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import PageTitle from '../PageTitle';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
 import LocalizedDatePicker from './LocalizedDatePicker';
-import actionsStateProvider from '../useRouter/actions';
 import CustomDropdownMenu from './CustomDropdownMenu';
 import CustomToolbar from './CustomToolbar';
 import { getPermissions } from '../utils';
@@ -195,7 +194,7 @@ const GridBase = memo(({
     const dataRef = useRef(data);
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
-    const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl, isLoading, setPageTitle } = useStateContext();
+    const { stateData, formatDate, getApiEndpoint, buildUrl, isLoading, setPageTitle } = useStateContext();
     const { timeZone } = stateData;
     const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
@@ -319,16 +318,13 @@ const GridBase = memo(({
     }, []);
 
     useEffect(() => {
+        // Note: PASS_FILTERS_TO_HEADER was removed as component-specific state
+        // This functionality should be handled locally within the Grid component if needed
         if (props.isChildGrid || !hideTopFilters) {
             return;
         }
-        dispatchData({
-            type: actionsStateProvider.PASS_FILTERS_TO_HEADER, payload: {
-                filterButton: null,
-                hidden: { search: true, operation: true, export: true, print: true, filter: true }
-            }
-        });
-    }, []);
+        // TODO: If filter header communication is needed, implement using local state or props
+    }, [props.isChildGrid, hideTopFilters]);
 
     const createAction = useCallback(
         ({ key, title, icon, color = "primary", disabled, otherProps }) => (
@@ -620,7 +616,7 @@ const GridBase = memo(({
             path += `?${searchParams.toString()}`;
         }
         navigate(path);
-    }, [setActiveRecord, backendApi, model, parentFilters, where, pathname, addUrlParamKey, searchParams, navigate, dispatchData, getRecord]);
+    }, [setActiveRecord, backendApi, model, parentFilters, where, pathname, addUrlParamKey, searchParams, navigate, getRecord]);
 
     const handleDownload = useCallback(({ documentLink }) => {
         if (!documentLink) return;
@@ -789,7 +785,7 @@ const GridBase = memo(({
             });
             setShowAddConfirmation(false);
         }
-    }, [rowSelectionModel.ids, snackbar, data.records, idProperty, baseSaveData, model.selectionUpdateKeys, model.controllerType, selectionApi, backendApi, model, dispatchData, fetchData]);
+    }, [rowSelectionModel.ids, snackbar, data.records, idProperty, baseSaveData, model.selectionUpdateKeys, model.controllerType, selectionApi, backendApi, model, fetchData]);
 
     const onAdd = useCallback(() => {
         if (selectionApi.length > 0) {

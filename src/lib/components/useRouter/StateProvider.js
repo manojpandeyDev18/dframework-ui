@@ -1,6 +1,4 @@
-import React, { createContext, useReducer, useContext, useRef, useState, useCallback, useMemo, useEffect } from 'react';
-import stateReducer from './stateReducer';
-import initialState from './initialState';
+import React, { createContext, useContext, useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { locales } from '../mui/locale/localization';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -20,7 +18,14 @@ const snackbarWarning = () => console.warn('SnackbarProvider not found. Wrap Sta
 
 const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => {
 
-  const [stateData, dispatchData] = useReducer(stateReducer, initialState);
+  // App-level state - using individual useState for simplicity
+  const [locale, setLocaleState] = useState('en');
+  const [dateTime, setDateTimeState] = useState('MM/DD/YYYY hh:mm:ss A');
+  const [pageTitle, setPageTitleState] = useState(null);
+  const [modal, setModalState] = useState(null);
+  const [pageBackButton, setPageBackButtonState] = useState(null);
+  const [userData, setUserDataState] = useState(null);
+  const [timeZone, setTimeZoneState] = useState('');
   
   // Framework functionality - loader management
   const [isLoading, setIsLoading] = useState(false);
@@ -123,7 +128,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
    * @returns {Object} An object with a getLocalizedString function.
    */
   function useLocalization() {
-    const currentLocaleData = stateData.locale;
+    const currentLocaleData = locale;
     const localeData = locales[currentLocaleData];
     function getLocalizedString(key) {
       return currentLocaleData === 'pt-PT' || currentLocaleData === 'ptPT' ? localeData.components.MuiDataGrid.defaultProps.localeText[key] || key : localeData[key] || key;
@@ -134,56 +139,66 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   /**
    * Set the application locale
    */
-  const setLocale = useCallback((locale) => {
-    dispatchData({ type: 'SET_LOCALE', payload: locale });
+  const setLocale = useCallback((newLocale) => {
+    setLocaleState(newLocale);
   }, []);
 
   /**
    * Set page title details
    */
   const setPageTitle = useCallback((title) => {
-    dispatchData({ type: 'SET_PAGE_TITLE', payload: title });
+    setPageTitleState(title);
   }, []);
 
   /**
    * Set page back button configuration
    */
   const setPageBackButton = useCallback((backButton) => {
-    dispatchData({ type: 'SET_PAGE_BACK_BUTTON', payload: backButton });
+    setPageBackButtonState(backButton);
   }, []);
 
   /**
    * Set user data
    */
-  const setUserData = useCallback((userData) => {
-    dispatchData({ type: 'SET_USER_DATA', payload: userData });
+  const setUserData = useCallback((newUserData) => {
+    setUserDataState(newUserData);
   }, []);
 
   /**
    * Set timezone
    */
-  const setTimeZone = useCallback((timeZone) => {
-    dispatchData({ type: 'SET_TIMEZONE', payload: timeZone });
+  const setTimeZone = useCallback((newTimeZone) => {
+    setTimeZoneState(newTimeZone);
   }, []);
 
   /**
    * Set date/time format
    */
   const setDateTimeFormat = useCallback((format) => {
-    dispatchData({ type: 'SET_DATETIME_FORMAT', payload: format });
+    setDateTimeState(format);
   }, []);
 
   /**
    * Open/close modal
    */
-  const setModal = useCallback((modal) => {
-    dispatchData({ type: 'SET_MODAL', payload: modal });
+  const setModal = useCallback((newModal) => {
+    setModalState(newModal);
   }, []);
 
+  // Create stateData object for backward compatibility
+  const stateData = useMemo(() => ({
+    locale,
+    dateTime,
+    pageTitle,
+    modal,
+    pageBackButton,
+    userData,
+    timeZone
+  }), [locale, dateTime, pageTitle, modal, pageBackButton, userData, timeZone]);
+
   const contextValue = useMemo(() => ({
-    // State data and dispatch
+    // State data (for backward compatibility)
     stateData,
-    dispatchData,
     
     // Loader management
     isLoading,
