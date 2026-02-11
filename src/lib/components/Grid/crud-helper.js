@@ -17,14 +17,14 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
-    const state = getStateProviderInstance();
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, parentFilters, action = 'list', setError, extraParams = {}, contentType, columns, model }) => {
+    // Derive API and controllerType from model
+    const api = extraParams.api || model.api;
+    const controllerType = model.controllerType || 'node';
+    const isElasticExport = model.isElasticExport || extraParams.isElasticExport;
     
-    if (!contentType) {
-        if (showFullScreenLoader && framework?.showLoader) {
-            state.showLoader();
-        }
-    }
+    // Extract template, configFileName, and baseFilters from extraParams
+    const { template, configFileName, baseFilters, ...restExtraParams } = extraParams;
 
     const lookups = [];
     const lookupWithDeps = []; // for backward compatibility having two lookups arrays
@@ -68,14 +68,16 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     if (parentFilters) {
         where.push(...parentFilters);
     }
-
-    if (baseFilters) {
+    
+    // Add baseFilters from extraParams if present
+    if (baseFilters && Array.isArray(baseFilters)) {
         where.push(...baseFilters);
     }
+
     const requestData = {
         start: page * pageSize,
-        limit: isElasticExport ? model.exportSize : pageSize,
-        ...extraParams,
+        limit: isElasticExport ? (model.exportSize || 1000000) : pageSize,
+        ...restExtraParams,
         logicalOperator: filterModel.logicOperator,
         sort: sortModel.map(sort => (sort.filterField || sort.field) + ' ' + sort.sort).join(','),
         where,
@@ -99,10 +101,10 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
     const headers = {};
     let url = controllerType === 'cs' ? `${api}?action=${action}&asArray=0` : `${api}/${action}`;
 
-    if (template !== null) {
+    if (template !== undefined && template !== null) {
         url += `&template=${template}`;
     }
-    if (configFileName !== null) {
+    if (configFileName !== undefined && configFileName !== null) {
         url += `&configFileName=${configFileName}`;
     }
     if (contentType) {
@@ -117,7 +119,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
         form.setAttribute("target", "_blank");
-        if (template === null) {
+        if (template === undefined || template === null) {
             for (const key in requestData) {
                 let v = requestData[key];
                 if (v === undefined || v === null) {
@@ -149,8 +151,7 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             },
             jsonPayload: true,
             params: requestData,
-            dataParser: DATA_PARSERS.json,
-            history
+            dataParser: DATA_PARSERS.json
         };
 
         // for manipulating the request payload before sending the request.

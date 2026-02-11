@@ -561,7 +561,34 @@ const GridBase = memo(({
         if (additionalFilters) {
             filters.items = [...(filters.items || []), ...additionalFilters];
         }
-        extraParams = { ...extraParams, ...props.extraParams }; // Merge any custom params passed via component props into extraParams
+        
+        // Merge baseFilters, template, configFileName, and other custom params into extraParams
+        const mergedExtraParams = {
+            ...extraParams,
+            ...props.extraParams, // Merge any custom params passed via component props
+            api: baseUrl, // API endpoint
+        };
+        
+        // Add baseFilters to extraParams if present
+        if (finalBaseFilters && finalBaseFilters.length > 0) {
+            mergedExtraParams.baseFilters = finalBaseFilters;
+        }
+        
+        // Add template and configFileName for pivot exports
+        if (isPivotExport) {
+            if (model.exportTemplate) {
+                mergedExtraParams.template = model.exportTemplate;
+            }
+            if (model.configFileName) {
+                mergedExtraParams.configFileName = model.configFileName;
+            }
+        }
+        
+        // Add isElasticExport to extraParams or model
+        if (isElasticExport) {
+            mergedExtraParams.isElasticExport = isElasticExport;
+        }
+        
         const isValidFilters = !filters.items.length || filters.items.every(item => "value" in item && item.value !== undefined);
         if (!isValidFilters) return;
 
@@ -571,18 +598,12 @@ const GridBase = memo(({
             pageSize: !contentType ? pageSize : 1000000,
             sortModel,
             filterModel: filters,
-            controllerType: model.controllerType,
-            api: baseUrl,
             gridColumns,
             model,
             parentFilters,
-            extraParams,
+            extraParams: mergedExtraParams,
             contentType,
-            columns,
-            template: isPivotExport ? model.exportTemplate : null,
-            configFileName: isPivotExport ? model.configFileName : null,
-            baseFilters: finalBaseFilters,
-            isElasticExport
+            columns
         };
         if (typeof onListParamsChange === 'function') {
             onListParamsChange(listParams);
@@ -591,9 +612,7 @@ const GridBase = memo(({
         return getList({
             ...listParams,
             setError: snackbar.showError,
-            setData,
-            showFullScreenLoader,
-            history: navigate,
+            setData
         });
     };
 
