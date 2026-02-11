@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -64,7 +64,7 @@ const FrameworkProvider = ({ children }) => {
   }), [isLoading, showLoader, hideLoader, t, i18n, snackbar]);
 
   // Store instance for non-React functions
-  React.useEffect(() => {
+  useEffect(() => {
     setFrameworkInstance(contextValue);
     return () => setFrameworkInstance(null);
   }, [contextValue]);
