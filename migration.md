@@ -1,10 +1,10 @@
 # Breaking changes
 
-## Version 1.0.7 - StateProvider Consolidation
+## Version 1.0.7 - StateProvider Consolidation & useState Refactor
 
 ### Major Architectural Changes
 
-The framework has been restructured to consolidate all functionality into `StateProvider`.
+The framework has been restructured to consolidate all functionality into `StateProvider` and simplified to use `useState` instead of `useReducer`.
 
 #### Breaking Changes:
 
@@ -149,6 +149,18 @@ const { showLoader } = useStateContext();
 - `useFramework()` is an alias for `useStateContext()`
 - `FrameworkProvider` is an alias for `StateProvider`
 - All existing code continues to work with aliases
+
+#### Internal Implementation Change (v1.0.7):
+
+**Replaced `useReducer` with `useState`** for simpler implementation:
+- No more Redux-style reducer pattern
+- Each state field uses individual `useState`
+- Removed `actions.js` and `stateReducer.js` boilerplate
+- Better performance (no reducer overhead)
+- Smaller bundle size (150.25 kB vs 151.43 kB)
+- **Developer API unchanged** - all setter methods work identically
+
+This is an internal change that doesn't affect how you use the library.
 
 ---
 
