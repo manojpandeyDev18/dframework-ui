@@ -859,3 +859,180 @@ const exampleModel = new UiModel({
 This will add a custom action button with an Article icon to each row. When clicked, it will navigate to the related document page for that row.
 
 **Note:** The `icon` property in `customActions` should be a string that maps to a supported icon name. For example, `"article"` will use the Article icon. If an unknown icon is provided, a default icon will be used.
+
+---
+
+# FrameworkProvider
+
+## Overview
+
+`FrameworkProvider` is a centralized context provider that manages framework-wide utilities like loader state, dayjs, and i18n. It simplifies loader management by eliminating the need for dispatch/dispatchData and the counter-based approach.
+
+## Setup
+
+Wrap your application with both `FrameworkProvider` and `StateProvider`:
+
+```js
+import React from "react";
+import { FrameworkProvider, StateProvider, SnackbarProvider } from "@durlabh/dframework-ui";
+
+export default function App() {
+  return (
+    <FrameworkProvider>
+      <StateProvider apiEndpoints={{ default: 'http://localhost:3000/api' }}>
+        <SnackbarProvider>
+          {/* Your app components */}
+        </SnackbarProvider>
+      </StateProvider>
+    </FrameworkProvider>
+  );
+}
+```
+
+**Important:** Place `FrameworkProvider` as the outermost provider to ensure all components have access to framework utilities.
+
+## Using FrameworkProvider
+
+### Accessing Loader State
+
+Use the `useFramework()` hook to access loader controls:
+
+```js
+import { useFramework } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { isLoading, showLoader, hideLoader } = useFramework();
+  
+  const fetchData = async () => {
+    showLoader();
+    try {
+      const response = await fetch('/api/data');
+      const data = await response.json();
+      // Process data
+    } finally {
+      hideLoader();
+    }
+  };
+  
+  return (
+    <div>
+      {isLoading && <p>Loading...</p>}
+      <button onClick={fetchData}>Fetch Data</button>
+    </div>
+  );
+}
+```
+
+### Accessing dayjs
+
+Access the configured dayjs instance with UTC and timezone plugins:
+
+```js
+import { useFramework } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { dayjs } = useFramework();
+  
+  const formattedDate = dayjs().format('YYYY-MM-DD');
+  const utcDate = dayjs().utc().format();
+  
+  return <div>Current date: {formattedDate}</div>;
+}
+```
+
+### Accessing i18n
+
+Access translation utilities directly:
+
+```js
+import { useFramework } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { t, i18n } = useFramework();
+  
+  return (
+    <div>
+      <h1>{t('welcome')}</h1>
+      <p>Current language: {i18n.language}</p>
+    </div>
+  );
+}
+```
+
+## API Reference
+
+### FrameworkProvider Props
+
+The `FrameworkProvider` component does not accept any props besides `children`.
+
+### useFramework() Hook
+
+Returns an object with the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `isLoading` | `boolean` | Current loading state |
+| `showLoader` | `() => void` | Function to show the loader |
+| `hideLoader` | `() => void` | Function to hide the loader |
+| `dayjs` | `object` | dayjs instance with UTC and timezone plugins |
+| `t` | `function` | Translation function from i18next |
+| `i18n` | `object` | i18n instance from react-i18next |
+
+## Migration from dispatch/dispatchData
+
+If you're upgrading from a previous version that used `dispatchData` for loader management:
+
+**Before:**
+```js
+const { dispatchData } = useStateContext();
+dispatchData({ type: 'UPDATE_LOADER_STATE', payload: true });
+```
+
+**After:**
+```js
+const { showLoader } = useFramework();
+showLoader();
+```
+
+### Grid and Form Components
+
+Grid and Form components now automatically use `FrameworkProvider` for loader management. No changes are needed in your component code that uses these components.
+
+### Custom HTTP Requests
+
+When using `httpRequest` or `crudHelper` directly, pass `showLoader` and `hideLoader` instead of `dispatchData`:
+
+**Before:**
+```js
+import request from '@durlabh/dframework-ui/httpRequest';
+const { dispatchData } = useStateContext();
+
+await request({
+  url: '/api/data',
+  params: { id: 1 },
+  dispatchData
+});
+```
+
+**After:**
+```js
+import request from '@durlabh/dframework-ui/httpRequest';
+const { showLoader, hideLoader } = useFramework();
+
+await request({
+  url: '/api/data',
+  params: { id: 1 },
+  showLoader,
+  hideLoader
+});
+```
+
+## Benefits
+
+1. **Simplified Loader Management**: No more counter-based logic or manual dispatch calls
+2. **Centralized Utilities**: dayjs and i18n are available from a single context
+3. **Better Performance**: Eliminates unnecessary re-renders from global state updates
+4. **Cleaner API**: More intuitive `showLoader()`/`hideLoader()` instead of dispatch actions
+5. **Type Safety**: Better TypeScript support with explicit function signatures
+
+---
