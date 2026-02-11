@@ -33,17 +33,15 @@ const FrameworkProvider = ({ children }) => {
 
   const showLoader = useCallback(() => {
     loadingCountRef.current += 1;
-    if (!isLoading) {
-      setIsLoading(true);
-    }
-  }, [isLoading]);
+    setIsLoading(true);
+  }, []);
 
   const hideLoader = useCallback(() => {
     loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
-    if (loadingCountRef.current === 0 && isLoading) {
+    if (loadingCountRef.current === 0) {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, []);
 
   const contextValue = useMemo(() => ({
     // Loader state and controls
@@ -55,7 +53,7 @@ const FrameworkProvider = ({ children }) => {
     // i18n utilities
     t,
     i18n
-  }), [isLoading, showLoader, hideLoader, t, i18n]);
+  }), [isLoading, showLoader, hideLoader]);
 
   return (
     <FrameworkContext.Provider value={contextValue}>
