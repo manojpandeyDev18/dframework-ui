@@ -1,39 +1,12 @@
 import actionsStateProvider from "../useRouter/actions";
-import { transport, HTTP_STATUS_CODES } from "./httpRequest";
+import request, { DATA_PARSERS } from "./httpRequest";
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
-const timeInterval = 200;
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
 
-/**
- * Handles common HTTP error responses such as session expiration and forbidden access.
- * If an error is detected, sets an appropriate error message and redirects the user after a delay.
- * Returns true if a common error was handled, otherwise false.
- * 
- * @param {Object} response - The HTTP response object containing the status code.
- * @param {Function} setError - Callback function to set the error message.
- * @returns {boolean} Returns true if a common error was handled and a redirect is triggered, otherwise false.
- */
-const handleCommonErrors = (response, setError) => {
-    if (response.status === HTTP_STATUS_CODES.SESSION_EXPIRED) {
-        setError('Session Expired!');
-        setTimeout(() => {
-            window.location.href = '/';
-        }, timeInterval);
-        return true;
-    } else if (response.status === HTTP_STATUS_CODES.FORBIDDEN) {
-        setError('Access Denied!');
-        setTimeout(() => {
-            window.location.href = '/';
-        }, timeInterval);
-        return true;
-    } else if (response.status === HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR) {
-        setError('Internal Server Error');
-    }
-    return false;
-};
+const getErrorMessage = (response) => response?.message || response?.info || response?.error;
 
 function shouldApplyFilter(filter) {
     const { operator, value, type } = filter;
@@ -46,7 +19,7 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport }) => {
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
     if (!contentType) {
         if (showFullScreenLoader) {
             dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
@@ -137,6 +110,10 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         requestData.responseType = contentType;
         requestData.columns = columns;
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
+        // for manipulating the request payload before sending the request.
+        if (typeof model.createRequestPayload === 'function') {
+            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url, dataParsers: DATA_PARSERS, model });
+        }
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
         form.setAttribute("target", "_blank");
@@ -155,7 +132,7 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
                 form.append(hiddenTag);
             }
         }
-        form.setAttribute('action', url);
+        form.setAttribute('action', requestData.url || url);
         document.body.appendChild(form);
         form.submit();
         setTimeout(() => {
@@ -164,67 +141,69 @@ const getList = async ({ gridColumns, setIsLoading, setData, page, pageSize, sor
         return;
     }
     try {
-        setIsLoading(true);
-        const params = {
+        const reqParams = {
             url,
-            method: 'POST',
-            data: requestData,
-            headers: {
+            additionalHeaders: {
                 "Content-Type": "application/json",
                 ...headers
             },
-            credentials: 'include'
+            dispatchData,
+            jsonPayload: true,
+            params: requestData,
+            dataParser: DATA_PARSERS.json,
+            history
         };
-        setData(prevData => ({
-            ...prevData,
-            records: [] // reset records to empty array before fetching new data
-        }));
-        const response = await transport(params);
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            const { records } = response.data;
-            if (records) {
-                records.forEach(record => {
-                    dateColumns.forEach(column => {
-                        const { field, keepLocal, keepLocalDate } = column;
-                        if (record[field]) {
-                            record[field] = new Date(record[field]);
-                            if (keepLocalDate) {
-                                const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                                record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                            }
-                            if (keepLocal && !isLocalTime(record[field])) {
-                                const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                                record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                            }
-                        }
-                    });
-                    model.columns.forEach(({ field, displayIndex }) => {
-                        if (!displayIndex) return;
-                        record[field] = record[displayIndex];
-                    });
-                });
-            }
-            setData(response.data);
-        } else if (!handleCommonErrors(response, setError)) {
-            setError(response.statusText);
+
+        // for manipulating the request payload before sending the request.
+        if (typeof model.createRequestPayload === 'function') {
+            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action, dataParsers: DATA_PARSERS, model });
         }
+        const response = await request(reqParams);
+
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('An error occurred while fetching data', errorMessage);
+            setData((prevData) => ({ ...prevData, records: [], recordCount: 0 }));
+            return;
+        }
+
+        // Parse response data if needed custom processing.
+        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes(action)) {
+            const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns, action });
+            setData(resData);
+            return;
+        }
+
+
+        response.records.forEach(record => {
+            dateColumns.forEach(column => {
+                const { field, keepLocal, keepLocalDate } = column;
+                if (record[field]) {
+                    record[field] = new Date(record[field]);
+                    if (keepLocalDate) {
+                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                    }
+                    if (keepLocal && !isLocalTime(record[field])) {
+                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                    }
+                }
+            });
+            model.columns.forEach(({ field, displayIndex }) => {
+                if (!displayIndex) return;
+                record[field] = record[displayIndex];
+            });
+        });
+
+        setData(response);
     } catch (error) {
-        if (error.response && !handleCommonErrors(error.response, setError)) {
-            setError('Could not list record', error.message || error.toString());
-        } else{
-            setError('Network failure or server unreachable. Please try again.');
-        }
-    } finally {
-        setIsLoading(false);
-        if (!contentType && showFullScreenLoader) {
-            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
-        }
+        setError('Network failure or server unreachable. Please try again.');
     }
 };
 
-const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parentFilters, where = {}, setError }) => {
+const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError, dispatchData }) => {
     api = api || model.api;
-    setIsLoading(true);
     const searchParams = new URLSearchParams();
     const url = `${api}/${id === undefined || id === null ? '-' : id}`;
     const lookupsToFetch = [];
@@ -238,73 +217,77 @@ const getRecord = async ({ api, id, setIsLoading, setActiveRecord, model, parent
     if (where && Object.keys(where)?.length) {
         searchParams.set("where", JSON.stringify(where));
     }
+    const requestData = {
+        url: `${url}?${searchParams.toString()}`,
+        additionalParams: { method: 'GET' },
+        dispatchData,
+        jsonPayload: true
+    };
+
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { id, parentFilters, model, where, api, action: 'load', dataParsers: DATA_PARSERS });
+    }
     try {
-        const response = await transport({
-            url: `${url}?${searchParams.toString()}`,
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            const { data: record, lookups } = response.data;
-            let title = record[model.linkColumn];
-            const columnConfig = model.columns.find(a => a.field === model.linkColumn);
-            if (columnConfig && columnConfig.lookup) {
-                if (lookups && lookups[columnConfig.lookup] && lookups[columnConfig.lookup]?.length) {
-                    const lookupValue = lookups[columnConfig.lookup].find(a => a.value === title);
-                    if (lookupValue) {
-                        title = lookupValue.label;
-                    }
+        const response = await request(requestData);
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('Load failed', errorMessage);
+            return;
+        }
+        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('load')) {
+            const resData = await model.parseResponsePayload({ responseData: response, model, action: 'load' });
+            setActiveRecord(resData);
+            return;
+        }
+        const { data: record, lookups } = response || {};
+        let title = record[model.linkColumn];
+        const columnConfig = model.columns.find(a => a.field === model.linkColumn);
+        if (columnConfig && columnConfig.lookup) {
+            if (lookups && lookups[columnConfig.lookup] && lookups[columnConfig.lookup]?.length) {
+                const lookupValue = lookups[columnConfig.lookup].find(a => a.value === title);
+                if (lookupValue) {
+                    title = lookupValue.label;
                 }
             }
-            const defaultValues = { ...model.defaultValues };
-            setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups });
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Could not load record', response.body.toString());
         }
+        const defaultValues = { ...model.defaultValues };
+        setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups });
     } catch (error) {
-        if (error.response && handleCommonErrors(error.response, setError)) {
-            setError('Could not load record', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
+        setError('Could not load record', error.message || error.toString());
     }
 };
 
-const deleteRecord = async function ({ id, api, setIsLoading, setError }) {
+const deleteRecord = async function ({ id, api, setError, model }) {
     const result = { success: false, error: '' };
     if (!id) {
         setError('Deleted failed. No active record.');
         return;
     }
-    setIsLoading(true);
+    const requestData = {
+        url: `${api}/${id}`,
+        additionalParams: { method: 'DELETE' }
+    };
+
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { id, model, api, action: 'delete', dataParsers: DATA_PARSERS });
+    }
     try {
-        const response = await transport({
-            url: `${api}/${id}`,
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            if (response.data && !response.data.success) {
-                result.success = false;
-                setError('Delete failed', response.data.message);
-                return false;
-            }
-            result.success = true;
-            return true;
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Delete failed', response.body);
+        const response = await request(requestData);
+        if (response?.error || response?.success === false) {
+            result.success = false;
+            const errorMessage = getErrorMessage(response);
+            setError('Delete failed', errorMessage);
+            return false;
         }
+        result.success = true;
+        return true;
     } catch (error) {
-        if (error.response && !handleCommonErrors(error.response, setError)) {
-            setError('Could not delete record', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
+        setError('Could not delete record', error.message || error.toString());
     }
     return result;
 };
 
-const saveRecord = async function ({ id, api, values, setIsLoading, setError }) {
+const saveRecord = async function ({ id, api, values, setError, model, dispatchData }) {
     let url, method;
 
     if (id !== 0) {
@@ -315,62 +298,67 @@ const saveRecord = async function ({ id, api, values, setIsLoading, setError }) 
         method = 'POST';
     }
 
+    const requestData = {
+        url,
+        additionalParams: { method },
+        params: values,
+        additionalHeaders: {
+            'Content-Type': 'application/json'
+        },
+        jsonPayload: true,
+        dispatchData
+    };
+
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { id, model, values, api, action: 'save', dataParsers: DATA_PARSERS });
+    }
 
     try {
-        setIsLoading(true);
-        const response = await transport({
-            url,
-            method,
-            data: values,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            const data = response.data;
-            if (data.success) {
-                return data;
-            }
-            setError('Save failed', data.err || data.message);
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Save failed', response.body);
+        const response = await request(requestData);
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('Save failed', errorMessage);
+            return false;
         }
+        return response;
     } catch (error) {
-        if (error.response && !handleCommonErrors(error.response, setError)) {
-            setError('Could not save record', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
+        setError('Could not save record', error.message || error.toString());
     }
 
     return false;
 };
 
-const getLookups = async ({ api, setIsLoading, setActiveRecord, model, setError, lookups, scopeId }) => {
+const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, reqData }) => {
     api = api || model.api;
-    setIsLoading(true);
     const searchParams = new URLSearchParams();
     const url = `${api}/lookups`;
     searchParams.set("lookups", lookups);
     searchParams.set("scopeId", scopeId);
+    const requestData = {
+        url: `${url}?${searchParams.toString()}`,
+        additionalParams: { method: 'GET' },
+        jsonPayload: true,
+        ...reqData
+    };
     try {
-        const response = await transport({
-            url: `${url}?${searchParams.toString()}`,
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (response.status === HTTP_STATUS_CODES.OK) {
-            setActiveRecord(response.data);
-        } else if (!handleCommonErrors(response, setError)) {
-            setError('Could not load lookups', response.statusText);
+        if(typeof model.createRequestPayload === 'function') {
+            await model.createRequestPayload(requestData, { model, lookups, scopeId, dataParsers: DATA_PARSERS, action: 'lookups', api });
         }
+        const response = await request(requestData);
+        if (response?.error || response?.success === false) {
+            const errorMessage = getErrorMessage(response);
+            setError('Could not load lookups', errorMessage);
+            return false;
+        }
+
+        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('lookups')) {
+            const resData = await model.parseResponsePayload({ responseData: response, model, action: 'lookups' });
+            setActiveRecord(resData);
+            return;
+        }
+        setActiveRecord(response);
     } catch (error) {
-        if (error.response && !handleCommonErrors(error.response, setError)) {
-            setError('Could not load lookups', error.message || error.toString());
-        }
-    } finally {
-        setIsLoading(false);
+        setError('Could not load lookups', error.message || error.toString());
     }
 };
 export {

@@ -74,7 +74,7 @@ const transport = async (config) => {
  * Default data parsers for different response types
  * Use these to normalize API responses to a consistent type
  */
-const DATA_PARSERS = {
+const DATA_PARSERS = Object.freeze({
     /**
      * Parse JSON string or return object as-is
      * Automatically handles string JSON responses
@@ -93,7 +93,7 @@ const DATA_PARSERS = {
      * Return data as-is without parsing
      */
     raw: (data) => data
-};
+});
 
 /**
  * Enhanced HTTP request handler with automatic data parsing
@@ -171,7 +171,7 @@ const request = async ({
         ...additionalParams
     };
 
-    if (params) {
+    if (params && Object.keys(params).length > 0) {
         reqParams.data = jsonPayload ? params : getFormData(params);
     }
 
@@ -181,7 +181,7 @@ const request = async ({
         let data = response.data;
 
         if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: 'UPDATE_LOADER_STATE', payload: false });
+            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
         }
 
         // Handle HTTP errors here
@@ -189,6 +189,11 @@ const request = async ({
             history('/login');
             return;
         }
+
+        if (response.status === HTTP_STATUS_CODES.FORBIDDEN) {
+            return { error: true, message: data.message || 'Access Denied!' };
+        }
+
         if (response.status !== HTTP_STATUS_CODES.OK) {
             // You can return the error object or handle as needed
             return { error: true, message: data.message || 'An error occurred' };
@@ -214,7 +219,7 @@ const request = async ({
     } catch (ex) {
         pendingRequests--;
         if (pendingRequests === 0 && !disableLoader) {
-            dispatchData({ type: 'UPDATE_LOADER_STATE', payload: false });
+            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
         }
         // Only network errors will be caught here
         return { error: true, message: ex.message || 'Network error' };

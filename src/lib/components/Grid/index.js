@@ -1,4 +1,3 @@
-import Button from '@mui/material/Button';
 import {
     DataGridPremium,
     getGridDateOperators,
@@ -6,14 +5,16 @@ import {
     getGridStringOperators,
     getGridBooleanOperators,
     GridActionsCellItem,
-    useGridApiRef
+    useGridApiRef,
+    useGridApiContext,
+    useGridSelector,
+    gridRowSelectionStateSelector
 } from '@mui/x-data-grid-premium';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CopyIcon from '@mui/icons-material/FileCopy';
 import ArticleIcon from '@mui/icons-material/Article';
 import EditIcon from '@mui/icons-material/Edit';
-import React, { useMemo, useEffect, memo, useRef, useState, useCallback } from 'react';
-import Typography from '@mui/material/Typography';
+import { useMemo, useEffect, memo, useRef, useState, useCallback } from 'react';
 import { useSnackbar } from '../SnackBar/index';
 import { DialogComponent } from '../Dialog/index';
 import { getList, getRecord, deleteRecord, saveRecord } from './crud-helper';
@@ -26,7 +27,6 @@ import PageTitle from '../PageTitle';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
 import LocalizedDatePicker from './LocalizedDatePicker';
 import actionsStateProvider from '../useRouter/actions';
-import GridPreferences from './GridPreference';
 import CustomDropdownMenu from './CustomDropdownMenu';
 import CustomToolbar from './CustomToolbar';
 import { getPermissions } from '../utils';
@@ -48,8 +48,14 @@ const actionTypes = {
     Download: "Download"
 };
 const iconMapper = {
-    'article': <ArticleIcon />
+    'article': <ArticleIcon />,
+    'edit': <EditIcon />,
+    'copy': <CopyIcon />,
+    'delete': <DeleteIcon />,
+    'history': <HistoryIcon />,
+    'download': <FileDownloadIcon />,
 };
+
 const constants = {
     gridFilterModel: { items: [], logicOperator: 'and', quickFilterValues: Array(0), quickFilterLogicOperator: 'and' },
     permissions: { edit: true, add: true, export: true, delete: true, showColumnsOrder: true, filter: true },
@@ -68,7 +74,8 @@ const constants = {
     dateTime: 'dateTime',
     actions: 'actions',
     function: 'function',
-    pageSizeOptions: [5, 10, 20, 50, 100]
+    pageSizeOptions: [5, 10, 20, 50, 100],
+    defaultActionWidth: 50
 };
 const auditColumnMappings = [
     { key: 'addCreatedOnColumn', field: 'CreatedOn', type: 'dateTime', header: 'Created On' },
@@ -91,9 +98,12 @@ const DeleteContentText = styled('span')({
     textOverflow: 'ellipsis'
 });
 
-const CustomCheckBox = ({ params, selectedSet, handleSelectRow, idProperty }) => {
+const CustomCheckBox = ({ params, handleSelectRow, idProperty }) => {
+    const apiRef = useGridApiContext();
     const rowId = params.row[idProperty];
-    const isChecked = selectedSet.has(rowId);
+    // useGridSelector subscribes to state changes and triggers re-render when selection updates
+    const selectionModel = useGridSelector(apiRef, gridRowSelectionStateSelector);
+    const isChecked = selectionModel?.ids?.has(rowId) ?? false;
 
     const handleCheckboxClick = (event) => {
         event.stopPropagation();
@@ -105,6 +115,7 @@ const CustomCheckBox = ({ params, selectedSet, handleSelectRow, idProperty }) =>
             onClick={handleCheckboxClick}
             checked={isChecked}
             color="primary"
+            value={rowId}
             inputProps={{ 'aria-label': 'checkbox' }}
         />
     );
@@ -148,11 +159,14 @@ const GridBase = memo(({
     ...props
 }) => {
     const [paginationModel, setPaginationModel] = useState({ pageSize: defaultPageSize, page: 0 });
-    const [data, setData] = useState({ recordCount: 0, records: [], lookups: {} });
-    const [isLoading, setIsLoading] = useState(true);
+    const [data, setData] = useState({ recordCount: 0, records: null, lookups: {} });
     const forAssignment = !!onAssignChange;
     const rowsSelected = showRowsSelected;
-    const [selection, setSelection] = useState([]);
+    // MUI v8: rowSelectionModel uses object format with type ('include'/'exclude') and ids (Set)
+    const [rowSelectionModel, setRowSelectionModel] = useState({
+        type: 'include',
+        ids: new Set()
+    });
     const [isDeleting, setIsDeleting] = useState(false);
     const [record, setRecord] = useState(null);
     const visibilityModel = { CreatedOn: false, CreatedByUser: false, ...model.columnVisibilityModel };
@@ -160,7 +174,7 @@ const GridBase = memo(({
     const snackbar = useSnackbar();
     const paginationMode = model.paginationMode === constants.client ? constants.client : constants.server;
     const { t: translate, i18n } = useTranslation();
-    const tOpts = { t: translate, i18n };
+    const tOpts = useMemo(() => ({ t: translate, i18n }), [translate, i18n]);
     const [errorMessage, setErrorMessage] = useState('');
     const [sortModel, setSortModel] = useState(convertDefaultSort(defaultSort || model.defaultSort, constants, sortRegex));
     const initialFilterModel = { items: [], logicOperator: 'and', quickFilterValues: Array(0), quickFilterLogicOperator: 'and' };
@@ -175,7 +189,7 @@ const GridBase = memo(({
     const { id: idWithOptions } = useParams() || getParams;
     const id = idWithOptions?.split('-')[0];
     const apiRef = propsApiRef || useGridApiRef();
-    const { idProperty = "id", showHeaderFilters = true, disableRowSelectionOnClick = true, hideTopFilters = true, updatePageTitle = true, isElasticScreen = false, navigateBack = false, selectionApi = {} } = model;
+    const { idProperty = "id", showHeaderFilters = true, disableRowSelectionOnClick = true, hideTopFilters = true, updatePageTitle = true, isElasticScreen = false, navigateBack = false, selectionApi = {}, debounceTimeOut = 300 } = model;
     const isReadOnly = model.readOnly === true || readOnly;
     const isDoubleClicked = model.allowDoubleClick === false;
     const dataRef = useRef(data);
@@ -183,7 +197,7 @@ const GridBase = memo(({
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
     const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl } = useStateContext();
     const { timeZone } = stateData;
-    const effectivePermissions = { ...constants.permissions, ...model.permissions, ...permissions };
+    const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
     const userData = stateData.getUserData || {};
     const documentField = model.columns.find(ele => ele.type === 'fileUpload')?.field || "";
@@ -197,19 +211,22 @@ const GridBase = memo(({
     const [currentPreference, setCurrentPreference] = useState(null);
     const [preferencesReady, setPreferencesReady] = useState(!preferenceKey);
     const backendApi = api || model.api;
+    // State for single expanded detail panel row
+    const [rowPanelId, setRowPanelId] = useState(null);
+    const detailPanelExpandedRowIds = useMemo(() => new Set(rowPanelId ? [rowPanelId] : []), [rowPanelId]);
+    const enableRowDetailPanel = typeof model.getDetailPanelContent === 'function';
 
     useEffect(() => {
         if (!apiRef.current) return;
-        
         // Store preferenceKey on apiRef for GridPreferences to access
         apiRef.current.prefKey = preferenceKey;
     }, [apiRef, preferenceKey]);
 
     // Callback when preferences are loaded or changed
-    const onPreferenceChange = (preferenceName) => {
+    const onPreferenceChange = useCallback((preferenceName) => {
         setCurrentPreference(preferenceName);
         setPreferencesReady(true);
-    };
+    }, []);
 
     const baseDataFromParams = searchParams.has('baseData') && searchParams.get('baseData');
     const baseSaveData = useMemo(() => {
@@ -225,21 +242,19 @@ const GridBase = memo(({
         }
         return {};
     }, [baseDataFromParams]);
-    const [selectedSet, setSelectedSet] = useState(new Set());
 
     const handleSelectRow = useCallback(({ row }) => {
         const rowId = row[idProperty];
-        setSelectedSet(prevSet => {
-            const newSet = new Set(prevSet);
-            if (newSet.has(rowId)) {
-                newSet.delete(rowId);
+        setRowSelectionModel(prevModel => {
+            const newIds = new Set(prevModel?.ids || []);
+            if (newIds.has(rowId)) {
+                newIds.delete(rowId);
             } else {
-                newSet.add(rowId);
+                newIds.add(rowId);
             }
-            setSelection(Array.from(newSet));
-            return newSet;
+            return { type: 'include', ids: newIds };
         });
-    }, [idProperty, setSelectedSet, setSelection]);
+    }, [idProperty]);
 
     const gridColumnTypes = {
         "radio": {
@@ -272,7 +287,7 @@ const GridBase = memo(({
             "valueOptions": "lookup"
         },
         "selection": {
-            renderCell: (params) => <CustomCheckBox params={params} selectedSet={selectedSet} handleSelectRow={handleSelectRow} idProperty={idProperty} />
+            renderCell: (params) => <CustomCheckBox params={params} handleSelectRow={handleSelectRow} idProperty={idProperty} />
         }
     };
 
@@ -314,7 +329,91 @@ const GridBase = memo(({
             }
         });
     }, []);
+
+    const createAction = useCallback(
+        ({ key, title, icon, color = "primary", disabled, otherProps }) => (
+            <GridActionsCellItem
+                key={key}
+                icon={<Tooltip title={title}>{iconMapper[icon] || icon}</Tooltip>}
+                data-action={key}
+                label={title}
+                color={color}
+                disabled={disabled}
+                {...otherProps}
+            />
+        ),
+        []
+    );
     const { customActions = [] } = model;
+    const actionConfig = useMemo(() => {
+        const actions = [];
+
+        if (!forAssignment && !isReadOnly) {
+            actions.push(
+                {
+                    key: actionTypes.Edit,
+                    title: "Edit",
+                    icon: 'edit',
+                    show: !!canEdit,
+                    disabled: row => row.canEdit === false
+                },
+                {
+                    key: actionTypes.Copy,
+                    title: "Copy",
+                    icon: 'copy',
+                    show: !!effectivePermissions.copy,
+                },
+                {
+                    key: actionTypes.Delete,
+                    title: "Delete",
+                    icon: 'delete',
+                    color: "error",
+                    show: !!canDelete,
+                },
+                {
+                    key: actionTypes.History,
+                    title: "History",
+                    icon: 'history',
+                    show: !!showHistory,
+                },
+                ...customActions
+            );
+        }
+
+        actions.push({
+            key: actionTypes.Download,
+            title: "Download document",
+            icon: 'download',
+            show: documentField.length > 0,
+        });
+
+        return actions.filter(({ show }) => show !== false);
+    }, [
+        forAssignment,
+        isReadOnly,
+        canEdit,
+        canDelete,
+        showHistory,
+        effectivePermissions.copy,
+        documentField.length,
+        customActions
+    ]);
+
+    const getActions = useCallback(
+        ({ row }) =>
+            actionConfig
+                .map(({ key, title, icon, color, disabled, show, action, ...otherProps }) =>
+                    createAction({
+                        key,
+                        title: title || action, // Fallback to 'action' for backward compatibility if 'title' is not provided
+                        icon,
+                        color,
+                        disabled: disabled?.(row),
+                        otherProps
+                    })
+                ),
+        [actionConfig, createAction]
+    );
     const { gridColumns, pinnedColumns, lookupMap } = useMemo(() => {
         let baseColumnList = columns || model.gridColumns || model.columns;
         if (dynamicColumns) {
@@ -323,6 +422,7 @@ const GridBase = memo(({
         const pinnedColumns = { left: [GRID_CHECKBOX_SELECTION_COL_DEF.field], right: [] };
         const finalColumns = [];
         const lookupMap = {};
+        const updatedColumnType = { ...gridColumnTypes, ...model.gridColumnTypes };
         for (const column of baseColumnList) {
             if (column.gridLabel === null || (parent && column.lookup === parent) || (column.type === constants.oneToMany && column.countInList === false)) continue;
             const overrides = {};
@@ -330,8 +430,9 @@ const GridBase = memo(({
                 overrides.type = 'number';
                 overrides.field = column.field.replace(/s$/, 'Count');
             }
-            if (gridColumnTypes[column.type]) {
-                Object.assign(overrides, gridColumnTypes[column.type]);
+ 
+            if (updatedColumnType[column.type]) {
+                Object.assign(overrides, updatedColumnType[column.type]);
             }
             // Common filter operator pattern
             if (overrides.valueOptions === constants.lookup || column.type === constants.boolean) {
@@ -376,7 +477,7 @@ const GridBase = memo(({
                 overrides.cellClassName = 'mui-grid-linkColumn';
             }
             const headerName = tTranslate(column.gridLabel || column.label, tOpts);
-            finalColumns.push({ ...column, ...overrides,  headerName, description: headerName });
+            finalColumns.push({ ...column, ...overrides, headerName, description: headerName });
             if (column.pinned) {
                 pinnedColumns[column.pinned === constants.right ? constants.right : constants.left].push(column.field);
             }
@@ -399,66 +500,18 @@ const GridBase = memo(({
                 }
             });
         }
-        const actions = [];
-        if (!forAssignment && !isReadOnly) {
-            if (canEdit) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="Edit"><EditIcon /></Tooltip>} data-action={actionTypes.Edit} label="Edit" color="primary" />);
-            }
-            if (effectivePermissions.copy) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="Copy"><CopyIcon /> </Tooltip>} data-action={actionTypes.Copy} label="Copy" color="primary" />);
-            }
-            if (canDelete) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="Delete"><DeleteIcon /> </Tooltip>} data-action={actionTypes.Delete} label="Delete" color="error" />);
-            }
-            if (showHistory) {
-                actions.push(<GridActionsCellItem icon={<Tooltip title="History"><HistoryIcon /> </Tooltip>} data-action={actionTypes.History} label="History" color="primary" />);
-            }
-            if (customActions.length) {
-                customActions.forEach(({ icon, action, color }) => {
-                    actions.push(
-                        <GridActionsCellItem
-                            icon={<Tooltip title={action}>{iconMapper[icon] || <CopyIcon />}</Tooltip>}
-                            data-action={action}
-                            label={action}
-                            color={color || "primary"}
-                        />
-                    );
-                });
-            }
-        }
-        if (documentField.length) {
-            actions.push(<GridActionsCellItem icon={<Tooltip title="Download document"><FileDownloadIcon /> </Tooltip>} data-action={actionTypes.Download} label="Download document" color="primary" />);
-        }
-        if (actions.length) {
+        if (actionConfig.length) {
             finalColumns.push({
                 field: 'actions',
                 type: 'actions',
-                label: '',
-                width: actions.length * 50,
+                width: (model.actionWidth ?? constants.defaultActionWidth) * actionConfig.length,
                 hidable: false,
-                getActions: (params) => {
-                    const rowActions = [...actions];
-                    if (canEdit && !isReadOnly) {
-                        const isDisabled = params.row.canEdit === false;
-                        rowActions[0] = (
-                            <GridActionsCellItem
-                                icon={
-                                    <Tooltip title="Edit">
-                                        <EditIcon />
-                                    </Tooltip>
-                                }
-                                data-action={actionTypes.Edit}
-                                label="Edit"
-                                color="primary"
-                                disabled={isDisabled}
-                            />
-                        );
-                    }
-                    return rowActions;
-                }
+                getActions,
+                headerName: tTranslate('Actions', tOpts),
             });
+
+            pinnedColumns.right.push('actions');
         }
-        pinnedColumns.right.push('actions');
         return { gridColumns: finalColumns, pinnedColumns, lookupMap };
     }, [columns, model, parent, permissions, forAssignment, dynamicColumns, translate]);
 
@@ -467,7 +520,6 @@ const GridBase = memo(({
     useEffect(() => {
         // Only run once on initial mount
         if (hasInitializedRef.current) return;
-        
         const toolbarFilterColumns = gridColumns?.filter(col => col.toolbarFilter?.defaultFilterValue !== undefined) || [];
         if (toolbarFilterColumns.length === 0) return;
 
@@ -491,7 +543,6 @@ const GridBase = memo(({
             ...prev,
             items: [...prev.items, ...toolbarFilters]
         }));
-        
         hasInitializedRef.current = true;
     }, [gridColumns]);
 
@@ -544,7 +595,6 @@ const GridBase = memo(({
         return getList({
             ...listParams,
             setError: snackbar.showError,
-            setIsLoading,
             setData,
             dispatchData,
             showFullScreenLoader,
@@ -554,7 +604,7 @@ const GridBase = memo(({
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
         if (setActiveRecord) {
-            getRecord({ id, api: backendApi, setIsLoading, setActiveRecord, model, parentFilters, where });
+            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError });
             return;
         }
         let path = pathname;
@@ -607,8 +657,15 @@ const GridBase = memo(({
                 return;
             }
             switch (action) {
-                case actionTypes.Edit:
-                    return openForm({ id: record[idProperty], record });
+                case actionTypes.Edit: {
+                    if (model.getDetailPanelContent) {
+                        const rowId = record[idProperty];
+                        setRowPanelId(prevId => prevId === rowId ? null : rowId);
+                        return;
+                    } else {
+                        return openForm({ id: record[idProperty], record });
+                    }
+                }
                 case actionTypes.Copy:
                     return openForm({ id: record[idProperty], mode: 'copy' });
                 case actionTypes.Delete:
@@ -645,9 +702,9 @@ const GridBase = memo(({
         navigate(historyObject);
     }, [isReadOnly, onCellClick, lookupMap, model, idProperty, documentField, navigate, toLink, customActions, tableName, searchParamKey, searchParams, gridTitle, getApiEndpoint, handleDownload, openForm]);
 
-    const handleDelete = async function () {
-        const baseUrl =  buildUrl(model.controllerType, backendApi);
-        const result = await deleteRecord({ id: record.id, api: baseUrl, setIsLoading, setError: snackbar.showError, setErrorMessage });
+    const handleDelete = useCallback(async () => {
+        const baseUrl = buildUrl(model.controllerType, backendApi);
+        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
         if (result === true) {
             setIsDeleting(false);
             snackbar.showMessage('Record Deleted Successfully.');
@@ -655,20 +712,21 @@ const GridBase = memo(({
         } else {
             setIsDeleting(false);
         }
-    };
-    const clearError = () => {
+    }, [model.controllerType, backendApi, record?.id, snackbar, setErrorMessage, model, fetchData]);
+
+    const clearError = useCallback(() => {
         setErrorMessage(null);
         setIsDeleting(false);
-    };
+    }, []);
 
-    const processRowUpdate = (updatedRow) => {
+    const processRowUpdate = useCallback((updatedRow) => {
         if (typeof props.processRowUpdate === "function") {
             props.processRowUpdate(updatedRow, data);
         }
         return updatedRow;
-    };
+    }, [props.processRowUpdate, data]);
 
-    const onCellDoubleClick = (event) => {
+    const onCellDoubleClick = useCallback((event) => {
         if (event.row.canEdit === false) {
             return;
         }
@@ -692,16 +750,16 @@ const GridBase = memo(({
         if (typeof onRowDoubleClick === constants.function) {
             onRowDoubleClick(event);
         }
-    };
+    }, [onCellDoubleClickOverride, isReadOnly, isDoubleClicked, disableCellRedirect, openForm, idProperty, model.rowRedirectLink, model.addRecordToState, navigate, onRowDoubleClick, template]);
 
-    const handleAddRecords = async () => {
-        if (selectedSet.size < 1) {
+    const handleAddRecords = useCallback(async () => {
+        if (rowSelectionModel.ids.size < 1) {
             snackbar.showError("Please select at least one record to proceed");
             return;
         }
 
-        const selectedIds = Array.from(selectedSet);
-        const recordMap = new Map(data.records.map(record => [record[idProperty], record]));
+        const selectedIds = Array.from(rowSelectionModel.ids);
+        const recordMap = new Map((data.records || []).map(record => [record[idProperty], record]));
         let selectedRecords = selectedIds.map(id => ({ ...baseSaveData, ...recordMap.get(id) }));
 
         // If selectionUpdateKeys is defined, filter each record to only those keys
@@ -711,14 +769,15 @@ const GridBase = memo(({
             );
         }
 
-        const baseUrl =  buildUrl(model.controllerType, backendApi);
+        const baseUrl =  buildUrl(model.controllerType, selectionApi || backendApi);
         try {
             const result = await saveRecord({
                 id: 0,
-                api: `${baseUrl}${selectionApi || api}/updateMany`,
+                api: `${baseUrl}/updateMany`,
                 values: { items: selectedRecords },
-                setIsLoading,
-                setError: snackbar.showError
+                setError: snackbar.showError,
+                model,
+                dispatchData
             });
 
             if (result) {
@@ -729,22 +788,23 @@ const GridBase = memo(({
         } catch (err) {
             snackbar.showError(err.message || "An error occurred, please try again later.");
         } finally {
-            setSelectedSet(new Set());
-            setIsLoading(false);
+            setRowSelectionModel({
+                type: 'include',
+                ids: new Set()
+            });
             setShowAddConfirmation(false);
         }
-    };
+    }, [rowSelectionModel.ids, snackbar, data.records, idProperty, baseSaveData, model.selectionUpdateKeys, model.controllerType, selectionApi, backendApi, model, dispatchData, fetchData]);
 
     const onAdd = useCallback(() => {
         if (selectionApi.length > 0) {
-            if (selectedSet.size) {
+            if (rowSelectionModel.ids.size > 0) {
                 setShowAddConfirmation(true);
                 return;
             }
             snackbar.showError(
                 "Please select at least one record to proceed"
             );
-            setIsLoading(false);
             return;
         }
         if (typeof onAddOverride === constants.function) {
@@ -752,42 +812,46 @@ const GridBase = memo(({
         } else {
             openForm({ id: 0 });
         }
-    }, [selectionApi, selectedSet.size, snackbar, onAddOverride, openForm]);
+    }, [selectionApi, snackbar, onAddOverride, openForm, rowSelectionModel.ids.size]);
 
     const clearFilters = useCallback(() => {
         if (!filterModel?.items?.length) return;
         setFilterModel({ ...constants.gridFilterModel });
     }, [filterModel]);
-    const updateAssignment = ({ unassign, assign }) => {
+    const updateAssignment = useCallback(({ unassign, assign }) => {
         const assignedValues = Array.isArray(selected) ? selected : (selected.length ? selected.split(',') : []);
         const finalValues = unassign ? assignedValues.filter(id => !unassign.includes(parseInt(id))) : [...assignedValues, ...assign];
         onAssignChange(typeof selected === constants.string ? finalValues.join(',') : finalValues);
-    };
+    }, [selected, onAssignChange]);
 
-    const onAssign = () => {
-        updateAssignment({ assign: selection });
-    };
+    const onAssign = useCallback(() => {
+        updateAssignment({ assign: Array.from(rowSelectionModel.ids) });
+    }, [updateAssignment, rowSelectionModel.ids]);
 
-    const onUnassign = () => {
-        updateAssignment({ unassign: selection });
-    };
+    const onUnassign = useCallback(() => {
+        updateAssignment({ unassign: Array.from(rowSelectionModel.ids) });
+    }, [updateAssignment, rowSelectionModel.ids]);
 
     const selectAll = useCallback(() => {
-        if (selectedSet.size === data.records.length) {
+        const records = data.records || [];
+        const currentCount = rowSelectionModel.ids.size;
+        if (currentCount === records.length) {
             // If all records are selected, deselect all
-            setSelectedSet(new Set());
-            setSelection([]);
+            setRowSelectionModel({
+                type: 'include',
+                ids: new Set()
+            });
         } else {
             // Select all records
-            const allIds = data.records.map(record => record[idProperty]);
-            setSelectedSet(new Set(allIds));
-            setSelection(allIds);
+            const allIds = records.map(record => record[idProperty]);
+            setRowSelectionModel({
+                type: 'include',
+                ids: new Set(allIds)
+            });
         }
-    }, [selectedSet.size, data.records, idProperty, setSelection, setSelectedSet]);
+    }, [rowSelectionModel, data.records, idProperty]);
 
-    const getGridRowId = (row) => {
-        return row[idProperty];
-    };
+    const getGridRowId = useCallback((row) => row[idProperty], [idProperty]);
     const handleExport = useCallback((e) => {
         if (data?.recordCount > recordCounts) {
             snackbar.showMessage('Cannot export more than 60k records, please apply filters or reduce your results using filters');
@@ -813,8 +877,9 @@ const GridBase = memo(({
             const col = lookup[field];
             columns[field] = { field, width: col.width, headerName: col.headerName || col.field, type: col.type, keepLocal: col.keepLocal === true, isParsable: col.isParsable, lookup: col.lookup };
         });
+        const action = (model?.formActions?.export || isPivotExport) ? (model?.formActions?.export || 'export') : undefined;
         fetchData(
-            isPivotExport ? 'export' : undefined,
+            action,
             undefined,
             e.target.dataset.contentType,
             columns,
@@ -840,12 +905,12 @@ const GridBase = memo(({
         };
     }, []);
 
-    const updateFilters = (e) => {
+    const updateFilters = useCallback((e) => {
         const { items } = e;
         const updatedItems = items.map(item => {
             const { field, operator, type, value } = item;
             const column = gridColumns.find(col => col.field === field) || {};
-            const isNumber = column.type === constants.number;
+            const isNumber = column.type === constants.Number;
 
             if (isNumber && value < 0) {
                 return { ...item, value: null };
@@ -864,9 +929,9 @@ const GridBase = memo(({
         });
         e.items = updatedItems;
         setFilterModel(e);
-    };
+    }, [gridColumns, constants.Number, emptyIsAnyOfOperatorFilters, isElasticScreen, setFilterModel]);
 
-    const updateSort = (e) => {
+    const updateSort = useCallback((e) => {
         const sort = e.map((ele) => {
             const field = gridColumns.filter(element => element.field === ele.field)[0] || {};
             const isKeywordField = isElasticScreen && field.isKeywordField;
@@ -877,11 +942,217 @@ const GridBase = memo(({
             return obj;
         });
         setSortModel(sort);
-    };
+    }, [gridColumns, isElasticScreen, setSortModel]);
+
     const pageTitle = title || model.gridTitle || model.title;
     const breadCrumbs = searchParamKey
         ? [{ text: searchParams.get(searchParamKey) || pageTitle }]
         : [{ text: pageTitle }];
+
+    const handleDetailPanelExpanded = useCallback((ids) => {
+        setRowPanelId(ids.size > 0 ? [...ids].pop() : null);
+    }, []);
+
+    const getDetailPanelContent = useCallback((params) => {
+        if (typeof model.getDetailPanelContent === 'function') {
+            return model.getDetailPanelContent({
+                ...params,
+                onRefresh: () => {
+                    // Close the expanded panel and refresh data
+                    setRowPanelId(null);
+                    fetchData();
+                }
+            });
+        }
+        return null;
+    }, [model.getDetailPanelContent, fetchData]);
+
+    const localeText =
+        useMemo(() => ({
+            filterValueTrue: tTranslate('Yes', tOpts),
+            filterValueFalse: tTranslate('No', tOpts),
+            noRowsLabel: tTranslate('No data', tOpts),
+            footerTotalRows: `${tTranslate('Total rows', tOpts)}:`,
+            MuiTablePagination: {
+                labelRowsPerPage: tTranslate('Rows per page', tOpts),
+                labelDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
+            },
+            toolbarQuickFilterPlaceholder: tTranslate(model?.searchPlaceholder || 'Search...', tOpts),
+            toolbarColumns: tTranslate('Columns', tOpts),
+            toolbarFilters: tTranslate('Filters', tOpts),
+            toolbarExport: tTranslate('Export', tOpts),
+            filterPanelAddFilter: tTranslate('Add filter', tOpts),
+            filterPanelRemoveAll: tTranslate('Remove all', tOpts),
+            filterPanelDeleteIconLabel: tTranslate('Delete', tOpts),
+            filterPanelColumns: tTranslate('Columns', tOpts),
+            filterPanelOperator: tTranslate('Operator', tOpts),
+            filterPanelValue: tTranslate('Value', tOpts),
+            filterPanelInputLabel: tTranslate('Value', tOpts),
+            filterPanelInputPlaceholder: tTranslate('Filter value', tOpts),
+            columnMenuLabel: tTranslate('Menu', tOpts),
+            columnMenuShowColumns: tTranslate('Show columns', tOpts),
+            columnMenuManageColumns: tTranslate('Manage columns', tOpts),
+            columnMenuFilter: tTranslate('Filter', tOpts),
+            columnMenuHideColumn: tTranslate('Hide column', tOpts),
+            columnMenuManagePivot: tTranslate('Manage pivot', tOpts),
+            toolbarColumnsLabel: tTranslate('Select columns', tOpts),
+            toolbarExportLabel: tTranslate('Export', tOpts),
+            pivotDragToColumns: tTranslate('Drag here to pivot by', tOpts),
+            pivotDragToRows: tTranslate('Drag here to group by', tOpts),
+            pivotDragToValues: tTranslate('Drag here to create values', tOpts),
+            pivotColumns: tTranslate('Pivot columns', tOpts),
+            pivotRows: tTranslate('Row groups', tOpts),
+            pivotValues: tTranslate('Values', tOpts),
+            pivotMenuRows: tTranslate('Rows', tOpts),
+            pivotMenuColumns: tTranslate('Columns', tOpts),
+            pivotMenuValues: tTranslate('Values', tOpts),
+            pivotToggleLabel: tTranslate('Pivot', tOpts),
+            pivotSearchControlPlaceholder: tTranslate('Search pivot columns', tOpts),
+            columnMenuUnsort: tTranslate('Unsort', tOpts),
+            columnMenuSortAsc: tTranslate('Sort by ascending', tOpts),
+            columnMenuSortDesc: tTranslate('Sort by descending', tOpts),
+            columnMenuUnpin: tTranslate('Unpin', tOpts),
+            columnsPanelTextFieldLabel: tTranslate('Find column', tOpts),
+            columnsPanelTextFieldPlaceholder: tTranslate('Column title', tOpts),
+            columnsPanelHideAllButton: tTranslate('Hide all', tOpts),
+            columnsPanelShowAllButton: tTranslate('Show all', tOpts),
+            pinToLeft: tTranslate('Pin to left', tOpts),
+            pinToRight: tTranslate('Pin to right', tOpts),
+            unpin: tTranslate('Unpin', tOpts),
+            filterValueAny: tTranslate('any', tOpts),
+            filterOperatorIs: tTranslate('is', tOpts),
+            filterOperatorNot: tTranslate('is not', tOpts),
+            filterOperatorIsAnyOf: tTranslate('is any of', tOpts),
+            filterOperatorContains: tTranslate('contains', tOpts),
+            filterOperatorDoesNotContain: tTranslate('does not contain', tOpts),
+            filterOperatorEquals: tTranslate('equals', tOpts),
+            filterOperatorDoesNotEqual: tTranslate('does not equal', tOpts),
+            filterOperatorStartsWith: tTranslate('starts with', tOpts),
+            filterOperatorEndsWith: tTranslate('ends with', tOpts),
+            filterOperatorIsEmpty: tTranslate('is empty', tOpts),
+            filterOperatorIsNotEmpty: tTranslate('is not empty', tOpts),
+            filterOperatorAfter: tTranslate('is after', tOpts),
+            filterOperatorOnOrAfter: tTranslate('is on or after', tOpts),
+            filterOperatorBefore: tTranslate('is before', tOpts),
+            filterOperatorOnOrBefore: tTranslate('is on or before', tOpts),
+            toolbarFiltersTooltipHide: tTranslate('Hide filters', tOpts),
+            toolbarFiltersTooltipShow: tTranslate('Show filters', tOpts),
+
+            //filter textfield labels
+            headerFilterOperatorContains: tTranslate('contains', tOpts),
+            headerFilterOperatorEquals: tTranslate('equals', tOpts),
+            headerFilterOperatorStartsWith: tTranslate('starts with', tOpts),
+            headerFilterOperatorEndsWith: tTranslate('ends with', tOpts),
+            headerFilterOperatorIsEmpty: tTranslate('is empty', tOpts),
+            headerFilterOperatorIsNotEmpty: tTranslate('is not empty', tOpts),
+            headerFilterOperatorAfter: tTranslate('is after', tOpts),
+            headerFilterOperatorOnOrAfter: tTranslate('is on or after', tOpts),
+            headerFilterOperatorBefore: tTranslate('is before', tOpts),
+            headerFilterOperatorOnOrBefore: tTranslate('is on or before', tOpts),
+            headerFilterOperatorIs: tTranslate('is', tOpts),
+            'headerFilterOperator=': tTranslate('equals', tOpts),
+            'headerFilterOperator!=': tTranslate('does not equal', tOpts),
+            'headerFilterOperator>': tTranslate('greater than', tOpts),
+            'headerFilterOperator>=': tTranslate('greater than or equal to', tOpts),
+            'headerFilterOperator<': tTranslate('less than', tOpts),
+            'headerFilterOperator<=': tTranslate('less than or equal to', tOpts),
+            columnsManagementSearchTitle: tTranslate('Search', tOpts),
+            columnsManagementNoColumns: tTranslate('No columns', tOpts),
+            paginationRowsPerPage: tTranslate('Rows per page', tOpts),
+            paginationDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
+            toolbarQuickFilterLabel: tTranslate('Search', tOpts),
+            toolbarFiltersTooltipActive: (count) => {
+                const key = count === 1 ? 'active filter' : 'active filters';
+                return `${count} ${tTranslate(key, tOpts)}`;
+            },
+            columnHeaderSortIconLabel: tTranslate('Sort', tOpts),
+            filterPanelOperatorAnd: tTranslate('And', tOpts),
+            filterPanelOperatorOr: tTranslate('Or', tOpts),
+            noResultsOverlayLabel: tTranslate('No results found', tOpts),
+            columnHeaderFiltersTooltipActive: (count) => {
+                const key = count === 1 ? 'active filter' : 'active filters';
+                return `${count} ${tTranslate(key, tOpts)}`;
+            },
+            detailPanelToggle: tTranslate('Detail panel toggle', tOpts),
+            checkboxSelectionHeaderName: tTranslate('Checkbox selection', tOpts),
+            columnsManagementShowHideAllText: tTranslate('Show/Hide all', tOpts),
+            noColumnsOverlayLabel: tTranslate('No columns', tOpts),
+            noColumnsOverlayManageColumns: tTranslate('Manage columns', tOpts),
+            columnsManagementReset: tTranslate('Reset', tOpts),
+            groupColumn: (name) => `${tTranslate('Group by', tOpts)} ${name}`,
+            unGroupColumn: (name) => `${tTranslate('Ungroup', tOpts)} ${name}`,
+            footerRowSelected: (count) => {
+                const key = count === 1 ? 'item selected' : 'items selected';
+                return `${count.toLocaleString()} ${tTranslate(key, tOpts)}`;
+            }
+        }), [tTranslate, tOpts, model?.searchPlaceholder]);
+
+    const slotProps = useMemo(() => ({
+        headerFilterCell: { showClearIcon: true },
+        toolbar: {
+            model,
+            data,
+            currentPreference,
+            isReadOnly,
+            canAdd,
+            forAssignment,
+            showAddIcon,
+            onAdd,
+            selectionApi,
+            rowSelectionModel,
+            selectAll,
+            available,
+            onAssign,
+            assigned,
+            onUnassign,
+            effectivePermissions,
+            clearFilters,
+            handleExport,
+            preferenceKey,
+            apiRef,
+            gridColumns,
+            tTranslate,
+            tOpts,
+            idProperty,
+            filterModel,
+            setFilterModel,
+            onPreferenceChange,
+            toolbarItems
+        },
+        footer: {
+            pagination: true,
+            apiRef,
+            tTranslate,
+            tOpts
+        },
+        panel: {
+            placement: "bottom-end"
+        },
+        pagination: {
+            backIconButtonProps: {
+                title: tTranslate('Go to previous page', tOpts),
+                'aria-label': tTranslate('Go to previous page', tOpts),
+            },
+            nextIconButtonProps: {
+                title: tTranslate('Go to next page', tOpts),
+                'aria-label': tTranslate('Go to next page', tOpts),
+            },
+        }
+    }), [model, data, currentPreference, isReadOnly, canAdd, forAssignment, showAddIcon, onAdd, selectionApi, rowSelectionModel, selectAll, available, onAssign, assigned, onUnassign, effectivePermissions, clearFilters, handleExport, preferenceKey, apiRef, gridColumns, tTranslate, tOpts, idProperty, filterModel, setFilterModel, onPreferenceChange, toolbarItems]);
+
+    const initialState = useMemo(() => ({
+        columns: {
+            columnVisibilityModel: visibilityModel
+        },
+        pinnedColumns: pinnedColumns
+    }), [visibilityModel, pinnedColumns]);
+
+    const slots = useMemo(() => ({
+        headerFilterMenu: false,
+        toolbar: CustomToolbar,
+        footer: Footer
+    }), []);
+
     return (
         <>
             {showPageTitle !== false && <PageTitle navigate={navigate} showBreadcrumbs={!hideBreadcrumb && !hideBreadcrumbInGrid}
@@ -898,12 +1169,15 @@ const GridBase = memo(({
                             },
                             "& .MuiDataGrid-virtualScroller ": {
                                 zIndex: 2,
+                            },
+                            "& .MuiDataGrid-detailPanelToggleCell, & .MuiDataGrid-cell--withRenderer.MuiDataGrid-cell--detailPanelToggle": {
+                                display: 'none'
                             }
                         }}
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
-                        loading={isLoading}
+                        loading={!data.records || stateData.loaderOpen}
                         className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}
@@ -913,7 +1187,7 @@ const GridBase = memo(({
                         onPaginationModelChange={setPaginationModel}
                         pagination
                         rowCount={data.recordCount}
-                        rows={data.records}
+                        rows={data.records || []}
                         sortModel={sortModel}
                         paginationMode={paginationMode}
                         sortingMode={paginationMode}
@@ -922,57 +1196,13 @@ const GridBase = memo(({
                         keepNonExistentRowsSelected
                         onSortModelChange={updateSort}
                         onFilterModelChange={updateFilters}
-                        rowSelection={selection}
-                        onRowSelectionModelChange={setSelection}
+                        rowSelectionModel={rowSelectionModel}
+                        onRowSelectionModelChange={setRowSelectionModel}
                         filterModel={filterModel}
                         getRowId={getGridRowId}
                         onRowClick={onRowClick}
-                        slots={{
-                            headerFilterMenu: false,
-                            toolbar: CustomToolbar,
-                            footer: Footer
-                        }}
-                        slotProps={{
-                            toolbar: {
-                                model,
-                                data,
-                                currentPreference,
-                                isReadOnly,
-                                canAdd,
-                                forAssignment,
-                                showAddIcon,
-                                onAdd,
-                                selectionApi,
-                                selectedSet,
-                                selectAll,
-                                available,
-                                onAssign,
-                                assigned,
-                                onUnassign,
-                                effectivePermissions,
-                                clearFilters,
-                                handleExport,
-                                preferenceKey,
-                                apiRef,
-                                gridColumns,
-                                tTranslate,
-                                tOpts,
-                                idProperty,
-                                filterModel,
-                                setFilterModel,
-                                onPreferenceChange,
-                                toolbarItems
-                            },
-                            footer: {
-                                pagination: true,
-                                apiRef,
-                                tTranslate,
-                                tOpts
-                            },
-                            panel: {
-                                placement: "bottom-end"
-                            }
-                        }}
+                        slots={slots}
+                        slotProps={slotProps}
                         hideFooterSelectedRowCount={rowsSelected}
                         density="compact"
                         disableDensitySelector={true}
@@ -981,130 +1211,14 @@ const GridBase = memo(({
                         disableRowGrouping={true}
                         disableRowSelectionOnClick={disableRowSelectionOnClick}
                         disablePivoting={disablePivoting}
-                        initialState={{
-                            columns: {
-                                columnVisibilityModel: visibilityModel
-                            },
-                            pinnedColumns: pinnedColumns
-                        }}
-                        localeText={{
-                            filterValueTrue: tTranslate('Yes', tOpts),
-                            filterValueFalse: tTranslate('No', tOpts),
-                            noRowsLabel: tTranslate('No data', tOpts),
-                            footerTotalRows: `${tTranslate('Total rows', tOpts)}:`,
-                            MuiTablePagination: {
-                                labelRowsPerPage: tTranslate('Rows per page', tOpts),
-                                labelDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
-                            },
-                            toolbarQuickFilterPlaceholder: tTranslate(model?.searchPlaceholder || 'Search...', tOpts),
-                            toolbarColumns: tTranslate('Columns', tOpts),
-                            toolbarFilters: tTranslate('Filters', tOpts),
-                            toolbarExport: tTranslate('Export', tOpts),
-                            filterPanelAddFilter: tTranslate('Add filter', tOpts),
-                            filterPanelRemoveAll: tTranslate('Remove all', tOpts),
-                            filterPanelDeleteIconLabel: tTranslate('Delete', tOpts),
-                            filterPanelColumns: tTranslate('Columns', tOpts),
-                            filterPanelOperator: tTranslate('Operator', tOpts),
-                            filterPanelValue: tTranslate('Value', tOpts),
-                            filterPanelInputLabel: tTranslate('Value', tOpts),
-                            filterPanelInputPlaceholder: tTranslate('Filter value', tOpts),
-                            columnMenuLabel: tTranslate('Menu', tOpts),
-                            columnMenuShowColumns: tTranslate('Show columns', tOpts),
-                            columnMenuManageColumns: tTranslate('Manage columns', tOpts),
-                            columnMenuFilter: tTranslate('Filter', tOpts),
-                            columnMenuHideColumn: tTranslate('Hide column', tOpts),
-                            columnMenuManagePivot: tTranslate('Manage pivot', tOpts),
-                            toolbarColumnsLabel: tTranslate('Select columns', tOpts),
-                            toolbarExportLabel: tTranslate('Export', tOpts),
-                            pivotDragToColumns: tTranslate('Drag here to pivot by', tOpts),
-                            pivotDragToRows: tTranslate('Drag here to group by', tOpts),
-                            pivotDragToValues: tTranslate('Drag here to create values', tOpts),
-                            pivotColumns: tTranslate('Pivot columns', tOpts),
-                            pivotRows: tTranslate('Row groups', tOpts),
-                            pivotValues: tTranslate('Values', tOpts),
-                            pivotMenuRows: tTranslate('Rows', tOpts),
-                            pivotMenuColumns: tTranslate('Columns', tOpts),
-                            pivotMenuValues: tTranslate('Values', tOpts),
-                            pivotToggleLabel: tTranslate('Pivot', tOpts),
-                            pivotSearchControlPlaceholder: tTranslate('Search pivot columns', tOpts),
-                            columnMenuUnsort: tTranslate('Unsort', tOpts),
-                            columnMenuSortAsc: tTranslate('Sort by ascending', tOpts),
-                            columnMenuSortDesc: tTranslate('Sort by descending', tOpts),
-                            columnMenuUnpin: tTranslate('Unpin', tOpts),
-                            columnsPanelTextFieldLabel: tTranslate('Find column', tOpts),
-                            columnsPanelTextFieldPlaceholder: tTranslate('Column title', tOpts),
-                            columnsPanelHideAllButton: tTranslate('Hide all', tOpts),
-                            columnsPanelShowAllButton: tTranslate('Show all', tOpts),
-                            pinToLeft: tTranslate('Pin to left', tOpts),
-                            pinToRight: tTranslate('Pin to right', tOpts),
-                            unpin: tTranslate('Unpin', tOpts),
-                            filterValueAny: tTranslate('any', tOpts),
-                            filterOperatorIs: tTranslate('is', tOpts),
-                            filterOperatorNot: tTranslate('is not', tOpts),
-                            filterOperatorIsAnyOf: tTranslate('is any of', tOpts),
-                            filterOperatorContains: tTranslate('contains', tOpts),
-                            filterOperatorDoesNotContain: tTranslate('does not contain', tOpts),
-                            filterOperatorEquals: tTranslate('equals', tOpts),
-                            filterOperatorDoesNotEqual: tTranslate('does not equal', tOpts),
-                            filterOperatorStartsWith: tTranslate('starts with', tOpts),
-                            filterOperatorEndsWith: tTranslate('ends with', tOpts),
-                            filterOperatorIsEmpty: tTranslate('is empty', tOpts),
-                            filterOperatorIsNotEmpty: tTranslate('is not empty', tOpts),
-                            filterOperatorAfter: tTranslate('is after', tOpts),
-                            filterOperatorOnOrAfter: tTranslate('is on or after', tOpts),
-                            filterOperatorBefore: tTranslate('is before', tOpts),
-                            filterOperatorOnOrBefore: tTranslate('is on or before', tOpts),
-                            toolbarFiltersTooltipHide: tTranslate('Hide filters', tOpts),
-                            toolbarFiltersTooltipShow: tTranslate('Show filters', tOpts),
-
-                            //filter textfield labels
-                            headerFilterOperatorContains: tTranslate('contains', tOpts),
-                            headerFilterOperatorEquals: tTranslate('equals', tOpts),
-                            headerFilterOperatorStartsWith: tTranslate('starts with', tOpts),
-                            headerFilterOperatorEndsWith: tTranslate('ends with', tOpts),
-                            headerFilterOperatorIsEmpty: tTranslate('is empty', tOpts),
-                            headerFilterOperatorIsNotEmpty: tTranslate('is not empty', tOpts),
-                            headerFilterOperatorAfter: tTranslate('is after', tOpts),
-                            headerFilterOperatorOnOrAfter: tTranslate('is on or after', tOpts),
-                            headerFilterOperatorBefore: tTranslate('is before', tOpts),
-                            headerFilterOperatorOnOrBefore: tTranslate('is on or before', tOpts),
-                            headerFilterOperatorIs: tTranslate('is', tOpts),
-                            'headerFilterOperator=': tTranslate('equals', tOpts),
-                            'headerFilterOperator!=': tTranslate('does not equal', tOpts),
-                            'headerFilterOperator>': tTranslate('greater than', tOpts),
-                            'headerFilterOperator>=': tTranslate('greater than or equal to', tOpts),
-                            'headerFilterOperator<': tTranslate('less than', tOpts),
-                            'headerFilterOperator<=': tTranslate('less than or equal to', tOpts),
-                            columnsManagementSearchTitle: tTranslate('Search', tOpts),
-                            columnsManagementNoColumns: tTranslate('No columns', tOpts),
-                            paginationRowsPerPage: tTranslate('Rows per page', tOpts),
-                            paginationDisplayedRows: ({ from, to, count }) => `${from}–${to} ${tTranslate('of', tOpts)} ${count}`,
-                            toolbarQuickFilterLabel: tTranslate('Search', tOpts),
-                            toolbarFiltersTooltipActive: (count) => {
-                                const key = count === 1 ? 'active filter' : 'active filters';
-                                return `${count} ${tTranslate(key, tOpts)}`;
-                            },
-                            columnHeaderSortIconLabel: tTranslate('Sort', tOpts),
-                            filterPanelOperatorAnd: tTranslate('And', tOpts),
-                            filterPanelOperatorOr: tTranslate('Or', tOpts),
-                            noResultsOverlayLabel: tTranslate('No results found', tOpts),
-                            columnHeaderFiltersTooltipActive: (count) => {
-                                const key = count === 1 ? 'active filter' : 'active filters';
-                                return `${count} ${tTranslate(key, tOpts)}`;
-                            },
-                            detailPanelToggle: tTranslate('Detail panel toggle', tOpts),
-                            checkboxSelectionHeaderName: tTranslate('Checkbox selection', tOpts),
-                            columnsManagementShowHideAllText: tTranslate('Show/Hide all', tOpts),
-                            noColumnsOverlayLabel: tTranslate('No columns', tOpts),
-                            noColumnsOverlayManageColumns: tTranslate('Manage columns', tOpts),
-                            columnsManagementReset: tTranslate('Reset', tOpts),
-                            groupColumn: (name) => `${tTranslate('Group by', tOpts)} ${name}`,
-                            unGroupColumn: (name) => `${tTranslate('Ungroup', tOpts)} ${name}`,
-                            footerRowSelected: (count) => {
-                                const key = count === 1 ? 'item selected' : 'items selected';
-                                return `${count.toLocaleString()} ${tTranslate(key, tOpts)}`;
-                            }
-                        }}
+                        filterDebounceMs={debounceTimeOut}
+                        initialState={initialState}
+                        {...(enableRowDetailPanel && {
+                             getDetailPanelContent,
+                             detailPanelExpandedRowIds,
+                             onDetailPanelExpandedRowIdsChange: handleDetailPanelExpanded
+                        })}
+                        localeText={localeText}
                         showToolbar={true}
                         columnHeaderHeight={columnHeaderHeight}
                     />
@@ -1127,7 +1241,7 @@ const GridBase = memo(({
                         title="Confirm Add"
                     >
                         <DeleteContentText>
-                            {tTranslate("Are you sure you want to add", tOpts)} {selectedSet.size} {tTranslate("records", { count: selectedSet.size, ...tOpts })}?
+                            {tTranslate("Are you sure you want to add", tOpts)} {rowSelectionModel.ids.size} {tTranslate("records", { count: rowSelectionModel.ids.size, ...tOpts })}?
                         </DeleteContentText>
                     </DialogComponent>
                 )}

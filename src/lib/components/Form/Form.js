@@ -1,6 +1,6 @@
 import React from "react";
 import { useFormik } from "formik";
-import { useState, useEffect, createContext, useMemo } from "react";
+import { useState, useEffect, createContext, useMemo, useCallback } from "react";
 import {
   getRecord,
   saveRecord,
@@ -29,7 +29,9 @@ const consts = {
   create: "Create",
   copy: "Copy",
   edit: "Edit",
-  number: "number"
+  number: "number",
+  loadIdIndex: 1,
+  editIdIndex: 0
 };
 
 const Form = ({
@@ -43,15 +45,18 @@ const Form = ({
   sx,
   readOnly,
   beforeSubmit,
-  deletePromptText
+  deletePromptText,
+  detailPanelId = null, // Grid Row Detail Panel Id
+  onCancel,
+  onSaveSuccess
 }) => {
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
   const { relations = [] } = model;
-  const { dispatchData, stateData } = useStateContext();
+  const { dispatchData, stateData, buildUrl } = useStateContext();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
-  const id = idWithOptions.split("-")[0];
+  const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
   const searchParams = new URLSearchParams(window.location.search);
   const baseDataFromParams = searchParams.has(consts.baseData) && searchParams.get(consts.baseData);
   if (baseDataFromParams) {
@@ -62,7 +67,7 @@ const Form = ({
   }
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState({});
-  const [lookups, setLookups] = useState(null);
+  const [lookups, setLookups] = useState({});
   const [isDeleting, setIsDeleting] = useState(false);
   const snackbar = useSnackbar();
   const [validationSchema, setValidationSchema] = useState(null);
@@ -70,11 +75,10 @@ const Form = ({
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const url = stateData?.gridSettings?.permissions?.Url || '';
   const fieldConfigs = typeof model.applyFieldConfig === consts.function
     ? model.applyFieldConfig({ data, lookups })
     : defaultFieldConfigs;
-  const gridApi = useMemo(() => `${url}${model.api || api || ''}`, [url, model.api, api]);
+  const gridApi = buildUrl(model.controllerType, model.api);
   const { mode } = stateData.dataForm;
   const userData = stateData.getUserData || {};
   const userDefinedPermissions = {
@@ -90,8 +94,9 @@ const Form = ({
     userDefinedPermissions
   });
   const { hideBreadcrumb = false, navigateBack } = model;
+  const recordEditable = !("canEdit" in data) || data.canEdit;
 
-  const handleNavigation = () => {
+  const handleNavigation = useCallback(() => {
     let navigatePath;
     switch (typeof navigateBack) {
       case consts.function:
@@ -106,7 +111,7 @@ const Form = ({
         break;
     }
     navigate(navigatePath);
-  };
+  }, [navigateBack, navigate, params, searchParams, data, pathname]);
 
   const isNew = useMemo(() => utils.emptyIdValues.includes(id), [id]);
 
@@ -115,22 +120,24 @@ const Form = ({
     : { ...baseSaveData, ...model.initialValues, ...data }, [model.initialValues, data, id]);
 
   useEffect(() => {
-    if (!url) return;
+    const formApi = api || gridApi;
+    if (!formApi) return;
+    setIsLoading(true);
     setValidationSchema(model.getValidationSchema({ id, snackbar }));
     const options = idWithOptions.split("-");
     const params = {
-      api: api || gridApi,
+      api: formApi,
       model,
       setError: errorOnLoad
     };
     getRecord({
       ...params,
-      id: options.length > 1 ? options[1] : options[0],
-      setIsLoading,
-      setActiveRecord
+      id: detailPanelId || (options.length > 1 ? options[consts.loadIdIndex] : id),
+      setActiveRecord,
+      dispatchData
     });
 
-  }, [id, idWithOptions, model, url]);
+  }, [id, idWithOptions, model, api, gridApi, detailPanelId, dispatchData]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -148,13 +155,17 @@ const Form = ({
         id,
         api: gridApi,
         values: values,
-        setIsLoading,
         setError: snackbar.showError,
+        model,
+        dispatchData
       })
         .then((success) => {
           if (!success) return;
           if (model.reloadOnSave) {
             return window.location.reload();
+          }
+          if (typeof onSaveSuccess === consts.function) {
+            onSaveSuccess();
           }
           const message = success.info ? success.info : `Record ${id === 0 ? "Added" : "Updated"} Successfully.`;
           snackbar.showMessage(message);
@@ -175,20 +186,26 @@ const Form = ({
             resetForm();
           }
         })
-        .finally(() => setIsLoading(false));
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   });
 
-  const handleDiscardChanges = () => {
+  const handleDiscardChanges = useCallback(() => {
     formik.resetForm();
     setIsDiscardDialogOpen(false);
+    if (typeof onCancel === consts.function) {
+      onCancel();
+    }
     navigateBack !== false && handleNavigation();
-  };
+  }, [formik, onCancel, navigateBack, handleNavigation]);
 
-  const errorOnLoad = function (title, error) {
+  const errorOnLoad = useCallback((title, error) => {
+    setIsLoading(false);
     snackbar.showError(title, error);
     handleNavigation();
-  };
+  }, [snackbar, handleNavigation]);
 
   const setActiveRecord = function ({ id, title, record, lookups }) {
     const isCopy = idWithOptions.indexOf("-") > -1;
@@ -206,6 +223,7 @@ const Form = ({
     });
     setData(record);
     setLookups(lookups);
+    setIsLoading(false);
     if (linkColumn !== "") {
       breadcrumbs.push({ text: linkColumn });
     }
@@ -217,23 +235,26 @@ const Form = ({
       }
     });
   };
-  const handleFormCancel = function (event) {
+  const handleFormCancel = useCallback((event) => {
     if (formik.dirty && recordEditable) {
       setIsDiscardDialogOpen(true);
     } else {
+      if (typeof onCancel === consts.function) {
+        onCancel();
+      }
       navigateBack !== false && handleNavigation();
     }
     event.preventDefault();
-  };
-  const handleDelete = async function () {
+  }, [formik.dirty, recordEditable, onCancel, navigateBack, handleNavigation]);
+  const handleDelete = useCallback(async () => {
     try {
       setIsDeleting(true);
       const response = await deleteRecord({
         id,
         api: api || model.api,
-        setIsLoading,
         setError: snackbar.showError,
-        setErrorMessage
+        setErrorMessage,
+        model
       });
       if (response === true) {
         snackbar.showMessage("Record Deleted Successfully.");
@@ -244,27 +265,20 @@ const Form = ({
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [id, api, model.api, snackbar, setErrorMessage, model, navigateBack, handleNavigation]);
   const clearError = () => {
     setErrorMessage(null)
     setIsDeleting(false);
   };
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", pt: "20%", justifyContent: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-  const handleChange = function (e) {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
-  };
+  }, [data]);
 
-  const handleSubmit = async function (e) {
+  const handleSubmit = useCallback(async (e) => {
     if (e) e.preventDefault();
     if (typeof beforeSubmit === consts.function) {
-      await beforeSubmit({ formik });
+      await beforeSubmit({ formik , model });
     }
     const { errors } = formik;
     formik.handleSubmit();
@@ -279,7 +293,7 @@ const Form = ({
     if (fieldConfig.tab) {
       setActiveStep(Object.keys(model.tabs).indexOf(fieldConfig.tab));
     }
-  };
+  }, [beforeSubmit, formik, model, snackbar, setActiveStep]);
 
   const breadcrumbs = [
     { text: formTitle },
@@ -287,20 +301,27 @@ const Form = ({
   ];
   const showRelations = Number(id) !== 0 && Boolean(relations.length);
   const showSaveButton = searchParams.has("showRelation");
-  const recordEditable = !("canEdit" in data) || data.canEdit;
   const readOnlyRelations = !recordEditable || data.readOnlyRelations;
   deletePromptText = deletePromptText || "Are you sure you want to delete ?";
+  const { showPageTitle = true } = model;
   return (
     <>
-      <PageTitle
-        navigate={navigate}
-        title={formTitle}
-        showBreadcrumbs={!hideBreadcrumb}
-        breadcrumbs={breadcrumbs}
-        model={model}
-      />
+      {showPageTitle && (
+        <PageTitle
+          navigate={navigate}
+          title={formTitle}
+          showBreadcrumbs={!hideBreadcrumb}
+          breadcrumbs={breadcrumbs}
+          model={model}
+        />
+      )}
       <ActiveStepContext.Provider value={{ activeStep, setActiveStep }}>
         <Paper sx={{ padding: 2, ...sx }}>
+          {isLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
           <form>
             <Stack
               direction="row"
@@ -342,6 +363,7 @@ const Form = ({
               mode={mode}
             />
           </form>
+          )}
           {errorMessage && (
             <DialogComponent
               open={!!errorMessage}

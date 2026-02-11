@@ -13,12 +13,11 @@ const Field = ({ field, formik, orientation = "row", label, lookups, fieldConfig
     return (
         <>
             <FormControl component="fieldset" error={isError}>
-                <FormLabel component="legend">{label}</FormLabel>
                 <RadioGroup
                     row={orientation === "row"}
                     aria-label={label}
                     name={field}
-                    value={formik.values[field]}
+                    value={formik.values[field] ?? ""}
                     onChange={handleChange}
                 >
                     {options?.map((option, index) => (
