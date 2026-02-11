@@ -866,7 +866,7 @@ This will add a custom action button with an Article icon to each row. When clic
 
 ## Overview
 
-`FrameworkProvider` is a centralized context provider that manages framework-wide utilities like loader state, dayjs, and i18n. It simplifies loader management by eliminating the need for dispatch/dispatchData and the counter-based approach.
+`FrameworkProvider` is a centralized context provider that manages framework-wide utilities like loader state, dayjs, and i18n. It handles concurrent requests automatically by tracking the number of active operations, ensuring the loader stays visible until all operations complete.
 
 ## Setup
 

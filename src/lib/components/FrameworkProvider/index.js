@@ -14,7 +14,7 @@ const FrameworkContext = createContext(undefined);
  * FrameworkProvider - Centralized context for framework-wide utilities
  * 
  * Provides:
- * - Loader management (show/hide loader without counter)
+ * - Loader management (show/hide loader with concurrent request tracking)
  * - dayjs instance with plugins
  * - i18n utilities (t, i18n)
  * 
@@ -28,15 +28,22 @@ const FrameworkContext = createContext(undefined);
  */
 const FrameworkProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const loadingCountRef = useRef(0);
   const { t, i18n } = useTranslation();
 
   const showLoader = useCallback(() => {
-    setIsLoading(true);
-  }, []);
+    loadingCountRef.current += 1;
+    if (!isLoading) {
+      setIsLoading(true);
+    }
+  }, [isLoading]);
 
   const hideLoader = useCallback(() => {
-    setIsLoading(false);
-  }, []);
+    loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
+    if (loadingCountRef.current === 0 && isLoading) {
+      setIsLoading(false);
+    }
+  }, [isLoading]);
 
   const contextValue = useMemo(() => ({
     // Loader state and controls

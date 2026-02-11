@@ -167,9 +167,9 @@ const request = async ({
         return exportRequest(url, params);
     }
     
-    const shouldShowLoader = !disableLoader && typeof showLoader === 'function' && typeof hideLoader === 'function';
+    const canUseLoader = !disableLoader && typeof showLoader === 'function' && typeof hideLoader === 'function';
     
-    if (shouldShowLoader) {
+    if (canUseLoader) {
         showLoader();
     }
 
@@ -189,7 +189,7 @@ const request = async ({
         const response = await transport(reqParams);
         let data = response.data;
 
-        if (shouldShowLoader) {
+        if (canUseLoader) {
             hideLoader();
         }
 
@@ -226,7 +226,7 @@ const request = async ({
 
         return data;
     } catch (ex) {
-        if (shouldShowLoader) {
+        if (canUseLoader) {
             hideLoader();
         }
         // Only network errors will be caught here
