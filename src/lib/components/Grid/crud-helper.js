@@ -1,5 +1,4 @@
 import request, { DATA_PARSERS, getErrorMessage } from "./httpRequest";
-import { getStateProviderInstance } from "../useRouter/StateProvider";
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
@@ -18,15 +17,6 @@ function shouldApplyFilter(filter) {
 }
 
 const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, baseFilters, action = 'list', setError, extraParams = {}, contentType, columns, model, api }) => {
-    // Get framework instance for loader management
-    const framework = getStateProviderInstance();
-    const shouldShowLoader = framework?.showLoader && framework?.hideLoader;
-    
-    // Show loader at start
-    if (shouldShowLoader) {
-        framework.showLoader();
-    }
-    
     try {
         // Derive API and controllerType from model
         const finalApi = api || model.api;
@@ -198,24 +188,10 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         setData(response);
     } catch (error) {
         setError('Network failure or server unreachable. Please try again.');
-    } finally {
-        // Always hide loader in finally block
-        if (shouldShowLoader) {
-            framework.hideLoader();
-        }
     }
 };
 
 const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError }) => {
-    // Get framework instance for loader management
-    const framework = getStateProviderInstance();
-    const shouldShowLoader = framework?.showLoader && framework?.hideLoader;
-    
-    // Show loader at start
-    if (shouldShowLoader) {
-        framework.showLoader();
-    }
-    
     try {
         api = api || model.api;
         const searchParams = new URLSearchParams();
@@ -267,11 +243,6 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
         setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups });
     } catch (error) {
         setError('Could not load record', error.message || error.toString());
-    } finally {
-        // Always hide loader in finally block
-        if (shouldShowLoader) {
-            framework.hideLoader();
-        }
     }
 };
 
@@ -346,15 +317,6 @@ const saveRecord = async function ({ id, api, values, setError, model }) {
 };
 
 const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, reqData }) => {
-    // Get framework instance for loader management
-    const framework = getStateProviderInstance();
-    const shouldShowLoader = framework?.showLoader && framework?.hideLoader;
-    
-    // Show loader at start
-    if (shouldShowLoader) {
-        framework.showLoader();
-    }
-    
     try {
         api = api || model.api;
         const searchParams = new URLSearchParams();
@@ -386,11 +348,6 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
         setActiveRecord(response);
     } catch (error) {
         setError('Could not load lookups', error.message || error.toString());
-    } finally {
-        // Always hide loader in finally block
-        if (shouldShowLoader) {
-            framework.hideLoader();
-        }
     }
 };
 export {

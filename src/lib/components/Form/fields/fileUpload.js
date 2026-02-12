@@ -10,9 +10,11 @@ const { errorMapping } = utils;
 const MB = 1024 * 1024;
 function FileUpload({ column, field, formik }) {
     const inputValue = formik.values[field] || "";
-    const { stateData } = useStateContext();
+    const { getApiEndpoint } = useStateContext();
     const { maxSize, formats } = column;
-    const { uploadApi, mediaApi, Url } = stateData?.gridSettings?.permissions;
+    const uploadApi = getApiEndpoint("upload");
+    const mediaApi = getApiEndpoint("media");
+    const url = getApiEndpoint();
     const [formState, setFormState] = useState({
         isExternal: "no",
         selectedFile: null
@@ -82,7 +84,7 @@ function FileUpload({ column, field, formik }) {
         }
     };
 
-    const host = new URL(Url, window.location.origin).hostname.toLowerCase();
+    const host = new URL(url, window.location.origin).hostname.toLowerCase();
     React.useEffect(() => {
         setFormState({
             ...formState,

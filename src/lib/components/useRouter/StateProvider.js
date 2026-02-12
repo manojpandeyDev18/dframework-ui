@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useRef, useState, useCallback, useMemo } from 'react';
 import { locales } from '../mui/locale/localization';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -44,7 +44,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   }
 
   function getApiEndpoint(key) {
-    return apiEndpoints.current[key];
+    return apiEndpoints.current[key || "default"] || '';
   }
 
   function buildUrl(controllerType, url) {
@@ -232,12 +232,6 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   }), [stateData, isLoading, showLoader, hideLoader, t, i18n, snackbar, 
        setLocale, setPageTitle, setPageBackButton, setUserData, setTimeZone, setDateTimeFormat, setModal]);
 
-  // Store instance for non-React functions
-  useEffect(() => {
-    setStateProviderInstance(contextValue);
-    return () => setStateProviderInstance(null);
-  }, [contextValue]);
-
   return (
     <StateContext.Provider value={contextValue}>
       {children}
@@ -257,25 +251,6 @@ const useStateContext = () => {
     throw new Error('useStateContext must be used within a StateProvider');
   }
   return context;
-};
-
-// Store state provider instance for use in non-React functions
-let stateProviderInstance = null;
-
-/**
- * Internal function to set state provider instance
- * Called automatically by StateProvider
- */
-export const setStateProviderInstance = (instance) => {
-  stateProviderInstance = instance;
-};
-
-/**
- * Get state provider instance for use in non-React functions
- * This allows httpRequest and other utility functions to access framework features
- */
-export const getStateProviderInstance = () => {
-  return stateProviderInstance;
 };
 
 export { StateProvider, useStateContext, useRouter, RouterProvider };

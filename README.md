@@ -15,11 +15,30 @@ In Dframework we have create Multple Component for our Use
 
 ```js
 import React from "react";
-import { SnackbarProvider } from "@durlabh/dfamework-ui";
+import { SnackbarProvider } from "@durlabh/dframework-ui";
 export default function App() {
   return (
-    <SnackbarProvider SnackbarProps={{ autoHideDuration: 1000 }}>
+    <SnackbarProvider>
       ******************* Import Your Component ********************
+    </SnackbarProvider>
+  );
+}
+```
+
+# Provider Setup (Required)
+
+Wrap your app with `SnackbarProvider` and `StateProvider`.
+
+```js
+import React from "react";
+import { SnackbarProvider, StateProvider } from "@durlabh/dframework-ui";
+
+export default function App() {
+  return (
+    <SnackbarProvider>
+      <StateProvider apiEndpoints={{ default: "/api/", upload: "/upload", media: "/media" }}>
+        ******************* Import Your Component ********************
+      </StateProvider>
     </SnackbarProvider>
   );
 }
@@ -29,7 +48,7 @@ export default function App() {
 
 ```js
 import React from "react";
-import { useSnackbar } from "@durlabh/dfamework-ui";
+import { useSnackbar } from "@durlabh/dframework-ui";
 export default function App() {
   const snac = useSnackbar();
   return (
@@ -53,7 +72,7 @@ export default function App() {
 # How we will use the Dialog Component
 
 ```js
-import {DialogComponent} from '@durlabh/dfamework-ui';
+import {DialogComponent} from '@durlabh/dframework-ui';
 import React from 'react'
 import
 export default function App() {
@@ -71,7 +90,7 @@ export default function App() {
 
 ```js
 import React from "react";
-import { UiModel } from "./lib/components/Grid/ui-models";
+import { UiModel } from "@durlabh/dframework-ui";
 export default function App() {
   const surveyModel = new UiModel({
     title: "Questionnaires",
@@ -109,7 +128,7 @@ export default function App() {
 
 ```js
 import React from "react";
-import { UiModel } from "./lib/components/Grid/ui-models";
+import { UiModel } from "@durlabh/dframework-ui";
 export default function App() {
   const surveyModel = new UiModel({
     title: "Questionnaires",

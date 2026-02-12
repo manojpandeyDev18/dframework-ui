@@ -4,7 +4,7 @@
 
 ### Removed Backward Compatibility
 
-The framework has removed all backward compatibility aliases and features. This is a major version release with breaking changes.
+The framework has removed backward compatibility aliases and the dispatch pattern. This is a major version release with breaking changes.
 
 #### Breaking Changes:
 
@@ -107,6 +107,10 @@ The framework has removed all backward compatibility aliases and features. This 
    - Uses individual useState calls for simplicity (no useReducer)
    - Direct setter methods only - no dispatch pattern
 
+9. **API Endpoints Keys**
+  - File upload and media now use `upload` and `media` keys in `apiEndpoints`
+  - Remove legacy keys like `uploadApi` and `mediaApi`
+
 #### Migration Guide:
 
 **Step 1: Update Provider Setup**
@@ -135,7 +139,7 @@ The framework has removed all backward compatibility aliases and features. This 
 // Old
 const { stateData } = useStateContext();
 const locale = stateData.dataLocalization;
-const userData = stateData.getUserData;
+const userData = stateData.userData;
 const pageTitle = stateData.pageTitleDetails;
 
 // New (required)
@@ -179,10 +183,7 @@ const { showLoader } = useStateContext();
 
 #### Non-Breaking Changes:
 
-- Grid and Form components work without changes
-- `useFramework()` is an alias for `useStateContext()`
-- `FrameworkProvider` is an alias for `StateProvider`
-- All existing code continues to work with aliases
+- Grid and Form components work without changes if they only use the new StateProvider API
 
 #### Internal Implementation Change (v1.0.7):
 
@@ -225,19 +226,19 @@ The loader management system was refactored to use automatic loader management a
 
 #### Migration Guide:
 
-**Step 1: Add FrameworkProvider with SnackbarProvider**
+**Step 1: Add StateProvider with SnackbarProvider**
 
 Wrap your app with providers in the correct order:
 
 ```js
-import { SnackbarProvider, FrameworkProvider } from "@durlabh/dframework-ui";
+import { SnackbarProvider, StateProvider } from "@durlabh/dframework-ui";
 
 function App() {
   return (
     <SnackbarProvider>
-      <FrameworkProvider>
+      <StateProvider>
         {/* Existing providers and components */}
-      </FrameworkProvider>
+      </StateProvider>
     </SnackbarProvider>
   );
 }

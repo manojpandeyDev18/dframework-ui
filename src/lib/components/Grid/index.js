@@ -188,13 +188,14 @@ const GridBase = memo(({
     const { id: idWithOptions } = useParams() || getParams;
     const id = idWithOptions?.split('-')[0];
     const apiRef = propsApiRef || useGridApiRef();
-    const { idProperty = "id", showHeaderFilters = true, disableRowSelectionOnClick = true, hideTopFilters = true, updatePageTitle = true, isElasticScreen = false, navigateBack = false, selectionApi = {}, debounceTimeOut = 300 } = model;
+    const { idProperty = "id", showHeaderFilters = true, disableRowSelectionOnClick = true, updatePageTitle = true, isElasticScreen = false, navigateBack = false, selectionApi = {}, debounceTimeOut = 300 } = model;
     const isReadOnly = model.readOnly === true || readOnly;
     const isDoubleClicked = model.allowDoubleClick === false;
     const dataRef = useRef(data);
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
-    const { stateData, formatDate, getApiEndpoint, buildUrl, isLoading, setPageTitle } = useStateContext();
+    const { stateData, formatDate, getApiEndpoint, buildUrl, setPageTitle } = useStateContext();
+    const [loading, setLoading] = useState(false);
     const { timeZone } = stateData;
     const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
@@ -316,15 +317,6 @@ const GridBase = memo(({
         const map = lookupMapParam || {};
         return lookupData[map[field]?.lookup] || [];
     }, []);
-
-    useEffect(() => {
-        // Note: PASS_FILTERS_TO_HEADER was removed as component-specific state
-        // This functionality should be handled locally within the Grid component if needed
-        if (props.isChildGrid || !hideTopFilters) {
-            return;
-        }
-        // TODO: If filter header communication is needed, implement using local state or props
-    }, [props.isChildGrid, hideTopFilters]);
 
     const createAction = useCallback(
         ({ key, title, icon, color = "primary", disabled, otherProps }) => (
@@ -543,7 +535,7 @@ const GridBase = memo(({
     }, [gridColumns]);
 
 
-    const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
+    const fetchData = async (action = "list", extraParams = {}, contentType, columns, isPivotExport) => {
         const { pageSize, page } = paginationModel;
 
         const baseUrl =  buildUrl(model.controllerType, isPivotExport ? model.pivotApi : backendApi);
@@ -608,11 +600,16 @@ const GridBase = memo(({
             onListParamsChange(listParams);
         }
         apiRef.current.listParams = listParams;
-        return getList({
-            ...listParams,
-            setError: snackbar.showError,
-            setData
-        });
+        setLoading(true);
+        try {
+            return await getList({
+                ...listParams,
+                setError: snackbar.showError,
+                setData
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const openForm = useCallback(({ id, record = {}, mode }) => {
@@ -714,14 +711,14 @@ const GridBase = memo(({
 
     const handleDelete = useCallback(async () => {
         const baseUrl = buildUrl(model.controllerType, backendApi);
-        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
-        if (result === true) {
-            setIsDeleting(false);
-            snackbar.showMessage('Record Deleted Successfully.');
-            fetchData();
-        } else {
-            setIsDeleting(false);
-        }
+            const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
+            if (result === true) {
+                setIsDeleting(false);
+                snackbar.showMessage('Record Deleted Successfully.');
+                fetchData();
+            } else {
+                setIsDeleting(false);
+            }
     }, [model.controllerType, backendApi, record?.id, snackbar, setErrorMessage, model, fetchData]);
 
     const clearError = useCallback(() => {
@@ -780,6 +777,7 @@ const GridBase = memo(({
         }
 
         const baseUrl =  buildUrl(model.controllerType, selectionApi || backendApi);
+        setLoading(true);
         try {
             const result = await saveRecord({
                 id: 0,
@@ -797,6 +795,7 @@ const GridBase = memo(({
         } catch (err) {
             snackbar.showError(err.message || "An error occurred, please try again later.");
         } finally {
+            setLoading(false);
             setRowSelectionModel({
                 type: 'include',
                 ids: new Set()
@@ -892,8 +891,7 @@ const GridBase = memo(({
             undefined,
             e.target.dataset.contentType,
             columns,
-            isPivotExport,
-            isElasticScreen
+            isPivotExport
         );
     }, [data?.recordCount, apiRef, gridColumns, snackbar, fetchData, isElasticScreen]);
 
@@ -1184,7 +1182,7 @@ const GridBase = memo(({
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
-                        loading={!data.records || isLoading}
+                        loading={!data.records || loading}
                         className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}

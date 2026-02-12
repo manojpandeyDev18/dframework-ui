@@ -1,5 +1,3 @@
-// Removed getStateProviderInstance import - loader management moved to calling components
-
 const HTTP_STATUS_CODES = {
     OK: 200,
     SESSION_EXPIRED: 401,
@@ -73,7 +71,7 @@ const transport = async (config) => {
  * Extract error message from response
  * Utility to normalize error messages across different response formats
  */
-const getErrorMessage = (response) => response?.message || response?.info || response?.error;
+const getErrorMessage = (response) => response?.message || response?.info || response?.error || response?.err;
 
 /**
  * Default data parsers for different response types
