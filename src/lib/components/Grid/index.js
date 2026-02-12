@@ -318,6 +318,15 @@ const GridBase = memo(({
         return lookupData[map[field]?.lookup] || [];
     }, []);
 
+    useEffect(() => {
+        // Note: PASS_FILTERS_TO_HEADER was removed as component-specific state
+        // This functionality should be handled locally within the Grid component if needed
+        if (props.isChildGrid || !hideTopFilters) {
+            return;
+        }
+        // TODO: If filter header communication is needed, implement using local state or props
+    }, [props.isChildGrid, hideTopFilters]);
+
     const createAction = useCallback(
         ({ key, title, icon, color = "primary", disabled, otherProps }) => (
             <GridActionsCellItem
@@ -711,14 +720,14 @@ const GridBase = memo(({
 
     const handleDelete = useCallback(async () => {
         const baseUrl = buildUrl(model.controllerType, backendApi);
-            const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
-            if (result === true) {
-                setIsDeleting(false);
-                snackbar.showMessage('Record Deleted Successfully.');
-                fetchData();
-            } else {
-                setIsDeleting(false);
-            }
+        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
+        if (result === true) {
+            setIsDeleting(false);
+            snackbar.showMessage('Record Deleted Successfully.');
+            fetchData();
+        } else {
+            setIsDeleting(false);
+        }
     }, [model.controllerType, backendApi, record?.id, snackbar, setErrorMessage, model, fetchData]);
 
     const clearError = useCallback(() => {
