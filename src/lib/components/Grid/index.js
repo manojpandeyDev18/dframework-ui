@@ -188,14 +188,14 @@ const GridBase = memo(({
     const { id: idWithOptions } = useParams() || getParams;
     const id = idWithOptions?.split('-')[0];
     const apiRef = propsApiRef || useGridApiRef();
-    const { idProperty = "id", showHeaderFilters = true, disableRowSelectionOnClick = true, updatePageTitle = true, isElasticScreen = false, navigateBack = false, selectionApi = {}, debounceTimeOut = 300 } = model;
+    const { idProperty = "id", showHeaderFilters = true, disableRowSelectionOnClick = true, hideTopFilters = true, updatePageTitle = true, isElasticScreen = false, navigateBack = false, selectionApi = {}, debounceTimeOut = 300 } = model;
     const isReadOnly = model.readOnly === true || readOnly;
     const isDoubleClicked = model.allowDoubleClick === false;
     const dataRef = useRef(data);
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
     const { stateData, formatDate, getApiEndpoint, buildUrl, setPageTitle } = useStateContext();
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const { timeZone } = stateData;
     const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
@@ -609,7 +609,7 @@ const GridBase = memo(({
             onListParamsChange(listParams);
         }
         apiRef.current.listParams = listParams;
-        setLoading(true);
+        setIsLoading(true);
         try {
             return await getList({
                 ...listParams,
@@ -617,7 +617,7 @@ const GridBase = memo(({
                 setData
             });
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -786,7 +786,7 @@ const GridBase = memo(({
         }
 
         const baseUrl =  buildUrl(model.controllerType, selectionApi || backendApi);
-        setLoading(true);
+        setIsLoading(true);
         try {
             const result = await saveRecord({
                 id: 0,
@@ -804,7 +804,7 @@ const GridBase = memo(({
         } catch (err) {
             snackbar.showError(err.message || "An error occurred, please try again later.");
         } finally {
-            setLoading(false);
+            setIsLoading(false);
             setRowSelectionModel({
                 type: 'include',
                 ids: new Set()
@@ -1191,7 +1191,7 @@ const GridBase = memo(({
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
-                        loading={!data.records || loading}
+                        loading={!data.records || isLoading}
                         className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}
