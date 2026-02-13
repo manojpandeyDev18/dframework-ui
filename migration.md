@@ -207,10 +207,10 @@ The loader management system was refactored to use automatic loader management a
 
 #### Key Changes:
 
-1. **Automatic Loader Management**
-   - Loader is now automatically managed by `httpRequest`
-   - No need to pass `showLoader`, `hideLoader`, or `dispatchData`
-   - Loader shows before request and hides in finally block
+1. **Manual Loader Management**
+  - Loader is now managed by calling components or hooks
+  - `httpRequest` no longer toggles loading automatically
+  - Wrap async calls with your own loader logic
 
 5. **getErrorMessage Utility**
    - Moved from `crud-helper.js` to `httpRequest.js`
@@ -244,9 +244,9 @@ function App() {
 }
 ```
 
-**Step 2: Remove showLoader/hideLoader from HTTP Requests**
+**Step 2: Manage Loader Around HTTP Requests**
 
-If you're using `httpRequest` directly, remove the loader parameters:
+If you're using `httpRequest` directly, wrap the call with loader state:
 
 ```js
 // Before
@@ -256,10 +256,17 @@ import { useStateContext } from '@durlabh/dframework-ui';
 const { dispatchData } = useStateContext();
 await request({ url, params, dispatchData });
 
-// After - Loader is automatic!
+// After - Loader is manual
 import request from '@durlabh/dframework-ui/httpRequest';
+import { useStateContext } from '@durlabh/dframework-ui';
 
-await request({ url, params });
+const { showLoader, hideLoader } = useStateContext();
+showLoader();
+try {
+  await request({ url, params });
+} finally {
+  hideLoader();
+}
 ```
 
 **Step 3: Update Custom Loader Logic**
@@ -277,9 +284,9 @@ dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
 dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
 
 // After
-import { useFramework } from '@durlabh/dframework-ui';
+import { useStateContext } from '@durlabh/dframework-ui';
 
-const { showLoader, hideLoader } = useFramework();
+const { showLoader, hideLoader } = useStateContext();
 showLoader();
 // ... do work
 hideLoader();
@@ -300,7 +307,7 @@ const { isLoading } = useFramework();
 
 #### Non-Breaking Changes:
 
-- Grid and Form components automatically use the new loader system
+- Grid and Form components handle loading in their own UI logic
 - `StateProvider` continues to work as before (minus loader state)
 - All other StateProvider functionality remains unchanged
 - dayjs utilities in StateProvider remain for backward compatibility

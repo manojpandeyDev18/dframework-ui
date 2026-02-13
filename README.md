@@ -44,6 +44,8 @@ export default function App() {
 }
 ```
 
+If you use `model.controllerType`, provide a matching key in `apiEndpoints` (e.g., `{ default: "/api/", cs: "/api/" }`).
+
 ## Then use in Your Project
 
 ```js
