@@ -29,14 +29,13 @@ class UiModel {
 	};
 
 	constructor(modelConfig) {
-		const { title = "", controllerType } = modelConfig;
+		const { title = "" } = modelConfig;
 		let { api, idProperty = api + 'Id' } = modelConfig;
 		const module = "module" in modelConfig ? modelConfig.module : title.replace(/[^\w\s]/gi, "");
 		if (!api) {
 			api = `${title.replaceAll(regexConfig.nonAlphaNumeric, '-').toLowerCase()}`;
 			idProperty = title.replaceAll(' ', '') + 'Id';
 		}
-		api = controllerType === 'cs' ? `${api}.ashx` : `${api}`;
 		const defaultValues = { ...modelConfig.defaultValues };
 		const name = module || title;
 		Object.assign(this, {

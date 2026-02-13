@@ -47,8 +47,8 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     return apiEndpoints.current[key || "default"] || '';
   }
 
-  function buildUrl(controllerType, url) {
-    const baseUrl = apiEndpoints.current[controllerType || "default"] || '';
+  function buildUrl(url, endpoint) {
+    const baseUrl = apiEndpoints.current[endpoint || "default"] || '';
     return `${baseUrl}${url}`;
   }
 
@@ -56,17 +56,10 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
    * Show loader - simple boolean toggle
    * Calling methods should wrap all async operations in try/finally blocks
    */
-  const showLoader = useCallback(() => {
-    setIsLoading(true);
+  const showLoader = useCallback((flag = true) => {
+    setIsLoading(flag);
   }, []);
 
-  /**
-   * Hide loader - simple boolean toggle
-   * Should be called in finally blocks to ensure loader is always hidden
-   */
-  const hideLoader = useCallback(() => {
-    setIsLoading(false);
-  }, []);
 
   /**
    * Returns the system date and/or time format string based on user preferences and options.
@@ -200,7 +193,6 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     // Loader management
     isLoading,
     showLoader,
-    hideLoader,
     
     // Snackbar utilities
     showMessage: snackbar?.showMessage || snackbarWarning,
@@ -229,7 +221,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     setTimeZone,
     setDateTimeFormat,
     setModal
-  }), [stateData, isLoading, showLoader, hideLoader, t, i18n, snackbar, 
+  }), [stateData, isLoading, showLoader, t, i18n, snackbar, 
        setLocale, setPageTitle, setPageBackButton, setUserData, setTimeZone, setDateTimeFormat, setModal]);
 
   return (

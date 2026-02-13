@@ -66,13 +66,39 @@ import { useStateContext } from './components/useRouter/StateProvider';
 
 function MyComponent() {
   const {
-    stateData,           // Current application state
-    dispatchData,        // Function to update state
+    stateData,           // Current application state (backward compat object)
+
+    // Loader management
+    isLoading,           // Current loader state (boolean)
+    showLoader,          // Show/hide loader: showLoader(true) / showLoader(false)
+
+    // Snackbar utilities
+    showMessage,         // Show success message
+    showError,           // Show error message
+
+    // i18n utilities
+    dayjs,               // dayjs instance with timezone support
+    t,                   // i18next translation function
+    i18n,                // i18next instance
+
+    // Date/time utilities
+    formatDate,          // Format dates with timezone support
+    systemDateTimeFormat,// Get system date/time format string
+    useLocalization,     // Get localization utilities
+
+    // API utilities
     getApiEndpoint,      // Get API endpoint by key
     setApiEndpoint,      // Set/update API endpoint
-    formatDate,          // Format dates with timezone support
-    systemDateTimeFormat,// Get system date/time format
-    useLocalization,      // Get localization utilities
+    buildUrl,            // Build full URL: buildUrl('/api/users', 'endpointKey')
+
+    // State setters
+    setLocale,           // Set app locale
+    setPageTitle,        // Set page title/breadcrumbs
+    setPageBackButton,   // Set back button config
+    setUserData,         // Set user data
+    setTimeZone,         // Set timezone
+    setDateTimeFormat,   // Set date/time format
+    setModal             // Set modal state
   } = useStateContext();
 
   // Your component logic
@@ -84,75 +110,53 @@ function MyComponent() {
 ### State Management
 
 #### `stateData`
-Object containing the current application state.
+Object containing the current application state (provided for backward compatibility).
 
 **Available state properties:**
 ```javascript
 {
-  dataLocalization: 'en',           // Current locale (en, es, fr, etc.)
+  locale: 'en',                     // Current locale (en, es, fr, etc.)
   dateTime: 'MM/DD/YYYY hh:mm:ss A', // Date/time format
-  dataForm: '',                     // Form mode/data
-  pageTitleDetails: null,           // Page title information
+  pageTitle: null,                  // Page title information
   modal: null,                      // Modal state
   pageBackButton: null,             // Back button configuration
-  gridSettings: {},                 // Grid component settings
-  getLocal: {},                     // Local data cache
-  getUserData: null,                // Current user data
-  preferences: [],                  // User preferences
-  currentPreference: null,          // Active preference
-  totalPreferences: null,           // Total preference count
-  loaderOpen: false,                // Global loader state
-  filtersInHeader: {},              // Header filter values
+  userData: null,                   // Current user data
   timeZone: ""                      // User timezone
 }
 ```
 
-#### `dispatchData(action)`
-Updates application state using actions.
+#### State Setters
+Update application state using individual setter functions:
 
-**Example:**
 ```javascript
-import actionsStateProvider from './components/useRouter/actions';
+const { setLocale, setDateTimeFormat, setUserData, showLoader } = useStateContext();
 
 // Update localization
-dispatchData({
-  type: actionsStateProvider.UPDATE_LOCALIZATION,
-  payload: 'es-ES'
-});
+setLocale('es-ES');
 
 // Update date/time format
-dispatchData({
-  type: actionsStateProvider.UPDATE_DATE_TIME,
-  payload: 'DD-MM-YYYY hh:mm A'
-});
+setDateTimeFormat('DD-MM-YYYY hh:mm A');
 
 // Set user data
-dispatchData({
-  type: actionsStateProvider.USER_DATA,
-  payload: { name: 'John Doe', role: 'admin' }
-});
+setUserData({ name: 'John Doe', role: 'admin' });
 
-// Update loader state
-dispatchData({
-  type: actionsStateProvider.UPDATE_LOADER_STATE,
-  payload: true
-});
+// Show/hide loader
+showLoader(true);   // show
+showLoader(false);  // hide
 ```
 
-**Available Actions:**
-```javascript
-UPDATE_LOCALIZATION        // Change app locale
-UPDATE_DATE_TIME          // Change date/time format
-UPDATE_FORM_MODE          // Update form mode
-PAGE_TITLE_DETAILS        // Set page title
-OPEN_MODAL                // Control modal state
-SET_PAGE_BACK_BUTTON      // Configure back button
-SET_GRID_SETTINGS         // Update grid settings
-USER_DATA                 // Set user information
-UPDATE_LOADER_STATE       // Show/hide loader
-SET_TIMEZONE              // Set user timezone
-PASS_FILTERS_TO_HEADER    // Update header filters
-```
+**Available Setters:**
+
+| Setter | Description |
+|---|---|
+| `setLocale(locale)` | Change app locale |
+| `setDateTimeFormat(format)` | Change date/time format |
+| `setPageTitle(title)` | Set page title/breadcrumbs |
+| `setModal(modal)` | Control modal state |
+| `setPageBackButton(config)` | Configure back button |
+| `setUserData(data)` | Set user information |
+| `setTimeZone(tz)` | Set user timezone |
+| `showLoader(flag)` | Show/hide loader (`true`/`false`) |
 
 ### API Endpoint Management
 
@@ -292,12 +296,12 @@ const noRowsText = getLocalizedString('noRowsLabel');
 ```javascript
 import React, { useEffect, useState } from 'react';
 import { useStateContext } from './components/useRouter/StateProvider';
-import actionsStateProvider from './components/useRouter/actions';
 
 function UserProfile() {
   const {
     stateData,
-    dispatchData,
+    showLoader,
+    setUserData,
     getApiEndpoint,
     formatDate,
     useLocalization
@@ -307,32 +311,19 @@ function UserProfile() {
   const { getLocalizedString } = useLocalization();
 
   useEffect(() => {
-    // Show loader
-    dispatchData({
-      type: actionsStateProvider.UPDATE_LOADER_STATE,
-      payload: true
-    });
-
-    // Fetch user data
-    const userApi = getApiEndpoint('UserService');
-    fetch(`${userApi}/profile`)
-      .then(res => res.json())
-      .then(data => {
+    const fetchUser = async () => {
+      showLoader(true);
+      try {
+        const userApi = getApiEndpoint('UserService');
+        const res = await fetch(`${userApi}/profile`);
+        const data = await res.json();
         setUser(data);
-        
-        // Store user data in global state
-        dispatchData({
-          type: actionsStateProvider.USER_DATA,
-          payload: data
-        });
-      })
-      .finally(() => {
-        // Hide loader
-        dispatchData({
-          type: actionsStateProvider.UPDATE_LOADER_STATE,
-          payload: false
-        });
-      });
+        setUserData(data);
+      } finally {
+        showLoader(false);
+      }
+    };
+    fetchUser();
   }, []);
 
   if (!user) return <div>{getLocalizedString('loading')}</div>;
@@ -349,7 +340,7 @@ function UserProfile() {
           })
         }
       </p>
-      <p>Locale: {stateData.dataLocalization}</p>
+      <p>Locale: {stateData.locale}</p>
     </div>
   );
 }
@@ -507,9 +498,13 @@ interface ApiEndpoints {
 }
 
 interface AppState {
-  dataLocalization: string;
+  locale: string;
   dateTime: string;
-  // ... other properties
+  pageTitle: object | null;
+  modal: object | null;
+  pageBackButton: object | null;
+  userData: object | null;
+  timeZone: string;
 }
 ```
 

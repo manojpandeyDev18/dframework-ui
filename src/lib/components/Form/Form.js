@@ -52,7 +52,7 @@ const Form = ({
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
   const { relations = [] } = model;
-  const { stateData, buildUrl, setPageTitle: setPageTitleContext } = useStateContext();
+  const { stateData, buildUrl, setPageTitle } = useStateContext();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
   const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
@@ -77,7 +77,7 @@ const Form = ({
   const fieldConfigs = typeof model.applyFieldConfig === consts.function
     ? model.applyFieldConfig({ data, lookups })
     : defaultFieldConfigs;
-  const gridApi = buildUrl(model.controllerType, model.api);
+  const gridApi = buildUrl(model.api);
   // Determine mode from URL pattern: "0-{id}" indicates copy mode
   const mode = idWithOptions.includes('-') && idWithOptions.split('-')[0] === '0' ? 'copy' : '';
   const userData = stateData.userData || {};
@@ -225,7 +225,7 @@ const Form = ({
     if (linkColumn !== "") {
       breadcrumbs.push({ text: linkColumn });
     }
-    setPageTitleContext({
+    setPageTitle({
       showBreadcrumbs: true,
       breadcrumbs: breadcrumbs
     });

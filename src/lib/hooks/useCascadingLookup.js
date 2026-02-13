@@ -9,7 +9,7 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
     const [options, setOptions] = useState([]);
     const { buildUrl } = useStateContext();
     const snackbar = useSnackbar();
-    const api = buildUrl(model.controllerType, model.api);
+    const api = buildUrl(model.api);
     // Memoize dependency values
     const dependencyValues = useMemo(() => {
         const toReturn = {};

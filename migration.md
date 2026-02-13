@@ -131,6 +131,7 @@ The framework has removed backward compatibility aliases and the dispatch patter
     <App />
   </StateProvider>
 </SnackbarProvider>
+---
 ```
 
 **Step 2: Update State Access**
@@ -316,3 +317,6 @@ const { isLoading } = useFramework();
 - In `updateFilters`, removed CoolR specifc code, `OrderSuggestionHistoryFields`
 - In `onCellClickHandler`, removed custom code for isAcostaController
 - In  `GridBase` removed custom code for `isOrderDetailModalOpen`.
+- Consolidated list/export request setup into `fetchData` to remove duplicate logic from `handleExport`.
+
+---

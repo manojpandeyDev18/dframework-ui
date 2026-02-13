@@ -16,128 +16,135 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, baseFilters, action = 'list', setError, extraParams = {}, contentType, columns, model, api }) => {
-    try {
-        // Derive API and controllerType from model
-        const finalApi = api || model.api;
-        const controllerType = model.controllerType || 'node';
-        
-        // isElasticExport is true only if action is 'export' AND model.isElasticExport is true
-        const isElasticExport = action === 'export' && model.isElasticExport === true;
+const buildRequestData = ({ gridColumns, page, pageSize, sortModel, filterModel, baseFilters, action, extraParams = {}, model, api }) => {
+    const isElasticExport = action === 'export' && model.isElasticExport === true;
 
-        const lookups = [];
-        const lookupWithDeps = []; // for backward compatibility having two lookups arrays
-        const dateColumns = [];
-        gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true, dependsOn }) => {
-            if (dateDataTypes.includes(type)) {
-                dateColumns.push({ field, keepLocal, keepLocalDate });
-            }
-            if (!lookup) {
-                return;
-            }
-            if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
-                lookups.push(lookup);
-                lookupWithDeps.push({ lookup, dependsOn });
-            }
-        });
-
-        const where = [];
-        if (filterModel?.items?.length) {
-            filterModel.items.forEach(filter => {
-                if (shouldApplyFilter(filter)) {
-                    const { field, operator, filterField } = filter;
-                    let { value } = filter;
-                    const column = gridColumns.filter((item) => item?.field === filter.field);
-                    const type = column[0]?.type;
-                    if (type === 'boolean') {
-                        value = (value === 'true' || value === true) ? 1 : 0;
-                    } else if (type === 'number') {
-                        value = Array.isArray(value) ? value.filter(e => e) : value;
-                    }
-                    value = filter.filterValues || value;
-                    where.push({
-                        field: filterField || field,
-                        operator,
-                        value,
-                        type
-                    });
-                }
-            });
+    const lookups = [];
+    const lookupWithDeps = []; // for backward compatibility having two lookups arrays
+    const dateColumns = [];
+    gridColumns.forEach(({ lookup, type, field, keepLocal = false, keepLocalDate, filterable = true, dependsOn }) => {
+        if (dateDataTypes.includes(type)) {
+            dateColumns.push({ field, keepLocal, keepLocalDate });
         }
-        
-        // Add baseFilters if present (already includes parentFilters merged in Grid component)
-        if (baseFilters && Array.isArray(baseFilters)) {
-            where.push(...baseFilters);
-        }
-
-        const requestData = {
-            start: page * pageSize,
-            limit: isElasticExport ? (model.exportSize || 1000000) : pageSize,
-            ...extraParams,
-            logicalOperator: filterModel.logicOperator,
-            sort: sortModel.map(sort => (sort.filterField || sort.field) + ' ' + sort.sort).join(','),
-            where,
-            isElasticExport,
-            model: model.module,
-            fileName: model.overrideFileName
-        };
-
-        if (lookups.length) {
-            requestData.lookups = lookups.join(',');
-        }
-
-        if (lookupWithDeps.length) {
-            requestData.lookupWithDeps = JSON.stringify(lookupWithDeps);
-        }
-
-        if (model?.limitToSurveyed) {
-            requestData.limitToSurveyed = model?.limitToSurveyed;
-        }
-
-        const headers = {};
-        let url = controllerType === 'cs' ? `${finalApi}?action=${action}&asArray=0` : `${finalApi}/${action}`;
-
-        if (contentType) {
-            const form = document.createElement("form");
-            requestData.responseType = contentType;
-            requestData.columns = columns;
-            requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
-            // for manipulating the request payload before sending the request.
-            if (typeof model.createRequestPayload === 'function') {
-                await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, baseFilters, action, url, dataParsers: DATA_PARSERS, model });
-            }
-            form.setAttribute("method", "POST");
-            form.setAttribute("id", "exportForm");
-            form.setAttribute("target", "_blank");
-            if (!extraParams.template) {
-                for (const key in requestData) {
-                    let v = requestData[key];
-                    if (v === undefined || v === null) {
-                        continue;
-                    } else if (typeof v !== 'string') {
-                        v = JSON.stringify(v);
-                    }
-                    const hiddenTag = document.createElement('input');
-                    hiddenTag.type = "hidden";
-                    hiddenTag.name = key;
-                    hiddenTag.value = v;
-                    form.append(hiddenTag);
-                }
-            }
-            form.setAttribute('action', requestData.url || url);
-            document.body.appendChild(form);
-            form.submit();
-            setTimeout(() => {
-                document.getElementById("exportForm").remove();
-            }, 3000);
+        if (!lookup) {
             return;
         }
+        if (!lookups.includes(lookup) && lookupDataTypes.includes(type) && filterable) {
+            lookups.push(lookup);
+            lookupWithDeps.push({ lookup, dependsOn });
+        }
+    });
+
+    const where = [];
+    if (filterModel?.items?.length) {
+        filterModel.items.forEach(filter => {
+            if (shouldApplyFilter(filter)) {
+                const { field, operator, filterField } = filter;
+                let { value } = filter;
+                const column = gridColumns.filter((item) => item?.field === filter.field);
+                const type = column[0]?.type;
+                if (type === 'boolean') {
+                    value = (value === 'true' || value === true) ? 1 : 0;
+                } else if (type === 'number') {
+                    value = Array.isArray(value) ? value.filter(e => e) : value;
+                }
+                value = filter.filterValues || value;
+                where.push({
+                    field: filterField || field,
+                    operator,
+                    value,
+                    type
+                });
+            }
+        });
+    }
+
+    // Add baseFilters if present (already includes parentFilters merged in Grid component)
+    if (baseFilters && Array.isArray(baseFilters)) {
+        where.push(...baseFilters);
+    }
+
+    const requestData = {
+        start: page * pageSize,
+        limit: isElasticExport ? (model.exportSize || 1000000) : pageSize,
+        ...extraParams,
+        logicalOperator: filterModel.logicOperator,
+        sort: sortModel.map(sort => (sort.filterField || sort.field) + ' ' + sort.sort).join(','),
+        where,
+        isElasticExport,
+        model: model.module,
+        fileName: model.overrideFileName
+    };
+
+    if (lookups.length) {
+        requestData.lookups = lookups.join(',');
+    }
+
+    if (lookupWithDeps.length) {
+        requestData.lookupWithDeps = JSON.stringify(lookupWithDeps);
+    }
+
+    if (model?.limitToSurveyed) {
+        requestData.limitToSurveyed = model?.limitToSurveyed;
+    }
+
+    let url = `${api}/${action}`;
+
+    if (extraParams.template) {
+        url += `?template=${extraParams.template}`;
+    }
+    if (extraParams.configFileName) {
+        url += `${url.includes('?') ? '&' : '?'}configFileName=${extraParams.configFileName}`;
+    }
+
+    return { requestData, url, where, dateColumns };
+};
+
+const exportList = async ({ gridColumns, page, pageSize, sortModel, filterModel, baseFilters, action = 'list', extraParams = {}, contentType, columns, model, api }) => {
+    const { requestData, url, where } = buildRequestData({ gridColumns, page, pageSize, sortModel, filterModel, baseFilters, action, extraParams, model, api });
+
+    const form = document.createElement("form");
+    requestData.responseType = contentType;
+    requestData.columns = columns;
+    requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
+    // for manipulating the request payload before sending the request.
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, baseFilters, action, url, dataParsers: DATA_PARSERS, model });
+    }
+    form.setAttribute("method", "POST");
+    form.setAttribute("id", "exportForm");
+    form.setAttribute("target", "_blank");
+    if (!extraParams.template) {
+        for (const key in requestData) {
+            let v = requestData[key];
+            if (v === undefined || v === null) {
+                continue;
+            } else if (typeof v !== 'string') {
+                v = JSON.stringify(v);
+            }
+            const hiddenTag = document.createElement('input');
+            hiddenTag.type = "hidden";
+            hiddenTag.name = key;
+            hiddenTag.value = v;
+            form.append(hiddenTag);
+        }
+    }
+    form.setAttribute('action', requestData.url || url);
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => {
+        document.getElementById("exportForm").remove();
+    }, 3000);
+};
+
+const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, baseFilters, action = 'list', setError, extraParams = {}, model, api }) => {
+    try {
+        const { requestData, url, where, dateColumns } = buildRequestData({ gridColumns, page, pageSize, sortModel, filterModel, baseFilters, action, extraParams, model, api });
 
         const reqParams = {
             url,
             additionalHeaders: {
-                "Content-Type": "application/json",
-                ...headers
+                "Content-Type": "application/json"
             },
             jsonPayload: true,
             params: requestData,
@@ -352,6 +359,7 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
 };
 export {
     getList,
+    exportList,
     getRecord,
     deleteRecord,
     saveRecord,
@@ -360,6 +368,7 @@ export {
 
 const crudHelper = {
     getList,
+    exportList,
     getRecord,
     deleteRecord,
     saveRecord,
