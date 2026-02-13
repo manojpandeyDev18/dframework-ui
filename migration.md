@@ -207,46 +207,46 @@ The loader management system was refactored to use automatic loader management a
 
 #### Key Changes:
 
-1. **Manual Loader Management**
-  - Loader is now managed by calling components or hooks
-  - `httpRequest` no longer toggles loading automatically
-  - Wrap async calls with your own loader logic
+1. **Automatic Loader Management**
+   - Loader is now automatically managed by `httpRequest`
+   - No need to pass `showLoader`, `hideLoader`, or `dispatchData`
+   - Loader shows before request and hides in finally block
 
 5. **getErrorMessage Utility**
    - Moved from `crud-helper.js` to `httpRequest.js`
    - Now exported from `httpRequest.js` for reuse
-   
+
    ```js
    // Before
    // Only available in crud-helper (internal)
-   
+
    // After
    import { getErrorMessage } from "@durlabh/dframework-ui/httpRequest";
    ```
 
 #### Migration Guide:
 
-**Step 1: Add StateProvider with SnackbarProvider**
+**Step 1: Add FrameworkProvider with SnackbarProvider**
 
 Wrap your app with providers in the correct order:
 
 ```js
-import { SnackbarProvider, StateProvider } from "@durlabh/dframework-ui";
+import { SnackbarProvider, FrameworkProvider } from "@durlabh/dframework-ui";
 
 function App() {
   return (
     <SnackbarProvider>
-      <StateProvider>
+      <FrameworkProvider>
         {/* Existing providers and components */}
-      </StateProvider>
+      </FrameworkProvider>
     </SnackbarProvider>
   );
 }
 ```
 
-**Step 2: Manage Loader Around HTTP Requests**
+**Step 2: Remove showLoader/hideLoader from HTTP Requests**
 
-If you're using `httpRequest` directly, wrap the call with loader state:
+If you're using `httpRequest` directly, remove the loader parameters:
 
 ```js
 // Before
@@ -256,17 +256,10 @@ import { useStateContext } from '@durlabh/dframework-ui';
 const { dispatchData } = useStateContext();
 await request({ url, params, dispatchData });
 
-// After - Loader is manual
+// After - Loader is automatic!
 import request from '@durlabh/dframework-ui/httpRequest';
-import { useStateContext } from '@durlabh/dframework-ui';
 
-const { showLoader, hideLoader } = useStateContext();
-showLoader();
-try {
-  await request({ url, params });
-} finally {
-  hideLoader();
-}
+await request({ url, params });
 ```
 
 **Step 3: Update Custom Loader Logic**
@@ -284,9 +277,9 @@ dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
 dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false });
 
 // After
-import { useStateContext } from '@durlabh/dframework-ui';
+import { useFramework } from '@durlabh/dframework-ui';
 
-const { showLoader, hideLoader } = useStateContext();
+const { showLoader, hideLoader } = useFramework();
 showLoader();
 // ... do work
 hideLoader();
@@ -307,7 +300,7 @@ const { isLoading } = useFramework();
 
 #### Non-Breaking Changes:
 
-- Grid and Form components handle loading in their own UI logic
+- Grid and Form components automatically use the new loader system
 - `StateProvider` continues to work as before (minus loader state)
 - All other StateProvider functionality remains unchanged
 - dayjs utilities in StateProvider remain for backward compatibility
