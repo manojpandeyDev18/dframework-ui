@@ -83,14 +83,14 @@ The framework has removed backward compatibility aliases and the dispatch patter
    - Loader managed by CRUD helper functions (getList, getRecord, saveRecord, deleteRecord, getLookups)
    - Each CRUD function wraps operations in try/finally blocks to guarantee loader is hidden
    - httpRequest is a pure HTTP transport layer without loader management
-   - **For custom operations**: Use showLoader() before async operations, hideLoader() in finally block
+   - **For custom operations**: Use showLoader() before async operations, showLoader(false) in finally block
    
    ```js
    // CRUD functions handle loader automatically
    await getList({ model, gridColumns, setData, page, pageSize });
    
    // Custom operations - use try/finally pattern
-   const { showLoader, hideLoader } = useStateContext();
+   const { showLoader } = useStateContext();
    
    const myOperation = async () => {
      showLoader();
@@ -98,7 +98,7 @@ The framework has removed backward compatibility aliases and the dispatch patter
        await asyncOperation1();
        await asyncOperation2();
      } finally {
-       hideLoader(); // Always hidden, even on errors
+       showLoader(false); // Always hidden, even on errors
      }
    };
    ```
@@ -131,8 +131,8 @@ The framework has removed backward compatibility aliases and the dispatch patter
     <App />
   </StateProvider>
 </SnackbarProvider>
----
 ```
+---
 
 **Step 2: Update State Access**
 
@@ -210,7 +210,7 @@ The loader management system was refactored to use automatic loader management a
 
 1. **Automatic Loader Management**
    - Loader is now automatically managed by `httpRequest`
-   - No need to pass `showLoader`, `hideLoader`, or `dispatchData`
+   - No need to pass `showLoader`, or `dispatchData`
    - Loader shows before request and hides in finally block
 
 5. **getErrorMessage Utility**
@@ -245,7 +245,7 @@ function App() {
 }
 ```
 
-**Step 2: Remove showLoader/hideLoader from HTTP Requests**
+**Step 2: Remove showLoader from HTTP Requests**
 
 If you're using `httpRequest` directly, remove the loader parameters:
 
@@ -280,10 +280,9 @@ dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: false })
 // After
 import { useFramework } from '@durlabh/dframework-ui';
 
-const { showLoader, hideLoader } = useFramework();
+const { showLoader } = useFramework();
 showLoader();
 // ... do work
-hideLoader();
 ```
 
 **Step 4: Update Loader State Checks**

@@ -89,7 +89,7 @@ function MyComponent() {
     // API utilities
     getApiEndpoint,      // Get API endpoint by key
     setApiEndpoint,      // Set/update API endpoint
-    buildUrl,            // Build full URL: buildUrl('/api/users', 'endpointKey')
+    buildUrl,            // Build full URL using route relative to endpoint: buildUrl('/users', 'UserService')
 
     // State setters
     setLocale,           // Set app locale
