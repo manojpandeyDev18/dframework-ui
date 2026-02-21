@@ -17,7 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useMemo, useEffect, memo, useRef, useState, useCallback } from 'react';
 import { useSnackbar } from '../SnackBar/index';
 import { DialogComponent } from '../Dialog/index';
-import { getList, exportList, getRecord, deleteRecord, saveRecord } from './crud-helper';
+import { getList, getRecord, deleteRecord, saveRecord } from './crud-helper';
 import { Footer } from './footer';
 import template from './template';
 import { Tooltip, Box } from "@mui/material";
@@ -610,26 +610,28 @@ const GridBase = memo(({
         apiRef.current.listParams = listParams;
         setIsLoading(true);
         try {
-            if (!isExportRequest) {
-                return await getList({
-                    ...listParams,
-                    setError: snackbar.showError,
-                    setData
-                });
+            const result = await getList({ ...listParams, contentType, columns });
+            if (!isExportRequest && result !== undefined) {
+                setData(result);
             }
-            return exportList({
-                ...listParams,
-                contentType,
-                columns
-            });
+        } catch (error) {
+            snackbar.showError('An error occurred while fetching data', error.message);
+            if (!isExportRequest) {
+                setData((prevData) => ({ ...prevData, records: [], recordCount: 0 }));
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
-    const openForm = useCallback(({ id, record = {}, mode }) => {
+    const openForm = useCallback(async ({ id, record = {}, mode }) => {
         if (setActiveRecord) {
-            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError });
+            try {
+                const data = await getRecord({ id, api: backendApi, model, parentFilters, where });
+                setActiveRecord(data);
+            } catch (error) {
+                snackbar.showError('Could not load record', error.message);
+            }
             return;
         }
         let path = pathname;
@@ -726,15 +728,16 @@ const GridBase = memo(({
 
     const handleDelete = useCallback(async () => {
         const baseUrl = buildUrl(backendApi);
-        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
-        if (result === true) {
-            setIsDeleting(false);
+        try {
+            await deleteRecord({ id: record.id, api: baseUrl, model });
             snackbar.showMessage('Record Deleted Successfully.');
             fetchData();
-        } else {
+        } catch (error) {
+            snackbar.showError('Delete failed', error.message);
+        } finally {
             setIsDeleting(false);
         }
-    }, [backendApi, record?.id, snackbar, setErrorMessage, model, fetchData]);
+    }, [backendApi, record?.id, snackbar, model, fetchData]);
 
     const clearError = useCallback(() => {
         setErrorMessage(null);
@@ -798,7 +801,6 @@ const GridBase = memo(({
                 id: 0,
                 api: `${baseUrl}/updateMany`,
                 values: { items: selectedRecords },
-                setError: snackbar.showError,
                 model
             });
 

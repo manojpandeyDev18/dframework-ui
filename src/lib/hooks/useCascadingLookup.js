@@ -36,16 +36,19 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
             setOptions([]);
             return;
         }
-        getLookups({
-            api,
-            setActiveRecord: setOptions,
-            model,
-            setError: snackbar.showError,
-            lookups,
-            reqData: {
-                params: { lookups: [{ lookup: column.lookup, where: dependencyValues }] }
-            }
-        });
+        try {
+            const data = await getLookups({
+                api,
+                model,
+                lookups,
+                reqData: {
+                    params: { lookups: [{ lookup: column.lookup, where: dependencyValues }] }
+                }
+            });
+            setOptions(data);
+        } catch (error) {
+            snackbar.showError('Could not load lookups', error.message);
+        }
     };
 
     // Fetch cascading options

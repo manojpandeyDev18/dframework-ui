@@ -119,22 +119,26 @@ const Form = ({
     ? { ...model.initialValues, ...data, ...baseSaveData }
     : { ...baseSaveData, ...model.initialValues, ...data }, [model.initialValues, data, id]);
 
+  const loadRecord = useCallback(async () => {
+    try {
+      const data = await getRecord({
+        api: formApi,
+        model,
+        id: idToLoad,
+      });
+      setActiveRecord(data);
+    } catch (error) {
+      errorOnLoad('Could not load record', error.message);
+    }
+  }, [formApi, model, idToLoad]);
+  
   useEffect(() => {
     const formApi = api || gridApi;
     if (!formApi) return;
     setIsLoading(true);
     setValidationSchema(model.getValidationSchema({ id, snackbar }));
     const options = idWithOptions.split("-");
-    const params = {
-      api: formApi,
-      model,
-      setError: errorOnLoad
-    };
-    getRecord({
-      ...params,
-      id: detailPanelId || (options.length > 1 ? options[consts.loadIdIndex] : id),
-      setActiveRecord
-    });
+    loadRecord();
 
   }, [id, idWithOptions, model, api, gridApi, detailPanelId]);
 
@@ -154,7 +158,6 @@ const Form = ({
         id,
         api: gridApi,
         values: values,
-        setError: snackbar.showError,
         model
       })
         .then((success) => {
@@ -247,8 +250,6 @@ const Form = ({
       const response = await deleteRecord({
         id,
         api: api || model.api,
-        setError: snackbar.showError,
-        setErrorMessage,
         model
       });
       if (response === true) {

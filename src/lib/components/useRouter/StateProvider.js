@@ -39,13 +39,13 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
   // Initialize with provided endpoints or empty object
   const apiEndpoints = useRef(initialApiEndpoints);
 
-  function setApiEndpoint(key, endpoint) {
+  const setApiEndpoint = useCallback((key, endpoint) => {
     apiEndpoints.current[key] = endpoint;
-  }
+  }, []);
 
-  function getApiEndpoint(key) {
+  const getApiEndpoint = useCallback((key) => {
     return apiEndpoints.current[key || "default"] || '';
-  }
+  }, []);
 
   function buildUrl(url, endpoint) {
     const baseUrl = apiEndpoints.current[endpoint || "default"] || '';
@@ -69,7 +69,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
    * @param {string|null|undefined} state - The user-defined date/time format string (e.g., "dd-mm-yyyy hh:mm A").
    * @returns {string} The formatted date/time format string.
    */
-  function systemDateTimeFormat(isDateFormatOnly, showOnlyDate, state) {
+  const systemDateTimeFormat = useCallback((isDateFormatOnly, showOnlyDate, state) => {
     if (state !== undefined && state !== null) {
       const userData = state; // Access 'state' 
       let userDateFormat = isDateFormatOnly ? 'DD-MM-YYYY' : 'DD-MM-YYYY hh:mm:ss A';
@@ -90,7 +90,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
       return userDateFormat;
     }
     return isDateFormatOnly ? 'DD-MM-YYYY' : 'DD-MM-YYYY hh:mm:ss A';
-  }
+  }, []);
 
   /**
    * Formats a date value using the system or user-defined format and optional timezone.
@@ -103,28 +103,28 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
    * @param {string} [params.timeZone] - The timezone to use for formatting.
    * @returns {string} The formatted date string or '-' if value is falsy.
    */
-  function formatDate({ value, useSystemFormat, showOnlyDate = false, state, timeZone }) {
+  const formatDate = useCallback(({ value, useSystemFormat, showOnlyDate = false, state, timeZone }) => {
     if (!value) return '-';
     const format = systemDateTimeFormat(useSystemFormat, showOnlyDate, state); // Pass 'state' as an argument
     if (!timeZone) {
       return dayjs(value).format(format);
     }
     return dayjs(value).tz(timeZone).format(format);
-  }
+  }, [systemDateTimeFormat]);
 
   /**
    * Provides localization utilities for the current locale.
    *
    * @returns {Object} An object with a getLocalizedString function.
    */
-  function useLocalization() {
+  const useLocalization = useCallback(() => {
     const currentLocaleData = locale;
     const localeData = locales[currentLocaleData];
     function getLocalizedString(key) {
       return currentLocaleData === 'pt-PT' || currentLocaleData === 'ptPT' ? localeData.components.MuiDataGrid.defaultProps.localeText[key] || key : localeData[key] || key;
     }
     return { getLocalizedString };
-  }
+  }, [locale]);
 
   /**
    * Set the application locale
@@ -221,7 +221,8 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
     setTimeZone,
     setDateTimeFormat,
     setModal
-  }), [stateData, isLoading, showLoader, t, i18n, snackbar, 
+  }), [stateData, isLoading, showLoader, t, i18n, snackbar,
+       getApiEndpoint, setApiEndpoint, systemDateTimeFormat, formatDate, useLocalization,
        setLocale, setPageTitle, setPageBackButton, setUserData, setTimeZone, setDateTimeFormat, setModal]);
 
   return (
