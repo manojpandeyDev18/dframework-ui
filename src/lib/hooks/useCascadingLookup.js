@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useStateContext } from "../components/useRouter/StateProvider";
 import { getLookups } from "../components/Grid/crud-helper.js";
 import { useSnackbar } from "../components/SnackBar/index.js";
@@ -9,7 +9,7 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
     const [options, setOptions] = useState([]);
     const { buildUrl } = useStateContext();
     const snackbar = useSnackbar();
-    const api = buildUrl(model.controllerType, model.api);
+    const api = buildUrl(model.api);
     // Memoize dependency values
     const dependencyValues = useMemo(() => {
         const toReturn = {};
@@ -26,7 +26,7 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
         return typeof column.lookup === 'string' ? lookups[column.lookup] : column.lookup;
     }, [column.lookup, lookups, dependsOn]);
 
-    const fetchOptions = async () => {
+    const fetchOptions = useCallback(async () => {
         if (!column.lookup) return;
         // Only fetch if all dependencies have values
         const allDependenciesHaveValues = Object.values(dependencyValues).every(
@@ -36,17 +36,20 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
             setOptions([]);
             return;
         }
-        getLookups({
-            api,
-            setActiveRecord: setOptions,
-            model,
-            setError: snackbar.showError,
-            lookups,
-            reqData: {
-                params: { lookups: [{ lookup: column.lookup, where: dependencyValues }] }
-            }
-        });
-    };
+        try {
+            const data = await getLookups({
+                api,
+                model,
+                lookups,
+                reqData: {
+                    params: { lookups: [{ lookup: column.lookup, where: dependencyValues }] }
+                }
+            });
+            setOptions(data);
+        } catch (error) {
+            snackbar.showError('Could not load lookups', error.message);
+        }
+    }, [column.lookup, dependencyValues, api, model, lookups, snackbar]);
 
     // Fetch cascading options
     useEffect(() => {
@@ -55,7 +58,7 @@ export default function useCascadingLookup({ column, formik, lookups, dependsOn 
         } else if (isAutoComplete || !userSelected.current) {
             setOptions(initialOptions || []);
         }
-    }, [dependencyValues, initialOptions, lookups, api, column.lookup]);
+    }, [dependsOn.length, fetchOptions, isAutoComplete, initialOptions]);
 
     return options;
 }

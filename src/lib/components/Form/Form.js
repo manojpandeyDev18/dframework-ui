@@ -15,7 +15,6 @@ import FormLayout from "./field-mapper";
 import { useSnackbar } from "../SnackBar";
 import { DialogComponent } from "../Dialog";
 import { useStateContext, useRouter } from "../useRouter/StateProvider";
-import actionsStateProvider from "../useRouter/actions";
 import PageTitle from "../PageTitle";
 import utils, { getPermissions } from "../utils";
 import Relations from "./relations";
@@ -53,7 +52,7 @@ const Form = ({
   const formTitle = model.formTitle || model.title;
   const { navigate, getParams, useParams, pathname } = useRouter();
   const { relations = [] } = model;
-  const { dispatchData, stateData, buildUrl } = useStateContext();
+  const { stateData, buildUrl, setPageTitle } = useStateContext();
   const params = useParams() || getParams;
   const { id: idWithOptions = "" } = params;
   const id = detailPanelId || idWithOptions.split("-")[consts.editIdIndex];
@@ -78,9 +77,10 @@ const Form = ({
   const fieldConfigs = typeof model.applyFieldConfig === consts.function
     ? model.applyFieldConfig({ data, lookups })
     : defaultFieldConfigs;
-  const gridApi = buildUrl(model.controllerType, model.api);
-  const { mode } = stateData.dataForm;
-  const userData = stateData.getUserData || {};
+  const gridApi = buildUrl(model.api);
+  // Determine mode from URL pattern: "0-{id}" indicates copy mode
+  const mode = idWithOptions.includes('-') && idWithOptions.split('-')[0] === '0' ? 'copy' : '';
+  const userData = stateData.userData || {};
   const userDefinedPermissions = {
     add: true,
     edit: true,
@@ -119,25 +119,34 @@ const Form = ({
     ? { ...model.initialValues, ...data, ...baseSaveData }
     : { ...baseSaveData, ...model.initialValues, ...data }, [model.initialValues, data, id]);
 
-  useEffect(() => {
-    const formApi = api || gridApi;
-    if (!formApi) return;
-    setIsLoading(true);
-    setValidationSchema(model.getValidationSchema({ id, snackbar }));
+  const formApi = api || gridApi;
+  const idToLoad = useMemo(() => {
+    if (detailPanelId) {
+      return detailPanelId;
+    }
     const options = idWithOptions.split("-");
-    const params = {
-      api: formApi,
-      model,
-      setError: errorOnLoad
-    };
-    getRecord({
-      ...params,
-      id: detailPanelId || (options.length > 1 ? options[consts.loadIdIndex] : id),
-      setActiveRecord,
-      dispatchData
-    });
-
-  }, [id, idWithOptions, model, api, gridApi, detailPanelId, dispatchData]);
+    return options.length > 1 ? options[consts.loadIdIndex] : id;
+  }, [detailPanelId, idWithOptions, id]);
+  const loadRecord = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await getRecord({
+        api: formApi,
+        model,
+        id: idToLoad,
+      });
+      setActiveRecord(data);
+    } catch (error) {
+      errorOnLoad('Could not load record', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [formApi, model, idToLoad]);
+  
+  useEffect(() => {
+    setValidationSchema(model.getValidationSchema({ id, snackbar }));
+    loadRecord();
+  }, [id, idToLoad, model, formApi, snackbar, setValidationSchema, loadRecord]);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -155,9 +164,7 @@ const Form = ({
         id,
         api: gridApi,
         values: values,
-        setError: snackbar.showError,
-        model,
-        dispatchData
+        model
       })
         .then((success) => {
           if (!success) return;
@@ -227,12 +234,9 @@ const Form = ({
     if (linkColumn !== "") {
       breadcrumbs.push({ text: linkColumn });
     }
-    dispatchData({
-      type: actionsStateProvider.PAGE_TITLE_DETAILS,
-      payload: {
-        showBreadcrumbs: true,
-        breadcrumbs: breadcrumbs
-      }
+    setPageTitle({
+      showBreadcrumbs: true,
+      breadcrumbs: breadcrumbs
     });
   };
   const handleFormCancel = useCallback((event) => {
@@ -252,8 +256,6 @@ const Form = ({
       const response = await deleteRecord({
         id,
         api: api || model.api,
-        setError: snackbar.showError,
-        setErrorMessage,
         model
       });
       if (response === true) {

@@ -15,21 +15,42 @@ In Dframework we have create Multple Component for our Use
 
 ```js
 import React from "react";
-import { SnackbarProvider } from "@durlabh/dfamework-ui";
+import { SnackbarProvider } from "@durlabh/dframework-ui";
 export default function App() {
   return (
-    <SnackbarProvider SnackbarProps={{ autoHideDuration: 1000 }}>
+    <SnackbarProvider>
       ******************* Import Your Component ********************
     </SnackbarProvider>
   );
 }
 ```
 
+# Provider Setup (Required)
+
+Wrap your app with `SnackbarProvider` and `StateProvider`.
+
+```js
+import React from "react";
+import { SnackbarProvider, StateProvider } from "@durlabh/dframework-ui";
+
+export default function App() {
+  return (
+    <SnackbarProvider>
+      <StateProvider apiEndpoints={{ default: "/api/", upload: "/upload", media: "/media" }}>
+        ******************* Import Your Component ********************
+      </StateProvider>
+    </SnackbarProvider>
+  );
+}
+```
+
+The keys you define in `apiEndpoints` (like `default`, `upload`, `media`) are used with `buildUrl(url, endpointKey)` to select which base URL to use for a given request.
+
 ## Then use in Your Project
 
 ```js
 import React from "react";
-import { useSnackbar } from "@durlabh/dfamework-ui";
+import { useSnackbar } from "@durlabh/dframework-ui";
 export default function App() {
   const snac = useSnackbar();
   return (
@@ -53,7 +74,7 @@ export default function App() {
 # How we will use the Dialog Component
 
 ```js
-import {DialogComponent} from '@durlabh/dfamework-ui';
+import {DialogComponent} from '@durlabh/dframework-ui';
 import React from 'react'
 import
 export default function App() {
@@ -71,7 +92,7 @@ export default function App() {
 
 ```js
 import React from "react";
-import { UiModel } from "./lib/components/Grid/ui-models";
+import { UiModel } from "@durlabh/dframework-ui";
 export default function App() {
   const surveyModel = new UiModel({
     title: "Questionnaires",
@@ -109,7 +130,7 @@ export default function App() {
 
 ```js
 import React from "react";
-import { UiModel } from "./lib/components/Grid/ui-models";
+import { UiModel } from "@durlabh/dframework-ui";
 export default function App() {
   const surveyModel = new UiModel({
     title: "Questionnaires",
@@ -151,7 +172,7 @@ export default function App() {
 | ---------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ------------ |
 | `title`                | `string`            | The title of the grid.                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -                 | Yes          |
 | `columns`              | `array`             | The list of column definitions for the grid.  [Column Properties Table](#column-properties-table)                                                                                                                                                                                                                                                                                                                                                                                  | -                 | Yes          |
-| `formTitle`            | `string`            | Title used in the form layout.                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `title`           | No           |  | `title` | No |
+| `formTitle`            | `string`            | Title used in the form layout.                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `title`           | No           |
 | `gridSubTitle`         | `string`            | Subtitle displayed below the grid title.                                                                                                                                                                                                                                                                                                                                                                                                                                           | -                 | No           |
 | `api`                  | `string`            | The API endpoint to fetch grid data.                                                                                                                                                                                                                                                                                                                                                                                                                                               | `title`           | No           |
 | `idProperty`           | `string`            | Specifies the unique identifier for grid rows.                                                                                                                                                                                                                                                                                                                                                                                                                                     | `api\|\|title`    | No           |
@@ -162,9 +183,9 @@ export default function App() {
 | `readOnly`             | `boolean`           | When `readOnly` is enabled, users won’t be able to open the edit form by double-clicking on the grid, and the action buttons will be hidden.                                                                                                                                                                                                                                                                                                                                       | `false`           | No           |
 | `joinColumn`           | `string`            | Specifies the column used for joining data with a parent grid.                                                                                                                                                                                                                                                                                                                                                                                                                     | -                 | No           |
 | `standard`             | `object \| boolean` | The standard property defines which audit columns appear in the grid. If set to true, all sub-properties will be true; if set to false, all sub-properties will be false. If the user wishes to customize this behavior by enabling or disabling certain columns, they can pass an object. Each key represents a column, which is enabled when set to true and hidden when set to false. See the [Standard Property Columns Table](#standard-property-columns-table ) for details. | `true`            | No           |
-| `controllerType`       | `string`            | Specifies the type of controller. Use "cs" for a .NET API. If no value is provided, it defaults to a Node.js API.                                                                                                                                                                                                                                                                                                                                                                  | Node.js API       | No           |
-| `exportTemplate`             | `string`            | Template configuration name for exporting, templates are stored inside `emailTemplates` directory at root of the project. eg. `exportTemplate: "alert-notification"`                                                                                                                                                                                                                                                                                                                                                                                                                                            | -                 | No           |
-| `pivotApi`             | `string`            | API endpoint for pivot-specific data.                                                                                                                                                                                                                                                                                                                                                                                                                                              | -                 | No           |
+| `exportTemplate`       | `string`            | Template configuration name for pivot export. Templates are stored inside `emailTemplates` at the project root. Example: `exportTemplate: "alert-notification"`.                                                                                                                                                                                                                                                                                                                    | -                 | No           |
+| `configFileName`       | `string`            | Optional config file name passed with pivot export requests.                                                                                                                                                                                                                                                                                                                                                                                                                       | -                 | No           |
+| `pivotApi`             | `string`            | API endpoint used for pivot export requests.                                                                                                                                                                                                                                                                                                                                                                                                                                       | -                 | No           |
 | `preferenceId`         | `string`            | Identifier for saved grid preferences.                                                                                                                                                                                                                                                                                                                                                                                                                                             | -                 | No           |
 | `defaultPreferenceEnums` | `object`            | Enumerations for specific table preferences. [Table Preference Enums Example](./docs/defaultPreferenceEnums.md)                                                                                                                                                                                                                                                                                                                                                                | -                 | No           |
 | `showAddIcon`          | `boolean`           | Indicates if the "Add" button icon should be displayed.                                                                                                                                                                                                                                                                                                                                                                                                                            | `false`            | No           |
@@ -859,3 +880,301 @@ const exampleModel = new UiModel({
 This will add a custom action button with an Article icon to each row. When clicked, it will navigate to the related document page for that row.
 
 **Note:** The `icon` property in `customActions` should be a string that maps to a supported icon name. For example, `"article"` will use the Article icon. If an unknown icon is provided, a default icon will be used.
+
+---
+
+# StateProvider (Framework & State Management)
+
+## Overview
+
+`StateProvider` is the centralized provider that manages both framework utilities and application state. It includes:
+- Loader management (simple on/off - calling methods control via try/finally blocks)
+- dayjs, i18n utilities  
+- Snackbar integration
+- App-level state (page title, user data, timezone, etc.)
+- API endpoint configuration
+
+## Setup
+
+Wrap your application with the required providers:
+
+```js
+import React from "react";
+import { StateProvider, SnackbarProvider } from "@durlabh/dframework-ui";
+
+export default function App() {
+  return (
+    <SnackbarProvider>
+      <StateProvider apiEndpoints={{ default: 'http://localhost:3000/api' }}>
+        {/* Your app components */}
+      </StateProvider>
+    </SnackbarProvider>
+  );
+}
+```
+
+**Important:** 
+- `SnackbarProvider` must wrap `StateProvider` (StateProvider depends on snackbar utilities)
+
+## Using StateProvider
+
+### Loader Management
+
+**CRUD helper functions are pure** - they perform the requested operation and either return data or throw an error. They do **not** automatically show or hide any loader.
+
+**Loader state is controlled by the caller:**
+- The **Grid** and **Form** components manage their own loading state locally when they use CRUD helpers
+- If you call CRUD helpers directly, you are responsible for managing loader state (either with local component state or via the StateProvider loader using `showLoader(true/false)`)
+
+**Using CRUD helpers with the StateProvider loader:**
+```js
+import { useStateContext } from "@durlabh/dframework-ui";
+import { getList } from "@durlabh/dframework-ui/crud-helper";
+
+function MyComponent() {
+  const { showLoader } = useStateContext();
+
+  const loadData = async () => {
+    try {
+      showLoader(true);
+      const data = await getList({
+        model,
+        gridColumns,
+        page,
+        pageSize,
+      });
+      setData(data);
+    } finally {
+      showLoader(false);
+    }
+  };
+  
+  // ...
+}
+```
+
+**For custom operations, use try/finally with showLoader(flag):**
+```js
+const { showLoader } = useStateContext();
+
+const myCustomOperation = async () => {
+  try {
+    showLoader(true);
+    await someAsyncOperation();
+    await anotherAsyncOperation();
+  } finally {
+    showLoader(false); // Always hidden, even on exceptions
+  }
+};
+```
+
+### Manual Loader Control (If Needed)
+
+For non-API operations, you can manually control the loader:
+
+```js
+import { useStateContext } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { isLoading, showLoader } = useStateContext();
+  
+  const processData = async () => {
+    showLoader(true);
+    try {
+      // Heavy processing...
+      await someHeavyOperation();
+    } finally {
+      showLoader(false);
+    }
+  };
+  
+  return (
+    <div>
+      {isLoading && <p>Processing...</p>}
+      <button onClick={processData}>Process</button>
+    </div>
+  );
+}
+```
+
+### Accessing Snackbar
+
+Access snackbar for showing messages and errors:
+
+```js
+import { useStateContext } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { showMessage, showError } = useStateContext();
+  
+  const handleAction = () => {
+    showMessage('Success!', 'Operation completed');
+    // or
+    showError('Error!', 'Something went wrong');
+  };
+  
+  return <button onClick={handleAction}>Perform Action</button>;
+}
+```
+
+### App-Level State Management
+
+Use the provided setter methods for app-level state:
+
+```js
+import { useStateContext } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { 
+    setPageTitle, 
+    setUserData, 
+    setTimeZone, 
+    stateData 
+  } = useStateContext();
+  
+  useEffect(() => {
+    setPageTitle({ 
+      titleHeading: 'Dashboard', 
+      title: 'My Dashboard' 
+    });
+    setUserData({ name: 'John Doe', role: 'Admin' });
+    setTimeZone('America/New_York');
+  }, []);
+  
+  return <div>Welcome {stateData.userData?.name}</div>;
+}
+```
+
+### Accessing dayjs
+
+Access the configured dayjs instance with UTC and timezone plugins:
+
+```js
+import { useStateContext } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { dayjs } = useStateContext();
+  
+  const formattedDate = dayjs().format('YYYY-MM-DD');
+  const utcDate = dayjs().utc().format();
+  
+  return <div>Current date: {formattedDate}</div>;
+}
+```
+
+### Accessing i18n
+
+Access translation utilities directly:
+
+```js
+import { useStateContext } from "@durlabh/dframework-ui";
+
+function MyComponent() {
+  const { t, i18n } = useStateContext();
+  
+  return (
+    <div>
+      <h1>{t('welcome')}</h1>
+      <p>Current language: {i18n.language}</p>
+    </div>
+  );
+}
+```
+
+## API Reference
+
+### StateProvider Props
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `apiEndpoints` | `object` | API endpoint configuration (e.g., `{ default: 'http://api.example.com' }`) |
+| `children` | `ReactNode` | Child components |
+
+### useStateContext() Hook
+
+Returns an object with the following properties:
+
+Returns an object with the following properties:
+
+**Loader Management:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `isLoading` | `boolean` | Current loading state |
+| `showLoader` | `(flag: boolean) => void` | Set loading state; pass `true` to show the loader and `false` to hide it |
+
+**Framework Utilities:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `dayjs` | `object` | dayjs instance with UTC and timezone plugins |
+| `t` | `function` | Translation function from i18next |
+| `i18n` | `object` | i18n instance from react-i18next |
+| `showMessage` | `function` | Show a snackbar message |
+| `showError` | `function` | Show an error snackbar |
+
+**App-Level State:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `stateData` | `object` | Application state (pageTitle, userData, locale, timeZone, etc.) |
+| `setPageTitle` | `function` | Set page title |
+| `setUserData` | `function` | Set user data |
+| `setLocale` | `function` | Set application locale |
+| `setTimeZone` | `function` | Set timezone |
+| `setDateTimeFormat` | `function` | Set date/time format |
+| `setModal` | `function` | Set modal state |
+| `setPageBackButton` | `function` | Set page back button |
+
+**API Utilities:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `buildUrl` | `function` | Build API URLs |
+| `getApiEndpoint` | `function` | Get API endpoint by key |
+| `setApiEndpoint` | `function` | Set API endpoint |
+| `formatDate` | `function` | Format dates with timezone support |
+| `systemDateTimeFormat` | `function` | Get system date/time format |
+
+## State Management
+
+StateProvider uses individual setter methods for clean, type-safe state management:
+
+**Setting App-Level State:**
+```js
+const { setPageTitle, setUserData, setLocale, setTimeZone } = useStateContext();
+
+setPageTitle({ title: 'My Page' });
+setUserData(userData);
+setLocale('es');
+setTimeZone('America/New_York');
+```
+
+### Grid and Form Components
+
+Grid and Form components automatically use StateProvider for loader management. No changes are needed in your component code that uses these components.
+
+### Custom HTTP Requests
+
+When using `httpRequest` directly, loader management is automatic via CRUD functions:
+
+```js
+import request from '@durlabh/dframework-ui/httpRequest';
+
+// httpRequest is a pure transport layer - no loader management
+await request({
+  url: '/api/data',
+  params: { id: 1 }
+});
+
+// Loader is managed by CRUD functions
+import { getList } from '@durlabh/dframework-ui/crud-helper';
+getList({ ... }); // Shows/hides loader automatically
+```
+
+## Benefits
+
+1. **Automatic Loader Management**: Loader shows/hides automatically at the point of API call
+2. **Centralized Utilities**: dayjs, i18n, and snackbar available from a single context
+3. **Cleaner Code**: No need to pass showLoader/hideLoader as parameters
+3. **Better Performance**: Eliminates unnecessary re-renders from global state updates
+4. **Cleaner API**: More intuitive `showLoader(true)`/`showLoader(false)` instead of dispatch actions
+5. **Type Safety**: Better TypeScript support with explicit function signatures
+
+---

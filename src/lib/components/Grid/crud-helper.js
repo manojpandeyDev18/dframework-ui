@@ -1,12 +1,10 @@
-import actionsStateProvider from "../useRouter/actions";
-import request, { DATA_PARSERS } from "./httpRequest";
+import request, { DATA_PARSERS, getErrorMessage } from "./httpRequest";
 
 const dateDataTypes = ['date', 'dateTime'];
 const lookupDataTypes = ['singleSelect'];
+const exportDefaultLimit = 1_000_000;
 
 const isLocalTime = (dateValue) => new Date().getTimezoneOffset() === new Date(dateValue).getTimezoneOffset();
-
-const getErrorMessage = (response) => response?.message || response?.info || response?.error;
 
 function shouldApplyFilter(filter) {
     const { operator, value, type } = filter;
@@ -19,12 +17,8 @@ function shouldApplyFilter(filter) {
     return isUnaryOperator || hasValidValue;
 }
 
-const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filterModel, api, parentFilters, action = 'list', setError, extraParams, contentType, columns, controllerType = 'node', template = null, configFileName = null, dispatchData, showFullScreenLoader = false, model, baseFilters = null, isElasticExport, history = null }) => {
-    if (!contentType) {
-        if (showFullScreenLoader) {
-            dispatchData({ type: actionsStateProvider.UPDATE_LOADER_STATE, payload: true });
-        }
-    }
+const buildRequestData = ({ gridColumns, page, pageSize, sortModel, filterModel, baseFilters, action = 'list', extraParams = {}, model, api }) => {
+    const isElasticExport = action === 'export' && model.isElasticExport === true;
 
     const lookups = [];
     const lookupWithDeps = []; // for backward compatibility having two lookups arrays
@@ -65,16 +59,15 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
             }
         });
     }
-    if (parentFilters) {
-        where.push(...parentFilters);
-    }
 
-    if (baseFilters) {
+    // Add baseFilters if present (already includes parentFilters merged in Grid component)
+    if (baseFilters && Array.isArray(baseFilters)) {
         where.push(...baseFilters);
     }
+
     const requestData = {
         start: page * pageSize,
-        limit: isElasticExport ? model.exportSize : pageSize,
+        limit: isElasticExport ? (model.exportSize || exportDefaultLimit) : pageSize,
         ...extraParams,
         logicalOperator: filterModel.logicOperator,
         sort: sortModel.map(sort => (sort.filterField || sort.field) + ' ' + sort.sort).join(','),
@@ -96,28 +89,57 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         requestData.limitToSurveyed = model?.limitToSurveyed;
     }
 
-    const headers = {};
-    let url = controllerType === 'cs' ? `${api}?action=${action}&asArray=0` : `${api}/${action}`;
+    let url = `${api}/${action}`;
 
-    if (template !== null) {
-        url += `&template=${template}`;
+    const queryParams = new URLSearchParams();
+    if (extraParams.template) {
+        queryParams.append('template', extraParams.template);
     }
-    if (configFileName !== null) {
-        url += `&configFileName=${configFileName}`;
+    if (extraParams.configFileName) {
+        queryParams.append('configFileName', extraParams.configFileName);
     }
+    const queryString = queryParams.toString();
+    if (queryString) {
+        url += `?${queryString}`;
+    }
+
+    return { requestData, url, where, dateColumns };
+};
+
+/**
+ * Fetches a list of records or triggers a file export depending on whether `contentType` is provided.
+ *
+ * - Without `contentType` (list path):
+ *   - Performs a JSON POST request via `request`.
+ *   - Returns the parsed response.
+ *   - Throws on HTTP or application-level errors.
+ *
+ * - With `contentType` (export path):
+ *   - Builds a POST payload and submits a hidden `<form>` to trigger a file download in a new window/tab.
+ *   - This is a fire-and-forget operation: the promise resolves once the form is submitted.
+ *   - No errors from the export request are propagated back to the caller; failures are effectively silent
+ *     from this function's perspective and should be handled via server-side logging or a custom UX flow
+ *     (e.g. returning an error file or exposing a separate export-status API).
+ */
+const getList = async (props = {}) => {
+    const { contentType, columns, extraParams = {}, action = 'list', model } = props;
+    const { requestData, url, where, dateColumns } = buildRequestData(props);
+
     if (contentType) {
-        const form = document.createElement("form");
         requestData.responseType = contentType;
         requestData.columns = columns;
         requestData.userTimezoneOffset = -new Date().getTimezoneOffset(); // Negate to get the correct offset for conversion
-        // for manipulating the request payload before sending the request.
         if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { where, sortModel, page, pageSize, parentFilters, action, url, dataParsers: DATA_PARSERS, model });
+            await model.createRequestPayload(requestData, { where, url, dataParsers: DATA_PARSERS, ...props });
         }
+        const form = document.createElement("form");
         form.setAttribute("method", "POST");
         form.setAttribute("id", "exportForm");
         form.setAttribute("target", "_blank");
-        if (template === null) {
+        // Template-based exports are fully server-driven via the template query param.
+        // Request data (where, sort, limit, etc.) is intentionally omitted — the template
+        // defines the data shape and filtering on the server side.
+        if (!extraParams.template) {
             for (const key in requestData) {
                 let v = requestData[key];
                 if (v === undefined || v === null) {
@@ -135,74 +157,65 @@ const getList = async ({ gridColumns, setData, page, pageSize, sortModel, filter
         form.setAttribute('action', requestData.url || url);
         document.body.appendChild(form);
         form.submit();
-        setTimeout(() => {
-            document.getElementById("exportForm").remove();
-        }, 3000);
+        setTimeout(() => { form.remove(); }, 0);
         return;
     }
-    try {
-        const reqParams = {
-            url,
-            additionalHeaders: {
-                "Content-Type": "application/json",
-                ...headers
-            },
-            dispatchData,
-            jsonPayload: true,
-            params: requestData,
-            dataParser: DATA_PARSERS.json,
-            history
-        };
 
-        // for manipulating the request payload before sending the request.
-        if (typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(reqParams, { where, sortModel, page, pageSize, parentFilters, action, dataParsers: DATA_PARSERS, model });
-        }
-        const response = await request(reqParams);
+    const reqParams = {
+        url,
+        additionalHeaders: {
+            "Content-Type": "application/json"
+        },
+        jsonPayload: true,
+        params: requestData,
+        dataParser: DATA_PARSERS.json
+    };
 
-        if (response?.error || response?.success === false) {
-            const errorMessage = getErrorMessage(response);
-            setError('An error occurred while fetching data', errorMessage);
-            setData((prevData) => ({ ...prevData, records: [], recordCount: 0 }));
-            return;
-        }
-
-        // Parse response data if needed custom processing.
-        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes(action)) {
-            const resData = await model.parseResponsePayload({ responseData: response, model, dateColumns, action });
-            setData(resData);
-            return;
-        }
-
-
-        response.records.forEach(record => {
-            dateColumns.forEach(column => {
-                const { field, keepLocal, keepLocalDate } = column;
-                if (record[field]) {
-                    record[field] = new Date(record[field]);
-                    if (keepLocalDate) {
-                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                    }
-                    if (keepLocal && !isLocalTime(record[field])) {
-                        const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
-                        record[field] = new Date(record[field].getTime() + userTimezoneOffset);
-                    }
-                }
-            });
-            model.columns.forEach(({ field, displayIndex }) => {
-                if (!displayIndex) return;
-                record[field] = record[displayIndex];
-            });
-        });
-
-        setData(response);
-    } catch (error) {
-        setError('Network failure or server unreachable. Please try again.');
+    // for manipulating the request payload before sending the request.
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(reqParams, { where, dataParsers: DATA_PARSERS, ...props });
     }
+    const response = await request(reqParams);
+
+    if (response?.error || response?.success === false) {
+        throw new Error(getErrorMessage(response) || 'An error occurred while fetching data');
+    }
+
+    // Parse response data if needed custom processing.
+    if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes(action)) {
+        return await model.parseResponsePayload({ responseData: response, model, dateColumns, action, ...props });
+    }
+
+    response.records.forEach(record => {
+        dateColumns.forEach(column => {
+            const { field, keepLocal, keepLocalDate } = column;
+            if (record[field]) {
+                record[field] = new Date(record[field]);
+                if (keepLocalDate) {
+                    const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                    record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                }
+                if (keepLocal && !isLocalTime(record[field])) {
+                    const userTimezoneOffset = record[field].getTimezoneOffset() * 60000;
+                    record[field] = new Date(record[field].getTime() + userTimezoneOffset);
+                }
+            }
+        });
+        model.columns.forEach(({ field, displayIndex }) => {
+            if (!displayIndex) return;
+            record[field] = record[displayIndex];
+        });
+    });
+
+    return response;
 };
 
-const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where = {}, setError, dispatchData }) => {
+/**
+ * Loads a single record by id along with its lookups.
+ * Returns { id, title, record, lookups } or throws on error.
+ */
+const getRecord = async (props = {}) => {
+    let { api, id, model, parentFilters, where = {} } = props;
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/${id === undefined || id === null ? '-' : id}`;
@@ -220,48 +233,42 @@ const getRecord = async ({ api, id, setActiveRecord, model, parentFilters, where
     const requestData = {
         url: `${url}?${searchParams.toString()}`,
         additionalParams: { method: 'GET' },
-        dispatchData,
         jsonPayload: true
     };
 
     if (typeof model.createRequestPayload === 'function') {
-        await model.createRequestPayload(requestData, { id, parentFilters, model, where, api, action: 'load', dataParsers: DATA_PARSERS });
+        await model.createRequestPayload(requestData, { action: 'load', dataParsers: DATA_PARSERS, ...props });
     }
-    try {
-        const response = await request(requestData);
-        if (response?.error || response?.success === false) {
-            const errorMessage = getErrorMessage(response);
-            setError('Load failed', errorMessage);
-            return;
-        }
-        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('load')) {
-            const resData = await model.parseResponsePayload({ responseData: response, model, action: 'load' });
-            setActiveRecord(resData);
-            return;
-        }
-        const { data: record, lookups } = response || {};
-        let title = record[model.linkColumn];
-        const columnConfig = model.columns.find(a => a.field === model.linkColumn);
-        if (columnConfig && columnConfig.lookup) {
-            if (lookups && lookups[columnConfig.lookup] && lookups[columnConfig.lookup]?.length) {
-                const lookupValue = lookups[columnConfig.lookup].find(a => a.value === title);
-                if (lookupValue) {
-                    title = lookupValue.label;
-                }
+
+    const response = await request(requestData);
+    if (response?.error || response?.success === false) {
+        throw new Error(getErrorMessage(response) || 'Load failed');
+    }
+    if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('load')) {
+        return await model.parseResponsePayload({ responseData: response, model, action: 'load', ...props });
+    }
+    const { data: record, lookups } = response || {};
+    let title = record[model.linkColumn];
+    const columnConfig = model.columns.find(a => a.field === model.linkColumn);
+    if (columnConfig && columnConfig.lookup) {
+        if (lookups && lookups[columnConfig.lookup] && lookups[columnConfig.lookup]?.length) {
+            const lookupValue = lookups[columnConfig.lookup].find(a => a.value === title);
+            if (lookupValue) {
+                title = lookupValue.label;
             }
         }
-        const defaultValues = { ...model.defaultValues };
-        setActiveRecord({ id, title: title, record: { ...defaultValues, ...record, ...parentFilters }, lookups });
-    } catch (error) {
-        setError('Could not load record', error.message || error.toString());
     }
+    const defaultValues = { ...model.defaultValues };
+    return { id, title, record: { ...defaultValues, ...record, ...parentFilters }, lookups };
 };
 
-const deleteRecord = async function ({ id, api, setError, model }) {
-    const result = { success: false, error: '' };
+/**
+ * Deletes a record by id. Returns true on success or throws on error.
+ */
+const deleteRecord = async function (props = {}) {
+    const { id, api, model } = props;
     if (!id) {
-        setError('Deleted failed. No active record.');
-        return;
+        throw new Error('Delete failed. No active record.');
     }
     const requestData = {
         url: `${api}/${id}`,
@@ -269,25 +276,20 @@ const deleteRecord = async function ({ id, api, setError, model }) {
     };
 
     if (typeof model.createRequestPayload === 'function') {
-        await model.createRequestPayload(requestData, { id, model, api, action: 'delete', dataParsers: DATA_PARSERS });
+        await model.createRequestPayload(requestData, { action: 'delete', dataParsers: DATA_PARSERS, ...props });
     }
-    try {
-        const response = await request(requestData);
-        if (response?.error || response?.success === false) {
-            result.success = false;
-            const errorMessage = getErrorMessage(response);
-            setError('Delete failed', errorMessage);
-            return false;
-        }
-        result.success = true;
-        return true;
-    } catch (error) {
-        setError('Could not delete record', error.message || error.toString());
+    const response = await request(requestData);
+    if (response?.error || response?.success === false) {
+        throw new Error(getErrorMessage(response) || 'Delete failed');
     }
-    return result;
+    return true;
 };
 
-const saveRecord = async function ({ id, api, values, setError, model, dispatchData }) {
+/**
+ * Creates or updates a record. Returns the response on success or throws on error.
+ */
+const saveRecord = async function (props = {}) {
+    const { id, api, values, model } = props;
     let url, method;
 
     if (id !== 0) {
@@ -305,30 +307,25 @@ const saveRecord = async function ({ id, api, values, setError, model, dispatchD
         additionalHeaders: {
             'Content-Type': 'application/json'
         },
-        jsonPayload: true,
-        dispatchData
+        jsonPayload: true
     };
 
     if (typeof model.createRequestPayload === 'function') {
-        await model.createRequestPayload(requestData, { id, model, values, api, action: 'save', dataParsers: DATA_PARSERS });
+        await model.createRequestPayload(requestData, { action: 'save', dataParsers: DATA_PARSERS, ...props });
     }
 
-    try {
-        const response = await request(requestData);
-        if (response?.error || response?.success === false) {
-            const errorMessage = getErrorMessage(response);
-            setError('Save failed', errorMessage);
-            return false;
-        }
-        return response;
-    } catch (error) {
-        setError('Could not save record', error.message || error.toString());
+    const response = await request(requestData);
+    if (response?.error || response?.success === false) {
+        throw new Error(getErrorMessage(response) || 'Save failed');
     }
-
-    return false;
+    return response;
 };
 
-const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scopeId, reqData }) => {
+/**
+ * Fetches lookup data for a given scope. Returns the response or throws on error.
+ */
+const getLookups = async (props = {}) => {
+    let { api, model, lookups, scopeId, reqData } = props;
     api = api || model.api;
     const searchParams = new URLSearchParams();
     const url = `${api}/lookups`;
@@ -340,27 +337,21 @@ const getLookups = async ({ api, setActiveRecord, model, setError, lookups, scop
         jsonPayload: true,
         ...reqData
     };
-    try {
-        if(typeof model.createRequestPayload === 'function') {
-            await model.createRequestPayload(requestData, { model, lookups, scopeId, dataParsers: DATA_PARSERS, action: 'lookups', api });
-        }
-        const response = await request(requestData);
-        if (response?.error || response?.success === false) {
-            const errorMessage = getErrorMessage(response);
-            setError('Could not load lookups', errorMessage);
-            return false;
-        }
 
-        if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('lookups')) {
-            const resData = await model.parseResponsePayload({ responseData: response, model, action: 'lookups' });
-            setActiveRecord(resData);
-            return;
-        }
-        setActiveRecord(response);
-    } catch (error) {
-        setError('Could not load lookups', error.message || error.toString());
+    if (typeof model.createRequestPayload === 'function') {
+        await model.createRequestPayload(requestData, { action: 'lookups', dataParsers: DATA_PARSERS, ...props });
     }
+    const response = await request(requestData);
+    if (response?.error || response?.success === false) {
+        throw new Error(getErrorMessage(response) || 'Could not load lookups');
+    }
+
+    if (typeof model.parseResponsePayload === 'function' && model.parseResponseActions.includes('lookups')) {
+        return await model.parseResponsePayload({ responseData: response, model, action: 'lookups', ...props });
+    }
+    return response;
 };
+
 export {
     getList,
     getRecord,

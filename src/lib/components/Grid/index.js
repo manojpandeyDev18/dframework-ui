@@ -26,7 +26,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import PageTitle from '../PageTitle';
 import { useStateContext, useRouter } from '../useRouter/StateProvider';
 import LocalizedDatePicker from './LocalizedDatePicker';
-import actionsStateProvider from '../useRouter/actions';
 import CustomDropdownMenu from './CustomDropdownMenu';
 import CustomToolbar from './CustomToolbar';
 import { getPermissions } from '../utils';
@@ -39,7 +38,9 @@ import { styled } from '@mui/material/styles';
 
 const defaultPageSize = 50;
 const sortRegex = /(\w+)( ASC| DESC)?/i;
-const recordCounts = 60000;
+const recordCounts = 60_000;
+const exportPage = 0;
+const exportPageSize = 1_000_000;
 const actionTypes = {
     Copy: "Copy",
     Edit: "Edit",
@@ -195,11 +196,12 @@ const GridBase = memo(({
     const dataRef = useRef(data);
     const showAddIcon = model.showAddIcon === true;
     const toLink = model.columns.filter(({ link }) => Boolean(link)).map(item => item.link);
-    const { stateData, dispatchData, formatDate, getApiEndpoint, buildUrl } = useStateContext();
+    const { stateData, formatDate, getApiEndpoint, buildUrl, setPageTitle } = useStateContext();
+    const [isLoading, setIsLoading] = useState(false);
     const { timeZone } = stateData;
     const effectivePermissions = useMemo(() => ({ ...constants.permissions, ...model.permissions, ...permissions }), [model.permissions, permissions]);
     const emptyIsAnyOfOperatorFilters = ["isEmpty", "isNotEmpty", "isAnyOf"];
-    const userData = stateData.getUserData || {};
+    const userData = stateData.userData || {};
     const documentField = model.columns.find(ele => ele.type === 'fileUpload')?.field || "";
     const userDefinedPermissions = { add: effectivePermissions.add, edit: effectivePermissions.edit, delete: effectivePermissions.delete };
     const { canAdd, canEdit, canDelete } = getPermissions({ userData, model, userDefinedPermissions });
@@ -319,16 +321,13 @@ const GridBase = memo(({
     }, []);
 
     useEffect(() => {
+        // Note: PASS_FILTERS_TO_HEADER was removed as component-specific state
+        // This functionality should be handled locally within the Grid component if needed
         if (props.isChildGrid || !hideTopFilters) {
             return;
         }
-        dispatchData({
-            type: actionsStateProvider.PASS_FILTERS_TO_HEADER, payload: {
-                filterButton: null,
-                hidden: { search: true, operation: true, export: true, print: true, filter: true }
-            }
-        });
-    }, []);
+        // TODO: If filter header communication is needed, implement using local state or props
+    }, [props.isChildGrid, hideTopFilters]);
 
     const createAction = useCallback(
         ({ key, title, icon, color = "primary", disabled, otherProps }) => (
@@ -547,14 +546,11 @@ const GridBase = memo(({
     }, [gridColumns]);
 
 
-    const fetchData = (action = "list", extraParams = {}, contentType, columns, isPivotExport, isElasticExport) => {
+    const fetchData = useCallback(async ({ action = "list", extraParams = {}, isPivotExport = false, contentType, columns } = {}) => {
         const { pageSize, page } = paginationModel;
+        const isExportRequest = Boolean(contentType);
 
-        const baseUrl =  buildUrl(model.controllerType, isPivotExport ? model.pivotApi : backendApi);
-
-        if (assigned || available) {
-            extraParams[assigned ? "include" : "exclude"] = Array.isArray(selected) ? selected.join(",") : selected;
-        }
+        const baseUrl = buildUrl(isPivotExport ? model.pivotApi : backendApi);
 
         const filters = { ...filterModel };
         const finalBaseFilters = Array.isArray(baseFilters) ? [...baseFilters] : [];
@@ -565,46 +561,80 @@ const GridBase = memo(({
         if (additionalFilters) {
             filters.items = [...(filters.items || []), ...additionalFilters];
         }
-        extraParams = { ...extraParams, ...props.extraParams }; // Merge any custom params passed via component props into extraParams
+
+        // Merge parentFilters and baseFilters into one parameter
+        const mergedBaseFilters = [];
+        if (Array.isArray(finalBaseFilters)) {
+            mergedBaseFilters.push(...finalBaseFilters);
+        }
+        if (Array.isArray(parentFilters)) {
+            mergedBaseFilters.push(...parentFilters);
+        }
+
+        // Prepare extraParams with template and configFileName for pivot exports
+        const mergedExtraParams = {
+            ...extraParams,
+            ...props.extraParams, // Merge any custom params passed via component props
+        };
+
+        if (assigned || available) {
+            mergedExtraParams[assigned ? "include" : "exclude"] = Array.isArray(selected) ? selected.join(",") : selected;
+        }
+        
+        // Add template and configFileName for pivot exports
+        if (isPivotExport) {
+            if (model.exportTemplate) {
+                mergedExtraParams.template = model.exportTemplate;
+            }
+            if (model.configFileName) {
+                mergedExtraParams.configFileName = model.configFileName;
+            }
+        }
+
         const isValidFilters = !filters.items.length || filters.items.every(item => "value" in item && item.value !== undefined);
         if (!isValidFilters) return;
 
         const listParams = {
             action,
-            page: !contentType ? page : 0,
-            pageSize: !contentType ? pageSize : 1000000,
+            page: isExportRequest ? exportPage : page,
+            pageSize: isExportRequest ? exportPageSize : pageSize,
             sortModel,
             filterModel: filters,
-            controllerType: model.controllerType,
-            api: baseUrl,
             gridColumns,
             model,
-            parentFilters,
-            extraParams,
-            contentType,
-            columns,
-            template: isPivotExport ? model.exportTemplate : null,
-            configFileName: isPivotExport ? model.configFileName : null,
-            baseFilters: finalBaseFilters,
-            isElasticExport
+            baseFilters: mergedBaseFilters,
+            api: baseUrl,
+            extraParams: mergedExtraParams
         };
         if (typeof onListParamsChange === 'function') {
             onListParamsChange(listParams);
         }
         apiRef.current.listParams = listParams;
-        return getList({
-            ...listParams,
-            setError: snackbar.showError,
-            setData,
-            dispatchData,
-            showFullScreenLoader,
-            history: navigate,
-        });
-    };
+        setIsLoading(true);
+        try {
+            const result = await getList({ ...listParams, contentType, columns });
+            if (!isExportRequest && result !== undefined) {
+                setData(result);
+            }
+        } catch (error) {
+            snackbar.showError('An error occurred while fetching data', error.message);
+            if (!isExportRequest) {
+                setData((prevData) => ({ ...prevData, records: [], recordCount: 0 }));
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, [paginationModel, buildUrl, model, backendApi, filterModel, baseFilters, id, assigned, available, selected, props.extraParams, sortModel, gridColumns, parentFilters, onListParamsChange, apiRef, getList, snackbar]);
 
-    const openForm = useCallback(({ id, record = {}, mode }) => {
+    const openForm = useCallback(async ({ id, record = {}, mode }) => {
         if (setActiveRecord) {
-            getRecord({ id, api: backendApi, setActiveRecord, model, parentFilters, where, setError: snackbar.showError });
+            try {
+                const baseUrl = buildUrl(backendApi);
+                const data = await getRecord({ id, api: baseUrl, model, parentFilters, where });
+                setActiveRecord(data);
+            } catch (error) {
+                snackbar.showError('Could not load record', error.message);
+            }
             return;
         }
         let path = pathname;
@@ -613,18 +643,15 @@ const GridBase = memo(({
         }
         if (mode === "copy") {
             path += "0-" + id;
-            dispatchData({ type: 'UPDATE_FORM_MODE', payload: 'copy' });
-
         } else {
             path += id;
-            dispatchData({ type: 'UPDATE_FORM_MODE', payload: '' });
         }
         if (addUrlParamKey) {
             searchParams.set(addUrlParamKey, record[addUrlParamKey]);
             path += `?${searchParams.toString()}`;
         }
         navigate(path);
-    }, [setActiveRecord, backendApi, model, parentFilters, where, pathname, addUrlParamKey, searchParams, navigate, dispatchData, getRecord]);
+    }, [setActiveRecord, backendApi, model, parentFilters, where, pathname, addUrlParamKey, searchParams, navigate, getRecord, buildUrl, snackbar]);
 
     const handleDownload = useCallback(({ documentLink }) => {
         if (!documentLink) return;
@@ -703,16 +730,17 @@ const GridBase = memo(({
     }, [isReadOnly, onCellClick, lookupMap, model, idProperty, documentField, navigate, toLink, customActions, tableName, searchParamKey, searchParams, gridTitle, getApiEndpoint, handleDownload, openForm]);
 
     const handleDelete = useCallback(async () => {
-        const baseUrl = buildUrl(model.controllerType, backendApi);
-        const result = await deleteRecord({ id: record.id, api: baseUrl, setError: snackbar.showError, setErrorMessage, model });
-        if (result === true) {
-            setIsDeleting(false);
+        const baseUrl = buildUrl(backendApi);
+        try {
+            await deleteRecord({ id: record.id, api: baseUrl, model });
             snackbar.showMessage('Record Deleted Successfully.');
             fetchData();
-        } else {
+        } catch (error) {
+            snackbar.showError('Delete failed', error.message);
+        } finally {
             setIsDeleting(false);
         }
-    }, [model.controllerType, backendApi, record?.id, snackbar, setErrorMessage, model, fetchData]);
+    }, [backendApi, record?.id, snackbar, model, fetchData]);
 
     const clearError = useCallback(() => {
         setErrorMessage(null);
@@ -769,15 +797,14 @@ const GridBase = memo(({
             );
         }
 
-        const baseUrl =  buildUrl(model.controllerType, selectionApi || backendApi);
+        const baseUrl =  buildUrl(selectionApi || backendApi);
+        setIsLoading(true);
         try {
             const result = await saveRecord({
                 id: 0,
                 api: `${baseUrl}/updateMany`,
                 values: { items: selectedRecords },
-                setError: snackbar.showError,
-                model,
-                dispatchData
+                model
             });
 
             if (result) {
@@ -788,13 +815,14 @@ const GridBase = memo(({
         } catch (err) {
             snackbar.showError(err.message || "An error occurred, please try again later.");
         } finally {
+            setIsLoading(false);
             setRowSelectionModel({
                 type: 'include',
                 ids: new Set()
             });
             setShowAddConfirmation(false);
         }
-    }, [rowSelectionModel.ids, snackbar, data.records, idProperty, baseSaveData, model.selectionUpdateKeys, model.controllerType, selectionApi, backendApi, model, dispatchData, fetchData]);
+    }, [rowSelectionModel.ids, snackbar, data.records, idProperty, baseSaveData, model.selectionUpdateKeys, selectionApi, backendApi, model, fetchData]);
 
     const onAdd = useCallback(() => {
         if (selectionApi.length > 0) {
@@ -878,32 +906,28 @@ const GridBase = memo(({
             columns[field] = { field, width: col.width, headerName: col.headerName || col.field, type: col.type, keepLocal: col.keepLocal === true, isParsable: col.isParsable, lookup: col.lookup };
         });
         const action = (model?.formActions?.export || isPivotExport) ? (model?.formActions?.export || 'export') : undefined;
-        fetchData(
+        fetchData({
             action,
-            undefined,
-            e.target.dataset.contentType,
-            columns,
             isPivotExport,
-            isElasticScreen
-        );
-    }, [data?.recordCount, apiRef, gridColumns, snackbar, fetchData, isElasticScreen]);
+            contentType: e.target.dataset.contentType,
+            columns
+        });
+    }, [data?.recordCount, apiRef, gridColumns, snackbar, model, fetchData]);
 
     useEffect(() => {
         if (!backendApi || !preferencesReady) return;
         fetchData();
-    }, [paginationModel, model, assigned, available, selected, filterModel, id, additionalFilters, props.extraParams, sortModel, backendApi, gridColumns, parentFilters, isElasticScreen, preferencesReady, baseFilters]);
+    }, [backendApi, preferencesReady, fetchData]);
 
     useEffect(() => {
         if (props.isChildGrid || forAssignment || !updatePageTitle) {
             return;
         }
-        dispatchData({ type: actionsStateProvider.PAGE_TITLE_DETAILS, payload: { icon: "", titleHeading: model.pageTitle || model.title, title: model.title } });
+        setPageTitle({ icon: "", titleHeading: model.pageTitle || model.title, title: model.title });
         return () => {
-            dispatchData({
-                type: actionsStateProvider.PAGE_TITLE_DETAILS, payload: null
-            });
+            setPageTitle(null);
         };
-    }, []);
+    }, [setPageTitle, model.pageTitle, model.title, props.isChildGrid, forAssignment, updatePageTitle]);
 
     const updateFilters = useCallback((e) => {
         const { items } = e;
@@ -1177,7 +1201,7 @@ const GridBase = memo(({
                         headerFilters={showHeaderFilters}
                         unstable_headerFilters={showHeaderFilters} //for older versions of mui
                         checkboxSelection={forAssignment}
-                        loading={!data.records || stateData.loaderOpen}
+                        loading={!data.records || isLoading}
                         className="pagination-fix"
                         onCellClick={onCellClickHandler}
                         onCellDoubleClick={onCellDoubleClick}

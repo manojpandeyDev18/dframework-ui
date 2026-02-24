@@ -1,10 +1,10 @@
-import React, { createContext, useReducer, useContext, useRef } from 'react';
-import stateReducer from './stateReducer';
-import initialState from './initialState';
+import React, { createContext, useContext, useRef, useState, useCallback, useMemo } from 'react';
 import { locales } from '../mui/locale/localization';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { useTranslation } from 'react-i18next';
+import { useSnackbar } from '../SnackBar';
 
 // Extend dayjs with the plugins
 dayjs.extend(utc);
@@ -13,25 +13,53 @@ dayjs.extend(timezone);
 const StateContext = createContext();
 const RouterContext = createContext(null);
 
+// Fallback functions for missing SnackbarProvider
+const snackbarWarning = () => console.warn('SnackbarProvider not found. Wrap StateProvider with SnackbarProvider.');
+
 const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => {
 
-  const [stateData, dispatchData] = useReducer(stateReducer, initialState);
+  // App-level state - using individual useState for simplicity
+  const [locale, setLocaleState] = useState('en');
+  const [dateTime, setDateTimeState] = useState('MM/DD/YYYY hh:mm:ss A');
+  const [pageTitle, setPageTitleState] = useState(null);
+  const [modal, setModalState] = useState(null);
+  const [pageBackButton, setPageBackButtonState] = useState(null);
+  const [userData, setUserDataState] = useState(null);
+  const [timeZone, setTimeZoneState] = useState('');
+  
+  // Framework functionality - loader management (simple on/off, no counter)
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Framework functionality - i18n
+  const { t, i18n } = useTranslation();
+  
+  // Framework functionality - snackbar
+  const snackbar = useSnackbar();
 
   // Initialize with provided endpoints or empty object
   const apiEndpoints = useRef(initialApiEndpoints);
 
-  function setApiEndpoint(key, endpoint) {
+  const setApiEndpoint = useCallback((key, endpoint) => {
     apiEndpoints.current[key] = endpoint;
-  }
+  }, []);
 
-  function getApiEndpoint(key) {
-    return apiEndpoints.current[key];
-  }
+  const getApiEndpoint = useCallback((key) => {
+    return apiEndpoints.current[key || "default"] || '';
+  }, []);
 
-  function buildUrl(controllerType, url) {
-    const baseUrl = apiEndpoints.current[controllerType || "default"] || '';
+  const buildUrl = useCallback((url, endpoint) => {
+    const baseUrl = apiEndpoints.current[endpoint || "default"] || '';
     return `${baseUrl}${url}`;
-  }
+  }, []);
+
+  /**
+   * Show loader - simple boolean toggle
+   * Calling methods should wrap all async operations in try/finally blocks
+   */
+  const showLoader = useCallback((flag = true) => {
+    setIsLoading(flag);
+  }, []);
+
 
   /**
    * Returns the system date and/or time format string based on user preferences and options.
@@ -41,7 +69,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
    * @param {string|null|undefined} state - The user-defined date/time format string (e.g., "dd-mm-yyyy hh:mm A").
    * @returns {string} The formatted date/time format string.
    */
-  function systemDateTimeFormat(isDateFormatOnly, showOnlyDate, state) {
+  const systemDateTimeFormat = useCallback((isDateFormatOnly, showOnlyDate, state) => {
     if (state !== undefined && state !== null) {
       const userData = state; // Access 'state' 
       let userDateFormat = isDateFormatOnly ? 'DD-MM-YYYY' : 'DD-MM-YYYY hh:mm:ss A';
@@ -62,7 +90,7 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
       return userDateFormat;
     }
     return isDateFormatOnly ? 'DD-MM-YYYY' : 'DD-MM-YYYY hh:mm:ss A';
-  }
+  }, []);
 
   /**
    * Formats a date value using the system or user-defined format and optional timezone.
@@ -75,31 +103,130 @@ const StateProvider = ({ children, apiEndpoints: initialApiEndpoints = {} }) => 
    * @param {string} [params.timeZone] - The timezone to use for formatting.
    * @returns {string} The formatted date string or '-' if value is falsy.
    */
-  function formatDate({ value, useSystemFormat, showOnlyDate = false, state, timeZone }) {
+  const formatDate = useCallback(({ value, useSystemFormat, showOnlyDate = false, state, timeZone }) => {
     if (!value) return '-';
     const format = systemDateTimeFormat(useSystemFormat, showOnlyDate, state); // Pass 'state' as an argument
     if (!timeZone) {
       return dayjs(value).format(format);
     }
     return dayjs(value).tz(timeZone).format(format);
-  }
+  }, [systemDateTimeFormat]);
 
   /**
    * Provides localization utilities for the current locale.
    *
    * @returns {Object} An object with a getLocalizedString function.
    */
-  function useLocalization() {
-    const currentLocaleData = stateData.dataLocalization;
+  const useLocalization = useCallback(() => {
+    const currentLocaleData = locale;
     const localeData = locales[currentLocaleData];
     function getLocalizedString(key) {
       return currentLocaleData === 'pt-PT' || currentLocaleData === 'ptPT' ? localeData.components.MuiDataGrid.defaultProps.localeText[key] || key : localeData[key] || key;
     }
     return { getLocalizedString };
-  }
+  }, [locale]);
+
+  /**
+   * Set the application locale
+   */
+  const setLocale = useCallback((newLocale) => {
+    setLocaleState(newLocale);
+  }, []);
+
+  /**
+   * Set page title details
+   */
+  const setPageTitle = useCallback((title) => {
+    setPageTitleState(title);
+  }, []);
+
+  /**
+   * Set page back button configuration
+   */
+  const setPageBackButton = useCallback((backButton) => {
+    setPageBackButtonState(backButton);
+  }, []);
+
+  /**
+   * Set user data
+   */
+  const setUserData = useCallback((newUserData) => {
+    setUserDataState(newUserData);
+  }, []);
+
+  /**
+   * Set timezone
+   */
+  const setTimeZone = useCallback((newTimeZone) => {
+    setTimeZoneState(newTimeZone);
+  }, []);
+
+  /**
+   * Set date/time format
+   */
+  const setDateTimeFormat = useCallback((format) => {
+    setDateTimeState(format);
+  }, []);
+
+  /**
+   * Open/close modal
+   */
+  const setModal = useCallback((newModal) => {
+    setModalState(newModal);
+  }, []);
+
+  // Create stateData object for backward compatibility
+  const stateData = useMemo(() => ({
+    locale,
+    dateTime,
+    pageTitle,
+    modal,
+    pageBackButton,
+    userData,
+    timeZone
+  }), [locale, dateTime, pageTitle, modal, pageBackButton, userData, timeZone]);
+
+  const contextValue = useMemo(() => ({
+    // State data
+    stateData,
+    
+    // Loader management
+    isLoading,
+    showLoader,
+    
+    // Snackbar utilities
+    showMessage: snackbar?.showMessage || snackbarWarning,
+    showError: snackbar?.showError || snackbarWarning,
+    
+    // i18n utilities
+    dayjs,
+    t,
+    i18n,
+    
+    // Date/time utilities
+    systemDateTimeFormat,
+    formatDate,
+    useLocalization,
+    
+    // API utilities
+    getApiEndpoint,
+    setApiEndpoint,
+    buildUrl,
+    
+    // App-level state setters with meaningful names
+    setLocale,
+    setPageTitle,
+    setPageBackButton,
+    setUserData,
+    setTimeZone,
+    setDateTimeFormat,
+    setModal
+  }), [stateData, isLoading, showLoader, t, i18n, snackbar,
+       getApiEndpoint, setApiEndpoint, systemDateTimeFormat, formatDate, useLocalization,
+       setLocale, setPageTitle, setPageBackButton, setUserData, setTimeZone, setDateTimeFormat, setModal, buildUrl]);
 
   return (
-    <StateContext.Provider value={{ stateData, dispatchData, systemDateTimeFormat, formatDate, useLocalization, getApiEndpoint, setApiEndpoint, buildUrl }}>
+    <StateContext.Provider value={contextValue}>
       {children}
     </StateContext.Provider>
   );
